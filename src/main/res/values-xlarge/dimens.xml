@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <dimen name="project_card_width">400dp</dimen>
+    <dimen name="project_recycler_view_padding_horizontal">200dp</dimen>
+    <dimen name="project_recycler_view_padding_vertical">50dp</dimen>
+
+</resources>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:clickable="true"
+    android:foreground="?selectableItemBackground">
+
+    <android.support.percent.PercentFrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_aspectRatio="100%"
+            app:layout_widthPercent="100%">
+
+            <ImageView
+                android:id="@+id/project_list_item_preview_image"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_above="@+id/project_list_item_text_layout"
+                android:layout_alignParentTop="true"
+                android:background="@android:color/darker_gray" />
+
+            <LinearLayout
+                android:id="@+id/project_list_item_text_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_gravity="bottom"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <com.lom.quickgraph.ui.BackEditText
+                    android:id="@+id/project_list_item_primary_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@null"
+                    android:imeOptions="actionDone"
+                    android:inputType="textCapSentences|textNoSuggestions"
+                    android:singleLine="true"
+                    android:textSize="24sp"
+                    tools:text="Primary Text" />
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:id="@+id/project_list_item_secondary_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentLeft="true"
+                        android:layout_alignParentStart="true"
+                        android:layout_toLeftOf="@+id/project_list_item_counter_text"
+                        android:layout_toStartOf="@+id/project_list_item_counter_text"
+                        android:singleLine="true"
+                        android:textSize="14sp"
+                        tools:text="Secondary Text" />
+
+                    <TextView
+                        android:id="@+id/project_list_item_counter_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_alignParentRight="true"
+                        android:singleLine="true"
+                        android:textSize="14sp"
+                        tools:text="1" />
+
+                </RelativeLayout>
+
+            </LinearLayout>
+
+        </RelativeLayout>
+
+    </android.support.percent.PercentFrameLayout>
+
+</android.support.v7.widget.CardView>

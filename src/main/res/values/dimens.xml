@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+    <dimen name="fab_margin">16dp</dimen>
+    <dimen name="project_card_width">250dp</dimen>
+    <dimen name="card_decorator_width">6dp</dimen>
+    <dimen name="project_recycler_view_padding_horizontal">8dp</dimen>
+    <dimen name="project_recycler_view_padding_vertical">8dp</dimen>
+
+</resources>

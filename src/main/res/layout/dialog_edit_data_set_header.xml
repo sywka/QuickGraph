@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="72dp">
+
+    <FrameLayout
+        android:id="@+id/dialog_edit_data_set_color_layout"
+        android:layout_width="72dp"
+        android:layout_height="match_parent"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:padding="16dp">
+
+        <View
+            android:id="@+id/dialog_edit_data_set_color"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/oval" />
+
+    </FrameLayout>
+
+    <android.support.design.widget.TextInputLayout
+        android:id="@+id/dialog_edit_data_set_primary_input"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_toEndOf="@+id/dialog_edit_data_set_color_layout"
+        android:layout_toRightOf="@+id/dialog_edit_data_set_color_layout"
+        android:paddingRight="16dp">
+
+        <android.support.design.widget.TextInputEditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="sansserif"
+            android:hint="@string/label"
+            android:singleLine="true"
+            android:textColor="?android:textColorPrimary"
+            android:textSize="16sp"
+            tools:text="Title text" />
+
+    </android.support.design.widget.TextInputLayout>
+
+</RelativeLayout>
