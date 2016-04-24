@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <CheckBox
+        android:id="@+id/edit_data_set_draw_points"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="@dimen/general_section_check_box_padding"
+        android:paddingTop="@dimen/general_section_check_box_padding"
+        android:text="@string/draw_points" />
+
+
+    <TextView
+        android:id="@+id/edit_data_set_points_radius_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/point_radius" />
+
+    <SeekBar
+        android:id="@+id/edit_data_set_points_radius"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <CheckBox
+        android:id="@+id/edit_data_set_draw_points_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="@dimen/general_section_check_box_padding"
+        android:paddingTop="@dimen/general_section_check_box_padding"
+        android:text="@string/draw_points_label" />
+
+</LinearLayout>

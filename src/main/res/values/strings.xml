@@ -12,9 +12,13 @@
     <string name="action_remove_all">Clear</string>
     <string name="action_check_all">Check all</string>
     <string name="action_uncheck_all">Uncheck all</string>
-    <string name="action_draw_axis_label">Draw axis label</string>
+    <string name="action_axis">Axis</string>
+    <string name="action_draw_axis">Draw axis</string>
+    <string name="action_draw_x_axis_title">X-axis title</string>
+    <string name="action_draw_y_axis_title">Y-axis title</string>
     <string name="action_draw_legend">Draw legend</string>
     <string name="action_fit_screen">Fit screen</string>
+    <string name="action_color_grid">Color grid</string>
     <string name="action_ok">OK</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_undo">Undo</string>
@@ -28,7 +32,7 @@
     <string name="data_set">DataSet</string>
     <string name="data_set_remove">DataSet \"%1$s\" removed</string>
     <string name="data_set_remove_all">DataSets removed: %1$s</string>
-    <string name="color_chooser_title">Choose color</string>
+    <string name="color_picker_title">Choose color</string>
     <string name="unknown">Unknown</string>
     <string name="unknown_is">Unknown: %1$s</string>
     <string name="file_is">File: %1$s</string>
@@ -41,6 +45,12 @@
     <string name="to">To</string>
     <string name="delta">Delta</string>
     <string name="label">Label</string>
-    <string name="points">Draw points</string>
+    <string name="line_width">Stroke width: %1$s</string>
+    <string name="point_radius">Points radius: %1$s</string>
+    <string name="draw_line">Draw line</string>
+    <string name="cubic_curve">Cubic curve</string>
+    <string name="draw_points">Draw points</string>
+    <string name="draw_points_label">Draw points label</string>
+    <string name="can_empty">It may be empty</string>
 
 </resources>

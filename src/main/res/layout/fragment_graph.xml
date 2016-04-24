@@ -3,8 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white"
-    android:clickable="true">
+    android:background="@android:color/white">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -20,14 +19,25 @@
             app:popupTheme="@style/AppTheme.PopupOverlay" />
 
         <android.support.percent.PercentFrameLayout
+            android:id="@+id/graph_layout"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <com.github.mikephil.charting.charts.LineChart
-                android:id="@+id/graph"
+            <lecho.lib.hellocharts.view.LineChartView
+                android:id="@+id/graph_view"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
-                android:layout_gravity="center" />
+                android:layout_gravity="center"
+                android:padding="7dp" />
+
+            <ImageView
+                android:id="@+id/graph_empty"
+                android:layout_width="256dp"
+                android:layout_height="256dp"
+                android:layout_gravity="center"
+                android:tint="@android:color/black"
+                android:visibility="gone"
+                app:srcCompat="@drawable/ic_empty_preview_white_24dp" />
 
         </android.support.percent.PercentFrameLayout>
 

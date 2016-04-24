@@ -1,14 +1,18 @@
 package com.lom.quickgraph.fragment;
 
-import android.app.Activity;
+import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -23,15 +27,14 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import com.lom.quickgraph.R;
+import com.lom.quickgraph.activity.EditActivity;
 import com.lom.quickgraph.adapter.BaseSimpleAdapter;
 import com.lom.quickgraph.adapter.DataListAdapter;
+import com.lom.quickgraph.etc.LogUtil;
 import com.lom.quickgraph.etc.RealmHelper;
 import com.lom.quickgraph.etc.Utils;
-import com.lom.quickgraph.fragment.dialog.BaseEditItemDialogFragment;
-import com.lom.quickgraph.fragment.dialog.ColorChooserItemDialogFragment;
-import com.lom.quickgraph.fragment.dialog.EditItemDialogFragment;
+import com.lom.quickgraph.fragment.dialog.ColorPickerDialogFragment;
 import com.lom.quickgraph.model.DataSetModel;
-import com.lom.quickgraph.model.FunctionRangeModel;
 import com.lom.quickgraph.model.ProjectModel;
 import com.lom.quickgraph.ui.ArrowAnimator;
 
@@ -43,13 +46,12 @@ import io.realm.RealmChangeListener;
 import io.realm.RealmList;
 
 public class DataSetListFragment extends BaseFragment
-        implements BaseEditItemDialogFragment.EditorDialogCallback<DataSetModel>, View.OnKeyListener {
+        implements ColorPickerDialogFragment.OnColorChangedListener, View.OnKeyListener {
 
     private static final String TAG_GRAPH_FRAGMENT = "graph_fragment";
-    private static final String TAG_DIALOG = "dialog";
 
     private RealmHelper realmHelper;
-
+    private RealmChangeListener projectChangeListener;
     private ProjectModel projectModel;
 
     private BottomSheetBehavior<FrameLayout> bottomSheetBehavior;
@@ -65,14 +67,23 @@ public class DataSetListFragment extends BaseFragment
         realmHelper = new RealmHelper();
 
         View rootView = inflater.inflate(R.layout.fragment_data_set_list, container, false);
+        Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.toolbar);
 
         rootView.setFocusableInTouchMode(true);
         rootView.setOnKeyListener(this);
 
-        setupActivityActionBar((Toolbar) rootView.findViewById(R.id.toolbar), true);
+        boolean canGoBack = setupActivityActionBar(toolbar, getBaseActivity().getSupportActionBar() == null);
+        if (!canGoBack) toolbar.setNavigationIcon(new ColorDrawable(Color.TRANSPARENT));
+
         setupRecyclerView(rootView);
         setupFab(rootView);
-        setupBottomSheet(rootView, savedInstanceState);
+        setupBottomSheet(rootView);
+
+        getFragmentManager()
+                .beginTransaction()
+                .replace(R.id.graph_content, Utils.putLong(GraphFragment.newInstance(canGoBack), Utils.getLong(this)),
+                        TAG_GRAPH_FRAGMENT)
+                .commit();
 
         loadData();
 
@@ -83,52 +94,44 @@ public class DataSetListFragment extends BaseFragment
     public void onDestroyView() {
         super.onDestroyView();
 
-        realmHelper.closeRealm();
-    }
-
-    @Override
-    public void notifyItemChanged(final DataSetModel item) {
-        if (adapter != null) {
-
-            dismissSnackBar();
-            realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
-                @Override
-                public void execute(Realm realm) {
-                    int position = adapter.getPositionById(item.getUid());
-                    if (position == -1) {
-                        projectModel.addDataSet(0, realmHelper.getRealm().copyToRealmOrUpdate(item));
-                        adapter.notifyDataSetChanged();
-                    } else {
-                        adapter.getItem(position).getCoordinates().deleteAllFromRealm();
-                        realmHelper.getRealm().copyToRealmOrUpdate(item);
-                        adapter.notifyItemChanged(position);
-                    }
-
-                    updateLastEditDate();
-                }
-            });
+        if (projectModel != null && projectChangeListener != null) {
+            projectModel.removeChangeListener(projectChangeListener);
         }
-    }
-
-    private void updateLastEditDate() {
-        projectModel.setDate(new Date());
-        getActivity().setResult(Activity.RESULT_OK);
-        getActivity().invalidateOptionsMenu();
+        realmHelper.closeRealm();
     }
 
     private void loadData() {
         projectModel = realmHelper.findObjectAsync(ProjectModel.class, Utils.getLong(this));
-        projectModel.addChangeListener(new RealmChangeListener() {
+        projectModel.addChangeListener(projectChangeListener = new RealmChangeListener() {
             @Override
             public void onChange() {
                 if (projectModel.isLoaded()) {
-                    projectModel.removeChangeListener(this);
                     if (projectModel.isValid()) {
                         adapter.setItems(projectModel.getDataSets());
+                        invalidateOptionsMenu();
                     }
                 }
             }
         });
+    }
+
+    @Override
+    public void onColorChanged(final String tag, @ColorInt final int color) {
+        realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                try {
+                    adapter.getItem(adapter.getItemPosition(Long.valueOf(tag))).setColor(color);
+                } catch (NumberFormatException e) {
+                    LogUtil.d(e);
+                }
+            }
+        });
+    }
+
+    private void updateLastEditDate() {
+        projectModel.setDate(new Date());
+        invalidateOptionsMenu();
     }
 
     private void setupRecyclerView(View rootView) {
@@ -165,19 +168,15 @@ public class DataSetListFragment extends BaseFragment
                         @Override
                         public void execute(Realm realm) {
                             item.setChecked(!item.isChecked());
-
                             updateLastEditDate();
                         }
                     });
 
                 } else if (view.getId() == itemVH.colorView.getId()) {
-                    ColorChooserItemDialogFragment.bindArgument(new ColorChooserItemDialogFragment(),
-                            realmHelper.getRealm().copyFromRealm(item))
-                            .show(getChildFragmentManager(), TAG_DIALOG);
+                    Utils.putLong(new ColorPickerDialogFragment(), item.getColor())
+                            .show(getChildFragmentManager(), String.valueOf(item.getUid()));
                 } else {
-                    EditItemDialogFragment.bindArgument(new EditItemDialogFragment(),
-                            realmHelper.getRealm().copyFromRealm(item))
-                            .show(getChildFragmentManager(), TAG_DIALOG);
+                    startActivity(Utils.putLong(new Intent(getContext(), EditActivity.class), item.getUid()));
                 }
             }
         });
@@ -188,32 +187,18 @@ public class DataSetListFragment extends BaseFragment
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                FunctionRangeModel functionRangeModel = new FunctionRangeModel()
-                        .setUid(realmHelper.generateUID(FunctionRangeModel.class));
-
-                DataSetModel dataSetModel = new DataSetModel()
-                        .setUid(realmHelper.generateUID(DataSetModel.class))
-                        .setType(DataSetModel.Type.FROM_FUNCTION)
-                        .setFunctionRange(functionRangeModel);
-                dataSetModel.setPrimary(dataSetModel.getPrimary() + " №" + (projectModel.getDataSets().size() + 1));
-
-                EditItemDialogFragment.bindArgument(new EditItemDialogFragment(), dataSetModel)
-                        .show(getChildFragmentManager(), TAG_DIALOG);
+                Intent intent = new Intent(getContext(), EditActivity.class);
+                Utils.putBoolean(intent, true);
+                startActivity(Utils.putLong(intent, projectModel.getUid()));
             }
         });
     }
 
-    private void setupBottomSheet(View rootView, @Nullable Bundle savedInstanceState) {
+    private void setupBottomSheet(View rootView) {
         final FrameLayout bottomSheet = (FrameLayout) rootView.findViewById(R.id.bottom_sheet);
         if (bottomSheet == null) return;
-        if (savedInstanceState == null) {
-            getFragmentManager()
-                    .beginTransaction()
-                    .add(R.id.bottom_sheet_content, Utils.putLong(new GraphFragment(), Utils.getLong(this)),
-                            TAG_GRAPH_FRAGMENT)
-                    .commit();
-        }
 
+        final FrameLayout content = (FrameLayout) rootView.findViewById(R.id.graph_content);
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         fakeToolbar = (Toolbar) bottomSheet.findViewById(R.id.fake_toolbar);
@@ -236,16 +221,20 @@ public class DataSetListFragment extends BaseFragment
             @Override
             public void onStateChanged(@NonNull View bottomSheet, int newState) {
                 fakeToolbar.setClickable(newState != BottomSheetBehavior.STATE_EXPANDED);
+                if (newState == BottomSheetBehavior.STATE_EXPANDED)
+                    fab.setVisibility(View.GONE);
             }
 
             @Override
             public void onSlide(@NonNull View bottomSheet, float slideOffset) {
-                fakeToolbar.getBackground().setAlpha((int) (255f - 255f * slideOffset));
+                content.getForeground().setAlpha((int) (255f - 255f * slideOffset));
                 fakeToolbar.setNavigationIcon(drawables[(int) ((drawables.length - 1) * slideOffset)]);
 
                 setStatusBarColor(slideOffset == 1 ? BottomSheetBehavior.STATE_EXPANDED : BottomSheetBehavior.STATE_COLLAPSED);
-                if (slideOffset > 0.6) fab.hide();
-                else fab.show();
+                float limit = 0.8f;
+                if (slideOffset <= limit) {
+                    setFabScale(1 - slideOffset / limit);
+                }
             }
         });
     }
@@ -262,6 +251,12 @@ public class DataSetListFragment extends BaseFragment
         }
     }
 
+    private void setFabScale(float scale) {
+        ViewCompat.setScaleX(fab, scale);
+        ViewCompat.setScaleY(fab, scale);
+        fab.setVisibility(scale < 0.1 ? View.GONE : View.VISIBLE);
+    }
+
     @Override
     public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
         super.onViewStateRestored(savedInstanceState);
@@ -270,7 +265,7 @@ public class DataSetListFragment extends BaseFragment
                 setStatusBarColor(bottomSheetBehavior.getState());
                 fakeToolbar.setClickable(false);
                 fakeToolbar.setNavigationIcon(ArrowAnimator.getLessArrow());
-                fab.hide();
+                setFabScale(0);
             }
         }
     }
@@ -288,9 +283,11 @@ public class DataSetListFragment extends BaseFragment
     public void onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
 
-        boolean checkedAll = adapter.isCheckedAll();
-        menu.findItem(R.id.action_check_all).setVisible(!checkedAll);
-        menu.findItem(R.id.action_uncheck_all).setVisible(checkedAll);
+        if (adapter != null) {
+            boolean checkedAll = adapter.isCheckedAll();
+            menu.findItem(R.id.action_check_all).setVisible(!checkedAll);
+            menu.findItem(R.id.action_uncheck_all).setVisible(checkedAll);
+        }
     }
 
     @Override
@@ -300,10 +297,9 @@ public class DataSetListFragment extends BaseFragment
                 realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
                     @Override
                     public void execute(Realm realm) {
-                        for (DataSetModel dataSetModel : adapter.getItems())
+                        for (DataSetModel dataSetModel : adapter.getItems()) {
                             dataSetModel.setChecked(true);
-                        adapter.notifyDataSetChanged();
-
+                        }
                         updateLastEditDate();
                     }
                 });
@@ -312,10 +308,9 @@ public class DataSetListFragment extends BaseFragment
                 realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
                     @Override
                     public void execute(Realm realm) {
-                        for (DataSetModel dataSetModel : adapter.getItems())
+                        for (DataSetModel dataSetModel : adapter.getItems()) {
                             dataSetModel.setChecked(false);
-                        adapter.notifyDataSetChanged();
-
+                        }
                         updateLastEditDate();
                     }
                 });
@@ -334,15 +329,12 @@ public class DataSetListFragment extends BaseFragment
         realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                DataSetModel dataSet = adapter.getItem(position);
-                adapter.removeItem(position);
-                dataSet.removeFromRealm();
-
+                adapter.getItem(position).deleteFromRealm();
                 updateLastEditDate();
             }
         });
 
-        snackbar = Snackbar.make(getView(), getString(R.string.data_set_remove, dataSetModel.getPrimary()), Snackbar.LENGTH_LONG)
+        snackbar = Snackbar.make(recyclerView, getString(R.string.data_set_remove, dataSetModel.getPrimary()), Snackbar.LENGTH_LONG)
                 .setAction(R.string.action_undo, new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -350,9 +342,7 @@ public class DataSetListFragment extends BaseFragment
                             realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
                                 @Override
                                 public void execute(Realm realm) {
-                                    adapter.addItem(realmHelper.getRealm().copyToRealmOrUpdate(dataSetModel), position);
-                                    recyclerView.scrollToPosition(position);
-
+                                    projectModel.addDataSet(position, realmHelper.getRealm().copyToRealmOrUpdate(dataSetModel));
                                     updateLastEditDate();
                                 }
                             });
@@ -371,15 +361,12 @@ public class DataSetListFragment extends BaseFragment
         realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                RealmList<DataSetModel> dataSets = (RealmList<DataSetModel>) adapter.getItems();
-                adapter.removeAll();
-                dataSets.deleteAllFromRealm();
-
+                ((RealmList<DataSetModel>) adapter.getItems()).deleteAllFromRealm();
                 updateLastEditDate();
             }
         });
 
-        snackbar = Snackbar.make(getView(), getString(R.string.data_set_remove_all, dataSetModels.size()), Snackbar.LENGTH_LONG)
+        snackbar = Snackbar.make(recyclerView, getString(R.string.data_set_remove_all, dataSetModels.size()), Snackbar.LENGTH_LONG)
                 .setAction(R.string.action_undo, new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -390,8 +377,6 @@ public class DataSetListFragment extends BaseFragment
                                     List<DataSetModel> dataSets = realmHelper.getRealm().copyToRealmOrUpdate(dataSetModels);
                                     projectModel.setDataSets(new RealmList<>(dataSets.toArray(
                                             new DataSetModel[dataSets.size()])));
-                                    adapter.setItems(projectModel.getDataSets());
-
                                     updateLastEditDate();
                                 }
                             });

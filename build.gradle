@@ -5,7 +5,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:2.0.0'
-        classpath "io.realm:realm-gradle-plugin:0.88.3"
+        classpath "io.realm:realm-gradle-plugin:0.89.0"
     }
 }
 
@@ -47,9 +47,9 @@ dependencies {
     compile 'com.android.support:percent:23.3.0'
     compile 'com.android.support:design:23.3.0'
 
-    compile 'com.github.PhilJay:MPAndroidChart:v2.2.4'
+    compile 'com.github.lecho:hellocharts-library:1.5.8@aar'
     compile 'com.larswerkman:HoloColorPicker:1.5'
-    compile('com.github.afollestad.material-dialogs:core:0.8.5.7@aar') {
+    compile('com.github.afollestad.material-dialogs:core:0.8.5.8@aar') {
         transitive = true
     }
 }

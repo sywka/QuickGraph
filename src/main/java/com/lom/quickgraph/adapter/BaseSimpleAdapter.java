@@ -114,12 +114,12 @@ public abstract class BaseSimpleAdapter<ItemType, ViewHolder extends BaseSimpleA
         }
 
         public void notifyClickListener(View view) {
-            if (onItemClickListener != null)
+            if (onItemClickListener != null && !items.isEmpty())
                 onItemClickListener.onClick(view, items.get(getLayoutPosition()), (ViewHolder) this);
         }
 
         public boolean notifyLongClickListener(View view) {
-            return onItemLongClickListener != null &&
+            return onItemLongClickListener != null && !items.isEmpty() &&
                     onItemLongClickListener.onLongClick(view, items.get(getLayoutPosition()), (ViewHolder) this);
         }
     }

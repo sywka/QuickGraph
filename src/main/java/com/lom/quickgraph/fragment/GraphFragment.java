@@ -1,52 +1,70 @@
 package com.lom.quickgraph.fragment;
 
+import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.percent.PercentFrameLayout;
 import android.support.v4.app.Fragment;
-import android.support.v4.graphics.drawable.DrawableCompat;
-import android.support.v7.view.SupportMenuInflater;
-import android.support.v7.view.menu.ActionMenuItem;
 import android.support.v7.widget.Toolbar;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 
-import com.github.mikephil.charting.charts.LineChart;
-import com.github.mikephil.charting.components.XAxis;
-import com.github.mikephil.charting.data.Entry;
-import com.github.mikephil.charting.data.LineData;
-import com.github.mikephil.charting.data.LineDataSet;
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.lom.quickgraph.R;
 import com.lom.quickgraph.etc.AsyncRealmTask;
+import com.lom.quickgraph.etc.ProjectPreviewSaver;
 import com.lom.quickgraph.etc.RealmHelper;
 import com.lom.quickgraph.etc.Utils;
+import com.lom.quickgraph.fragment.dialog.ColorPickerDialogFragment;
 import com.lom.quickgraph.model.CoordinateModel;
 import com.lom.quickgraph.model.DataSetModel;
 import com.lom.quickgraph.model.ProjectModel;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
+import io.realm.Realm;
 import io.realm.RealmChangeListener;
+import lecho.lib.hellocharts.gesture.ZoomType;
+import lecho.lib.hellocharts.model.Axis;
+import lecho.lib.hellocharts.model.Line;
+import lecho.lib.hellocharts.model.LineChartData;
+import lecho.lib.hellocharts.model.PointValue;
+import lecho.lib.hellocharts.view.LineChartView;
 
-public class GraphFragment extends BaseFragment {
+public class GraphFragment extends BaseFragment implements ColorPickerDialogFragment.OnColorChangedListener {
+
+    private static final String TAG_CAN_GO_BACK = "can_go_back";
 
     private RealmHelper realmHelper;
 
-    private Toolbar toolbar;
-    private LineChart lineChart;
+    private PercentFrameLayout graphLayout;
+    private ImageView graphEmpty;
+    private LineChartView graphView;
     private ProgressBar progressBar;
     private ProjectModel projectModel;
 
-    private RealmChangeListener realmChangeListener;
+    private RealmChangeListener projectChangeListener;
+
+    public static GraphFragment newInstance(boolean canGoBack) {
+        GraphFragment graphFragment = new GraphFragment();
+        Bundle bundle = new Bundle();
+        bundle.putBoolean(TAG_CAN_GO_BACK, canGoBack);
+        graphFragment.setArguments(bundle);
+        return graphFragment;
+    }
 
     @Nullable
     @Override
@@ -56,9 +74,15 @@ public class GraphFragment extends BaseFragment {
         View rootView = inflater.inflate(R.layout.fragment_graph, container, false);
 
         progressBar = (ProgressBar) rootView.findViewById(R.id.graph_progress_bar);
+        Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.toolbar);
 
-        setupToolbar(rootView);
-        setupLineChart(rootView);
+        boolean canGoBack = setupActivityActionBar(toolbar, getArguments().getBoolean(TAG_CAN_GO_BACK, true));
+        toolbar.setTitle(R.string.activity_graph);
+        if (!canGoBack && getArguments().getBoolean(TAG_CAN_GO_BACK, true)) {
+            toolbar.setNavigationIcon(new ColorDrawable(Color.TRANSPARENT));
+        }
+
+        setupGraphLayout(rootView);
 
         loadData();
 
@@ -69,69 +93,63 @@ public class GraphFragment extends BaseFragment {
     public void onDestroyView() {
         super.onDestroyView();
 
-        projectModel.removeChangeListener(realmChangeListener);
+        projectModel.removeChangeListener(projectChangeListener);
         realmHelper.closeRealm();
     }
 
     private void loadData() {
         projectModel = realmHelper.findObjectAsync(ProjectModel.class, Utils.getLong(this));
-        projectModel.addChangeListener(realmChangeListener = new RealmChangeListener() {
+        projectModel.addChangeListener(projectChangeListener = new RealmChangeListener() {
             @Override
             public void onChange() {
                 if (projectModel.isLoaded()) {
-                    updateLineChartConfig();
-                    new AsyncUpdater(GraphFragment.this).execute(realmHelper.getRealm().copyFromRealm(projectModel));
+                    if (projectModel.isValid()) {
+                        updateLineChartConfig();
+                        new AsyncUpdater(GraphFragment.this).execute(realmHelper.getRealm().copyFromRealm(projectModel));
+                    }
                 }
             }
         });
     }
 
-    private void setupToolbar(View rootView) {
-        toolbar = (Toolbar) rootView.findViewById(R.id.toolbar);
+    private void updateLastEditDate(ProjectModel projectModel) {
+        projectModel.setDate(new Date());
+        getActivity().setResult(Activity.RESULT_OK);
+    }
 
-        onCreateOptionsMenu(toolbar.getMenu(), new SupportMenuInflater(getContext()));
-        toolbar.setTitle(R.string.activity_graph);
-        TypedValue typedValue = new TypedValue();
-        toolbar.setNavigationIcon(R.drawable.ic_arrow_back_white_24dp);
-        if (toolbar.getNavigationIcon() != null)
-            DrawableCompat.setTint(toolbar.getNavigationIcon(), typedValue.data);
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+    @Override
+    public void onColorChanged(String tag, @ColorInt final int color) {
+        realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
             @Override
-            public void onClick(View v) {
-                onOptionsItemSelected(new ActionMenuItem(getContext(), 0, android.R.id.home, 0, 0, null));
-            }
-        });
-        toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                return onOptionsItemSelected(item);
+            public void execute(Realm realm) {
+                projectModel.getParams().setColorGrid(color);
+                updateLastEditDate(projectModel);
             }
         });
     }
 
-    private void setupLineChart(View rootView) {
-        lineChart = (LineChart) rootView.findViewById(R.id.graph);
-        lineChart.setDoubleTapToZoomEnabled(false);
-        lineChart.getXAxis().setAvoidFirstLastClipping(true);
-        lineChart.getXAxis().setPosition(XAxis.XAxisPosition.BOTTOM);
-        lineChart.getAxisRight().setEnabled(false);
-        lineChart.getLegend().setWordWrapEnabled(true);
-        lineChart.setDescription("");
-        lineChart.setNoDataText("");
+    private void setupGraphLayout(View rootView) {
+        graphLayout = (PercentFrameLayout) rootView.findViewById(R.id.graph_layout);
+        graphEmpty = (ImageView) rootView.findViewById(R.id.graph_empty);
+        graphView = (LineChartView) rootView.findViewById(R.id.graph_view);
+        graphView.setDrawingCacheEnabled(true);
+        graphView.setInteractive(true);
+        graphView.setZoomEnabled(true);
+        graphView.setValueSelectionEnabled(true);
+        graphView.setLineChartData(new LineChartData());
     }
 
     private void updateLineChartConfig() {
-        lineChart.post(new Runnable() {
+        graphView.post(new Runnable() {
             @Override
             public void run() {
-                PercentFrameLayout.LayoutParams layoutParams = (PercentFrameLayout.LayoutParams) lineChart.getLayoutParams();
+                PercentFrameLayout.LayoutParams layoutParams = (PercentFrameLayout.LayoutParams) graphView.getLayoutParams();
                 if (projectModel.getParams().isFitScreen()) {
-                    layoutParams.getPercentLayoutInfo().aspectRatio = 0f;
+                    layoutParams.getPercentLayoutInfo().aspectRatio = -1.0f;
                     layoutParams.getPercentLayoutInfo().heightPercent = 1.0f;
                     layoutParams.getPercentLayoutInfo().widthPercent = 1.0f;
                 } else {
-                    View parent = (View) lineChart.getParent();
-                    if (parent.getHeight() < parent.getWidth()) {
+                    if (graphLayout.getHeight() < graphLayout.getWidth()) {
                         layoutParams.getPercentLayoutInfo().widthPercent = -1.0f;
                         layoutParams.getPercentLayoutInfo().heightPercent = 1.0f;
                     } else {
@@ -140,17 +158,13 @@ public class GraphFragment extends BaseFragment {
                     }
                     layoutParams.getPercentLayoutInfo().aspectRatio = 1.3f;
                 }
-                lineChart.requestLayout();
+                graphView.requestLayout();
             }
         });
 
-        lineChart.setGridBackgroundColor(projectModel.getParams().getColorGrid());
-        lineChart.getAxisLeft().setDrawLabels(projectModel.getParams().isDrawAxisLabel());
-        lineChart.getAxisRight().setDrawLabels(projectModel.getParams().isDrawAxisLabel());
-        lineChart.getXAxis().setDrawLabels(projectModel.getParams().isDrawAxisLabel());
-        lineChart.getLegend().setEnabled(projectModel.getParams().isDrawLegend());
+        graphView.setZoomType(ZoomType.HORIZONTAL_AND_VERTICAL);
 
-        onPrepareOptionsMenu(toolbar.getMenu());
+        invalidateOptionsMenu();
     }
 
     @Override
@@ -164,36 +178,91 @@ public class GraphFragment extends BaseFragment {
     public void onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
 
-        menu.findItem(R.id.action_draw_legend).setChecked(projectModel.getParams().isDrawLegend());
-        menu.findItem(R.id.action_draw_axis_label).setChecked(projectModel.getParams().isDrawAxisLabel());
-        menu.findItem(R.id.action_fit_screen).setChecked(projectModel.getParams().isFitScreen());
+        if (projectModel.isLoaded()) {
+            menu.findItem(R.id.action_draw_axis).setChecked(projectModel.getParams().isDrawAxis());
+            menu.findItem(R.id.action_axis).getSubMenu().setGroupVisible(R.id.group_draw_axis, projectModel.getParams().isDrawAxis());
+            menu.findItem(R.id.action_draw_legend).setChecked(projectModel.getParams().isDrawLegend());
+            menu.findItem(R.id.action_fit_screen).setChecked(projectModel.getParams().isFitScreen());
+        }
     }
 
     @Override
     public boolean onOptionsItemSelected(final MenuItem item) {
         if (item.isCheckable()) item.setChecked(!item.isChecked());
 
-        boolean consume = false;
-        realmHelper.getRealm().beginTransaction();
         switch (item.getItemId()) {
             case R.id.action_draw_legend:
-                projectModel.getParams().setDrawLegend(item.isChecked());
-                consume = true;
-                break;
-            case R.id.action_draw_axis_label:
-                projectModel.getParams().setDrawAxisLabel(item.isChecked());
-                consume = true;
-                break;
+                realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        projectModel.getParams().setDrawLegend(item.isChecked());
+                        updateLastEditDate(projectModel);
+                    }
+                });
+                return true;
+            case R.id.action_draw_axis:
+                realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        projectModel.getParams().setDrawAxis(item.isChecked());
+                        updateLastEditDate(projectModel);
+                    }
+                });
+                return true;
+            case R.id.action_color_grid:
+                Utils.putLong(new ColorPickerDialogFragment(), projectModel.getParams().getColorGrid())
+                        .show(getChildFragmentManager(), String.valueOf(projectModel.getUid()));
+                return true;
+            case R.id.action_draw_x_axis_name:
+                new MaterialDialog.Builder(getContext())
+                        .title(R.string.action_draw_x_axis_title)
+                        .negativeText(R.string.action_cancel)
+                        .input(getString(R.string.can_empty), projectModel.getParams().getXAxisTitle(), true, new MaterialDialog.InputCallback() {
+                            @Override
+                            public void onInput(@NonNull MaterialDialog dialog, final CharSequence input) {
+                                realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
+                                    @Override
+                                    public void execute(Realm realm) {
+                                        projectModel.getParams().setXAxisTitle(input.toString());
+                                        updateLastEditDate(projectModel);
+                                    }
+                                });
+                            }
+                        })
+                        .show();
+                return true;
+            case R.id.action_draw_y_axis_name:
+                new MaterialDialog.Builder(getContext())
+                        .title(R.string.action_draw_y_axis_title)
+                        .negativeText(R.string.action_cancel)
+                        .input(getString(R.string.can_empty), projectModel.getParams().getYAxisTitle(), true, new MaterialDialog.InputCallback() {
+                            @Override
+                            public void onInput(@NonNull MaterialDialog dialog, final CharSequence input) {
+                                realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
+                                    @Override
+                                    public void execute(Realm realm) {
+                                        projectModel.getParams().setYAxisTitle(input.toString());
+                                        updateLastEditDate(projectModel);
+                                    }
+                                });
+                            }
+                        })
+                        .show();
+                return true;
             case R.id.action_fit_screen:
-                projectModel.getParams().setFitScreen(item.isChecked());
-                consume = true;
-                break;
+                realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        projectModel.getParams().setFitScreen(item.isChecked());
+                        updateLastEditDate(projectModel);
+                    }
+                });
+                return true;
         }
-        realmHelper.getRealm().commitTransaction();
-        return consume || super.onOptionsItemSelected(item);
+        return super.onOptionsItemSelected(item);
     }
 
-    private class AsyncUpdater extends AsyncRealmTask<ProjectModel, LineData> {
+    private class AsyncUpdater extends AsyncRealmTask<ProjectModel, LineChartData> {
 
         public AsyncUpdater(@NonNull Fragment fragment) {
             super(fragment);
@@ -204,71 +273,75 @@ public class GraphFragment extends BaseFragment {
             super.onPreExecute();
 
             progressBar.setVisibility(View.VISIBLE);
-            lineChart.setData(new LineData());
-            lineChart.invalidate();
+            graphView.getChartData().finish();
+            graphView.destroyDrawingCache();
         }
 
         @Override
-        protected void onPostExecute(LineData lineData) {
+        protected void onPostExecute(LineChartData lineData) {
             super.onPostExecute(lineData);
 
             progressBar.setVisibility(View.GONE);
-            lineChart.setData(lineData);
-            lineChart.invalidate();
+            graphView.setLineChartData(lineData);
+
+            final boolean empty = lineData.getLines().isEmpty();
+            graphView.setVisibility(empty ? View.GONE : View.VISIBLE);
+            graphEmpty.setVisibility(empty ? View.VISIBLE : View.GONE);
+
+            graphView.buildDrawingCache();
+            graphView.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (graphView.getDrawingCache() != null) {
+                        Bitmap bitmap = empty ? null : graphView.getDrawingCache().copy(Bitmap.Config.ARGB_8888, false);
+                        ProjectPreviewSaver.savePreviewAsync(projectModel.getUid(), bitmap);
+                    }
+                }
+            });
         }
 
         @Override
-        protected LineData doInBackend(RealmHelper realmHelper, ProjectModel... params) {
-            //// FIXME: 14.04.2016 сохранение масштаба с разными датасетами
-            //// x1[1.0;   1.2 ] delta = 0.2
-            //// x2[1.15,  1.25] delta = 0.2
-            //// x2[1.03,  1.5]
-            List<Float> xValues = getXValues(params[0].getDataSets());
-            LineData lineData = new LineData(convertFloatToString(xValues));
+        protected LineChartData doInBackend(RealmHelper realmHelper, ProjectModel... params) {
+            ProjectModel project = params[0];
+            List<Line> lines = new ArrayList<>();
+            for (DataSetModel dataSetModel : project.getDataSets()) {
+                if (!dataSetModel.isChecked()) continue;
 
-            for (DataSetModel dataSetModel : params[0].getDataSets()) {
-                if (dataSetModel.isChecked()) {
-                    List<Entry> entries = new ArrayList<>();
-                    for (CoordinateModel coordinateModel : dataSetModel.getCoordinates()) {
-
-                        for (int i = 0; i < xValues.size(); i++) {
-                            if (xValues.get(i) == coordinateModel.getX()) {
-                                entries.add(new Entry(coordinateModel.getY(), i));
-                            }
-                        }
-                    }
-
-                    LineDataSet dataSet = new LineDataSet(entries, dataSetModel.getPrimary());
-                    dataSet.setColor(dataSetModel.getColor());
-                    dataSet.setDrawCircles(dataSetModel.isDrawCircle());
-                    dataSet.setCircleColor(dataSet.getColor());
-                    lineData.addDataSet(dataSet);
-                }
-            }
-            return lineData;
-        }
-
-
-        public List<Float> getXValues(List<DataSetModel> dataSetModels) {
-            List<Float> xValues = new ArrayList<>();
-            for (DataSetModel dataSetModel : dataSetModels) {
-                List<Float> extXValues = new ArrayList<>();
+                List<PointValue> values = new ArrayList<>();
                 for (CoordinateModel coordinateModel : dataSetModel.getCoordinates()) {
-                    extXValues.add(coordinateModel.getX());
+                    values.add(new PointValue(coordinateModel.getX(), coordinateModel.getY()));
                 }
-                xValues.removeAll(extXValues);
-                xValues.addAll(extXValues);
+                lines.add(new Line(values)
+                        .setColor(dataSetModel.getColor())
+                        .setStrokeWidth(Utils.dpToPx(dataSetModel.getLineWidth()))
+                        .setPointColor(dataSetModel.getColor())
+                        .setPointRadius(Utils.dpToPx(dataSetModel.getPointsRadius()))
+                        .setHasPoints(dataSetModel.isDrawPoints())
+                        .setHasLabels(dataSetModel.isDrawPointsLabel())
+                        .setHasLabelsOnlyForSelected(!dataSetModel.isDrawPointsLabel())
+                        .setHasLines(dataSetModel.isDrawLine())
+                        .setCubic(dataSetModel.isCubicCurve())
+                );
             }
-            Collections.sort(xValues);
-            return xValues;
-        }
 
-        public List<String> convertFloatToString(List<Float> list) {
-            List<String> listString = new ArrayList<>();
-            for (Float f : list) {
-                listString.add(String.valueOf(f));
-            }
-            return listString;
+            LineChartData lineData = new LineChartData(lines);
+            lineData.setAxisXBottom(new Axis()
+                    .setName(project.getParams().getXAxisTitle())
+                    .setHasSeparationLine(project.getParams().isDrawAxis())
+                    .setAutoGenerated(project.getParams().isDrawAxis())
+                    .setHasLines(true)
+                    .setLineColor(project.getParams().getColorGrid())
+                    .setTextColor(Color.GRAY)
+            );
+            lineData.setAxisYLeft(new Axis()
+                    .setName(project.getParams().getYAxisTitle())
+                    .setHasSeparationLine(project.getParams().isDrawAxis())
+                    .setAutoGenerated(project.getParams().isDrawAxis())
+                    .setHasLines(true)
+                    .setLineColor(project.getParams().getColorGrid())
+                    .setTextColor(Color.GRAY)
+            );
+            return lineData;
         }
     }
 }

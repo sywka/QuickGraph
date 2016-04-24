@@ -5,7 +5,7 @@
     android:orientation="vertical">
 
     <android.support.design.widget.TextInputLayout
-        android:id="@+id/dialog_edit_data_set_function"
+        android:id="@+id/edit_data_set_function"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -25,7 +25,7 @@
         android:weightSum="3.0">
 
         <android.support.design.widget.TextInputLayout
-            android:id="@+id/dialog_edit_data_set_function_from"
+            android:id="@+id/edit_data_set_function_from"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1.0">
@@ -41,7 +41,7 @@
         </android.support.design.widget.TextInputLayout>
 
         <android.support.design.widget.TextInputLayout
-            android:id="@+id/dialog_edit_data_set_function_to"
+            android:id="@+id/edit_data_set_function_to"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1.0">
@@ -57,7 +57,7 @@
         </android.support.design.widget.TextInputLayout>
 
         <android.support.design.widget.TextInputLayout
-            android:id="@+id/dialog_edit_data_set_function_delta"
+            android:id="@+id/edit_data_set_function_delta"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1.0">

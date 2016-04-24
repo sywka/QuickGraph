@@ -40,7 +40,7 @@ public class ProjectListAdapter extends BaseRealmSimpleAdapter<ProjectModel, Pro
             holder.previewImage.setImageDrawable(new BitmapDrawable(holder.itemView.getResources(),
                     BitmapFactory.decodeByteArray(b, 0, b.length)));
         } else {
-            holder.previewImage.setImageResource(R.drawable.ic_add_white_24dp);
+            holder.previewImage.setImageResource(R.drawable.ic_empty_preview_white_24dp);
         }
     }
 

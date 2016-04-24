@@ -9,7 +9,6 @@ import java.util.Date;
 import io.realm.Realm;
 import io.realm.RealmList;
 import io.realm.RealmObject;
-import io.realm.annotations.Ignore;
 import io.realm.annotations.PrimaryKey;
 import io.realm.annotations.Required;
 
@@ -54,10 +53,10 @@ public class ProjectModel extends RealmObject implements ObjectWithUID, Serializ
     }
 
     @Override
-    public void removeFromRealm() {
-        if (params != null) params.removeFromRealm();
+    public void deleteFromRealm() {
+        if (params != null) params.deleteFromRealm();
         dataSets.deleteAllFromRealm();
-        super.removeFromRealm();
+        super.deleteFromRealm();
     }
 
     // generated getters

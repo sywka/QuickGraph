@@ -3,15 +3,15 @@
     package="com.lom.quickgraph">
 
     <application
-        android:name="com.lom.quickgraph.App"
+        android:name=".App"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+
         <activity
             android:name=".activity.ProjectActivity"
-            android:label="@string/activity_project"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -23,6 +23,10 @@
             android:name=".activity.DataSetActivity"
             android:label="@string/activity_data_set_list"
             android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".activity.EditActivity"
+            android:theme="@style/AppTheme.NoActionBar" />
+
     </application>
 
 </manifest>

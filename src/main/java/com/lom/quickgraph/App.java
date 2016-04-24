@@ -4,7 +4,6 @@ import android.app.Application;
 import android.content.Context;
 
 import com.lom.quickgraph.etc.Config;
-import com.lom.quickgraph.etc.DataBaseMigration;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;

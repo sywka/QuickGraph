@@ -16,7 +16,10 @@ import io.realm.annotations.Required;
 
 public class DataSetModel extends RealmObject implements ObjectWithUID, Serializable {
 
-    public enum Type {UNKNOWN, FROM_FUNCTION, FROM_FILE}
+    public static final float MAX_LINE_WIDTH = 5f;
+    public static final float MAX_POINTS_RADIUS = 5f;
+
+    public enum Type {UNKNOWN, FROM_FUNCTION, FROM_TABLE}
 
     @PrimaryKey
     private long uid;
@@ -29,7 +32,17 @@ public class DataSetModel extends RealmObject implements ObjectWithUID, Serializ
 
     private int color;
 
-    private boolean drawCircle;
+    private float lineWidth;
+
+    private boolean drawLine;
+
+    private boolean drawPoints;
+
+    private boolean drawPointsLabel;
+
+    private float pointsRadius;
+
+    private boolean cubicCurve;
 
     private boolean checked;
 
@@ -43,7 +56,12 @@ public class DataSetModel extends RealmObject implements ObjectWithUID, Serializ
         primary = App.getContext().getString(R.string.data_set);
         secondary = "";
         color = Color.BLUE;
-        drawCircle = false;
+        lineWidth = 0.5f;
+        drawLine = true;
+        drawPoints = false;
+        drawPointsLabel = false;
+        pointsRadius = 1f;
+        cubicCurve = false;
         checked = true;
         typeIndex = Type.UNKNOWN.ordinal();
     }
@@ -67,15 +85,15 @@ public class DataSetModel extends RealmObject implements ObjectWithUID, Serializ
     }
 
     @Override
-    public void removeFromRealm() {
-        if (functionRange != null) functionRange.removeFromRealm();
+    public void deleteFromRealm() {
+        if (functionRange != null) functionRange.deleteFromRealm();
         coordinates.deleteAllFromRealm();
-        super.removeFromRealm();
+        super.deleteFromRealm();
     }
 
     public String getSecondaryExtended() {
         switch (getType()) {
-            case FROM_FILE:
+            case FROM_TABLE:
                 return App.getContext().getString(R.string.file_is, secondary);
             case FROM_FUNCTION:
                 return App.getContext().getString(R.string.function_is, secondary);
@@ -125,12 +143,61 @@ public class DataSetModel extends RealmObject implements ObjectWithUID, Serializ
         return this;
     }
 
-    public boolean isDrawCircle() {
-        return drawCircle;
+    public float getLineWidth() {
+        if (Float.compare(lineWidth, MAX_LINE_WIDTH) == 1) lineWidth = MAX_LINE_WIDTH;
+        return lineWidth;
     }
 
-    public DataSetModel setDrawCircle(boolean drawCircle) {
-        this.drawCircle = drawCircle;
+    public DataSetModel setLineWidth(float lineWidth) {
+        if (Float.compare(lineWidth, MAX_LINE_WIDTH) == 1) throw new IllegalArgumentException();
+        this.lineWidth = lineWidth;
+        return this;
+    }
+
+    public boolean isDrawLine() {
+        return drawLine;
+    }
+
+    public DataSetModel setDrawLine(boolean drawLine) {
+        this.drawLine = drawLine;
+        return this;
+    }
+
+    public boolean isDrawPoints() {
+        return drawPoints;
+    }
+
+    public DataSetModel setDrawPoints(boolean drawPoints) {
+        this.drawPoints = drawPoints;
+        return this;
+    }
+
+    public boolean isDrawPointsLabel() {
+        return drawPointsLabel;
+    }
+
+    public DataSetModel setDrawPointsLabel(boolean drawPointsLabel) {
+        this.drawPointsLabel = drawPointsLabel;
+        return this;
+    }
+
+    public float getPointsRadius() {
+        if (Float.compare(pointsRadius, MAX_POINTS_RADIUS) == 1) pointsRadius = MAX_POINTS_RADIUS;
+        return pointsRadius;
+    }
+
+    public DataSetModel setPointsRadius(float pointsRadius) {
+        if (Float.compare(pointsRadius, MAX_POINTS_RADIUS) == 1) throw new IllegalArgumentException();
+        this.pointsRadius = pointsRadius;
+        return this;
+    }
+
+    public boolean isCubicCurve() {
+        return cubicCurve;
+    }
+
+    public DataSetModel setCubicCurve(boolean cubicCurve) {
+        this.cubicCurve = cubicCurve;
         return this;
     }
 

@@ -17,7 +17,7 @@ public abstract class BaseRealmSimpleAdapter<ItemType extends RealmObject & Obje
         return getItem(position).getUid();
     }
 
-    public int getPositionById(long id) {
+    public int getItemPosition(long id) {
         for (int i = 0; i < getItemCount(); i++) {
             if (getItemId(i) == id) return i;
         }

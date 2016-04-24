@@ -2,9 +2,12 @@ package com.lom.quickgraph.etc;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.DisplayMetrics;
 
+import com.lom.quickgraph.App;
 import com.lom.quickgraph.activity.BaseActivity;
 import com.lom.quickgraph.model.CoordinateModel;
 
@@ -14,10 +17,32 @@ import io.realm.RealmList;
 
 public abstract class Utils {
 
-    public static <T extends BaseActivity> Intent putLong(Context context, Class<T> cl, long uid) {
-        Intent intent = new Intent(context, cl);
+    private static Context context = App.getContext();
+
+    public static int dpToPx(float dp) {
+        Resources resources = context.getResources();
+        DisplayMetrics metrics = resources.getDisplayMetrics();
+        int px = (int) (dp * ((float) metrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT));
+        return px;
+    }
+
+    public static float pxToDp(int px) {
+        Resources resources = context.getResources();
+        DisplayMetrics metrics = resources.getDisplayMetrics();
+        float dp = px / ((float) metrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT);
+        return dp;
+    }
+
+    public static <T extends BaseActivity> Intent putLong(Intent intent, long uid) {
         Bundle bundle = new Bundle();
         bundle.putLong(Config.TAG_LONG, uid);
+        intent.putExtras(bundle);
+        return intent;
+    }
+
+    public static Intent putBoolean(Intent intent, boolean bool) {
+        Bundle bundle = new Bundle();
+        bundle.putBoolean(Config.TAG_BOOLEAN, bool);
         intent.putExtras(bundle);
         return intent;
     }
@@ -26,15 +51,32 @@ public abstract class Utils {
         return activity.getIntent().getExtras().getLong(Config.TAG_LONG, -1);
     }
 
+    public static <T extends BaseActivity> boolean getBoolean(T activity) {
+        return activity.getIntent().getExtras().getBoolean(Config.TAG_BOOLEAN, false);
+    }
+
     public static <T extends Fragment> T putLong(T fragment, long uid) {
         Bundle bundle = new Bundle();
+        if (fragment.getArguments() != null) bundle = fragment.getArguments();
         bundle.putLong(Config.TAG_LONG, uid);
+        fragment.setArguments(bundle);
+        return fragment;
+    }
+
+    public static <T extends Fragment> T putBoolean(T fragment, boolean bool) {
+        Bundle bundle = new Bundle();
+        if (fragment.getArguments() != null) bundle = fragment.getArguments();
+        bundle.putBoolean(Config.TAG_BOOLEAN, bool);
         fragment.setArguments(bundle);
         return fragment;
     }
 
     public static long getLong(Fragment fragment) {
         return fragment.getArguments().getLong(Config.TAG_LONG, -1);
+    }
+
+    public static boolean getBoolean(Fragment fragment) {
+        return fragment.getArguments().getBoolean(Config.TAG_BOOLEAN, false);
     }
 
     public static boolean checkSyntaxExpression(String exp) {

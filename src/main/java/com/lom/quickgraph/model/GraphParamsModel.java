@@ -15,17 +15,23 @@ public class GraphParamsModel extends RealmObject implements ObjectWithUID, Seri
 
     private int colorGrid;
 
-    private boolean drawAxisLabel;
+    private String xAxisTitle;
+
+    private String yAxisTitle;
+
+    private boolean drawAxis;
 
     private boolean drawLegend;
 
     private boolean fitScreen;
 
     public GraphParamsModel() {
-        colorGrid = Color.BLACK;
-        drawAxisLabel = true;
+        colorGrid = Color.GRAY;
+        drawAxis = true;
         drawLegend = true;
         fitScreen = true;
+        xAxisTitle = "X";
+        yAxisTitle = "Y";
     }
 
     public GraphParamsModel copyToRealm(Realm realm) {
@@ -48,6 +54,24 @@ public class GraphParamsModel extends RealmObject implements ObjectWithUID, Seri
         return this;
     }
 
+    public String getXAxisTitle() {
+        return xAxisTitle;
+    }
+
+    public GraphParamsModel setXAxisTitle(String xAxisTitle) {
+        this.xAxisTitle = xAxisTitle;
+        return this;
+    }
+
+    public String getYAxisTitle() {
+        return yAxisTitle;
+    }
+
+    public GraphParamsModel setYAxisTitle(String yAxisTitle) {
+        this.yAxisTitle = yAxisTitle;
+        return this;
+    }
+
     public int getColorGrid() {
         return colorGrid;
     }
@@ -57,12 +81,12 @@ public class GraphParamsModel extends RealmObject implements ObjectWithUID, Seri
         return this;
     }
 
-    public boolean isDrawAxisLabel() {
-        return drawAxisLabel;
+    public boolean isDrawAxis() {
+        return drawAxis;
     }
 
-    public GraphParamsModel setDrawAxisLabel(boolean drawAxisLabel) {
-        this.drawAxisLabel = drawAxisLabel;
+    public GraphParamsModel setDrawAxis(boolean drawAxis) {
+        this.drawAxis = drawAxis;
         return this;
     }
 

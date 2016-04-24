@@ -1,6 +1,5 @@
 package com.lom.quickgraph.fragment;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Rect;
 import android.os.Bundle;
@@ -28,14 +27,14 @@ import com.lom.quickgraph.R;
 import com.lom.quickgraph.activity.DataSetActivity;
 import com.lom.quickgraph.adapter.BaseSimpleAdapter;
 import com.lom.quickgraph.adapter.ProjectListAdapter;
+import com.lom.quickgraph.etc.ProgressAsyncRealmTask;
+import com.lom.quickgraph.etc.RealmHelper;
+import com.lom.quickgraph.etc.Utils;
 import com.lom.quickgraph.model.DataSetModel;
 import com.lom.quickgraph.model.FunctionRangeModel;
 import com.lom.quickgraph.model.GraphParamsModel;
 import com.lom.quickgraph.model.ProjectModel;
 import com.lom.quickgraph.ui.AutofitRecyclerView;
-import com.lom.quickgraph.etc.ProgressAsyncRealmTask;
-import com.lom.quickgraph.etc.RealmHelper;
-import com.lom.quickgraph.etc.Utils;
 
 import java.util.List;
 
@@ -46,9 +45,9 @@ import io.realm.Sort;
 
 public class ProjectListFragment extends BaseFragment {
 
-    private static final int REQUEST_CODE_OPEN_PROJECT = 0;
-
     private RealmHelper realmHelper;
+    private RealmResults<ProjectModel> projectModels;
+    private RealmChangeListener projectChangeListener;
 
     private AutofitRecyclerView recyclerView;
     private ProjectListAdapter adapter;
@@ -74,26 +73,19 @@ public class ProjectListFragment extends BaseFragment {
     public void onDestroyView() {
         super.onDestroyView();
 
+        if (projectModels != null && projectChangeListener != null) {
+            projectModels.removeChangeListener(projectChangeListener);
+        }
         realmHelper.closeRealm();
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_CODE_OPEN_PROJECT) {
-            if (resultCode == Activity.RESULT_OK) {
-                adapter.notifyDataSetChanged();
-            }
-        }
-    }
 
     private void loadData() {
-        final RealmResults<ProjectModel> projectModels = realmHelper.findResultsAsync(ProjectModel.class, Sort.DESCENDING);
-        projectModels.addChangeListener(new RealmChangeListener() {
+        projectModels = realmHelper.findResultsAsync(ProjectModel.class, Sort.DESCENDING);
+        projectModels.addChangeListener(projectChangeListener = new RealmChangeListener() {
             @Override
             public void onChange() {
                 if (projectModels.isLoaded()) {
-                    projectModels.removeChangeListener(this);
                     adapter.setItems(projectModels);
                 }
             }
@@ -136,7 +128,7 @@ public class ProjectListFragment extends BaseFragment {
             @Override
             public void onClick(View view, ProjectModel item, ProjectListAdapter.ItemVH itemVH) {
                 dismissSnackBar();
-                startActivityForResult(Utils.putLong(getContext(), DataSetActivity.class, item.getUid()), REQUEST_CODE_OPEN_PROJECT);
+                startActivity(Utils.putLong(new Intent(getContext(), DataSetActivity.class), item.getUid()));
             }
         });
 
@@ -188,7 +180,6 @@ public class ProjectListFragment extends BaseFragment {
                                                 .setParams(graphParamsModel)
                                                 .copyToRealm(realmHelper.getRealm());
 
-                                        adapter.notifyDataSetChanged();
                                         recyclerView.scrollToPosition(0);
                                     }
                                 });
@@ -224,12 +215,11 @@ public class ProjectListFragment extends BaseFragment {
         realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                adapter.getItem(position).removeFromRealm();
-                adapter.notifyDataSetChanged();
+                adapter.getItem(position).deleteFromRealm();
             }
         });
 
-        snackbar = Snackbar.make(getView(), getString(R.string.project_remove, projectModel.getName()), Snackbar.LENGTH_LONG)
+        snackbar = Snackbar.make(recyclerView, getString(R.string.project_remove, projectModel.getName()), Snackbar.LENGTH_LONG)
                 .setAction(R.string.action_undo, new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -238,8 +228,6 @@ public class ProjectListFragment extends BaseFragment {
                                 @Override
                                 public void execute(Realm realm) {
                                     realmHelper.getRealm().copyToRealmOrUpdate(projectModel);
-                                    adapter.notifyDataSetChanged();
-                                    recyclerView.scrollToPosition(position);
                                 }
                             });
                         }
@@ -257,12 +245,11 @@ public class ProjectListFragment extends BaseFragment {
         realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                adapter.getItems().clear();
-                adapter.notifyDataSetChanged();
+                ((RealmResults<ProjectModel>) adapter.getItems()).deleteAllFromRealm();
             }
         });
 
-        snackbar = Snackbar.make(getView(), getString(R.string.project_remove_all, projectModels.size()), Snackbar.LENGTH_LONG)
+        snackbar = Snackbar.make(recyclerView, getString(R.string.project_remove_all, projectModels.size()), Snackbar.LENGTH_LONG)
                 .setAction(R.string.action_undo, new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -271,7 +258,6 @@ public class ProjectListFragment extends BaseFragment {
                                 @Override
                                 public void execute(Realm realm) {
                                     realmHelper.getRealm().copyToRealmOrUpdate(projectModels);
-                                    adapter.notifyDataSetChanged();
                                 }
                             });
                         }
@@ -295,7 +281,7 @@ public class ProjectListFragment extends BaseFragment {
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
 
-            adapter.notifyItemInserted(0);
+            realmHelper.getRealm().refresh();
             recyclerView.scrollToPosition(0);
         }
 

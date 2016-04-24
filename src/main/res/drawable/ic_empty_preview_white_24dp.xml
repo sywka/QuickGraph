@@ -1,0 +1,39 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportHeight="54187.0"
+    android:viewportWidth="54187.0">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M10100,15230l3816,-4785 3686,4785 -2562,-6 -21,23223 25864,-11 65,-2587 4979,3881 -5044,3557 5,-2590c-8613,-2 -17226,-3 -25840,-4 -1420,-90 -2160,-837 -2244,-2217l0,-23252 -2704,6z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M27093,27093L27093,27093" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M16399,32306l0,-2646l3557,-3492l4850,5820l4269,-5109l4397,1035l5756,-4075l388,0l0,2646l-388,0l-5756,4075l-4397,-1035l-4269,5109l-4850,-5821z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M39675,28460l-388,0l-5756,4075l-4397,-1035l-4269,5109l-4850,-5821l-3557,3493l0,3462l23217,0z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M16399,27808l5,-794l3557,-3492l4851,5820l4268,-5109l4398,1035l262,15l5494,-4090l388,0l-6,794l-388,0l-5756,4075l-4397,-1035l-4269,5109l-4850,-5821z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M16401,27411m-761,0a761,761 0,1 1,1522 0a761,761 0,1 1,-1522 0" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M19956,24057m-761,0a761,761 0,1 1,1522 0a761,761 0,1 1,-1522 0" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M24772,29613m-761,0a761,761 0,1 1,1522 0a761,761 0,1 1,-1522 0" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M29203,24653m-761,0a761,761 0,1 1,1522 0a761,761 0,1 1,-1522 0" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M33820,25552m-761,0a761,761 0,1 1,1522 0a761,761 0,1 1,-1522 0" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M39410,21769m-761,0a761,761 0,1 1,1522 0a761,761 0,1 1,-1522 0" />
+</vector>
