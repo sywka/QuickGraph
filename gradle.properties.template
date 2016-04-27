@@ -1,0 +1,6 @@
+# Move this to your gradle.properties with real data
+RELEASE_STORE_FILE=/path/to/your/keystore.release
+RELEASE_STORE_PASSWORD=pass
+RELEASE_KEY_ALIAS=alias
+RELEASE_KEY_PASSWORD=pass
+OUTPUT_DIR=

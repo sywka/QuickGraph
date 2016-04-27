@@ -34,7 +34,7 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <com.lom.quickgraph.ui.BackEditText
+                <com.shlom.solutions.quickgraph.ui.BackEditText
                     android:id="@+id/project_list_item_primary_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

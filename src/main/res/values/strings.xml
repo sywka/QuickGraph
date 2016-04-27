@@ -6,7 +6,7 @@
     <string name="activity_data_set_list">DataSets</string>
     <string name="activity_graph">Graphic</string>
 
-    <string name="fab_scrolling_view_behavior" translatable="false">com.lom.quickgraph.ui.ScrollingFABBehavior</string>
+    <string name="fab_scrolling_view_behavior" translatable="false">com.shlom.solutions.quickgraph.ui.ScrollingFABBehavior</string>
 
     <string name="action_settings">Settings</string>
     <string name="action_remove_all">Clear</string>

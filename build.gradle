@@ -4,7 +4,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.0.0'
+        classpath 'com.android.tools.build:gradle:2.1.0'
         classpath "io.realm:realm-gradle-plugin:0.89.0"
     }
 }
@@ -14,21 +14,42 @@ apply plugin: 'realm-android'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "23.0.2"
-
+    buildToolsVersion "23.0.3"
     defaultConfig {
-        applicationId "com.lom.quckgraph"
+        applicationId "com.shlom.solutions.quckgraph"
         minSdkVersion 14
         targetSdkVersion 23
         versionCode 1
-        versionName "1.0"
+        versionName "0.1a"
 
         vectorDrawables.useSupportLibrary = true
+    }
+    signingConfigs {
+        release {
+            storeFile file(RELEASE_STORE_FILE)
+            storePassword RELEASE_STORE_PASSWORD
+            keyAlias RELEASE_KEY_ALIAS
+            keyPassword RELEASE_KEY_PASSWORD
+            applicationVariants.all { variant ->
+                variant.outputs.each { output ->
+                    def outputFile = output.outputFile
+                    if (outputFile != null && outputFile.name.endsWith('.apk')) {
+                        String parent = outputFile.parent
+                        if (project.hasProperty('OUTPUT_DIR') && new File((String) OUTPUT_DIR).exists())
+                            parent = OUTPUT_DIR
+
+                        def fileName = outputFile.name.replace('.apk', "-\u0024{versionName}-build-\u0024{versionCode}.apk")
+                        output.outputFile = new File(parent, fileName)
+                    }
+                }
+            }
+        }
     }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
 }
