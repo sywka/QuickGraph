@@ -1,4 +1,6 @@
-package com.shlom.solutions.quickgraph.model;
+package com.shlom.solutions.quickgraph.database.model;
+
+import com.shlom.solutions.quickgraph.database.ObjectWithUID;
 
 import java.io.Serializable;
 

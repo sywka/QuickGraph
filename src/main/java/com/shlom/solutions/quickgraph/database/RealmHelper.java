@@ -1,9 +1,7 @@
-package com.shlom.solutions.quickgraph.etc;
+package com.shlom.solutions.quickgraph.database;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-
-import com.shlom.solutions.quickgraph.model.ObjectWithUID;
 
 import io.realm.Realm;
 import io.realm.RealmObject;

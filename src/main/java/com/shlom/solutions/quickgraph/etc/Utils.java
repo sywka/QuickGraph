@@ -9,7 +9,8 @@ import android.util.DisplayMetrics;
 
 import com.shlom.solutions.quickgraph.App;
 import com.shlom.solutions.quickgraph.activity.BaseActivity;
-import com.shlom.solutions.quickgraph.model.CoordinateModel;
+import com.shlom.solutions.quickgraph.database.RealmHelper;
+import com.shlom.solutions.quickgraph.database.model.CoordinateModel;
 
 import org.mariuszgromada.math.mxparser.Expression;
 

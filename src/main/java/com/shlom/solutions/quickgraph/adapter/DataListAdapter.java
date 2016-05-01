@@ -7,7 +7,7 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 
 import com.shlom.solutions.quickgraph.R;
-import com.shlom.solutions.quickgraph.model.DataSetModel;
+import com.shlom.solutions.quickgraph.database.model.DataSetModel;
 
 public class DataListAdapter extends BaseRealmSimpleAdapter<DataSetModel, DataListAdapter.ItemVH> {
 

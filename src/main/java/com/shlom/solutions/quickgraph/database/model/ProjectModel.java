@@ -1,7 +1,10 @@
-package com.shlom.solutions.quickgraph.model;
+package com.shlom.solutions.quickgraph.database.model;
 
 import com.shlom.solutions.quickgraph.App;
 import com.shlom.solutions.quickgraph.R;
+import com.shlom.solutions.quickgraph.database.ObjectWithUID;
+import com.shlom.solutions.quickgraph.etc.FileCacheHelper;
+import com.shlom.solutions.quickgraph.etc.LogUtil;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -22,7 +25,7 @@ public class ProjectModel extends RealmObject implements ObjectWithUID, Serializ
     @Required
     private Date date;
 
-    private byte[] preview;
+    private String previewFileName;
 
     private GraphParamsModel params;
 
@@ -52,11 +55,17 @@ public class ProjectModel extends RealmObject implements ObjectWithUID, Serializ
         return this;
     }
 
-    @Override
-    public void deleteFromRealm() {
+    public void deleteDependentsFromRealm() {
         if (params != null) params.deleteFromRealm();
-        dataSets.deleteAllFromRealm();
-        super.deleteFromRealm();
+        if (dataSets != null) {
+            for (DataSetModel dataSetModel : dataSets) {
+                dataSetModel.deleteDependentsFromRealm();
+            }
+            dataSets.deleteAllFromRealm();
+        }
+        if (previewFileName != null) {
+            LogUtil.d(FileCacheHelper.getImageCache(previewFileName).delete());
+        }
     }
 
     // generated getters
@@ -89,12 +98,12 @@ public class ProjectModel extends RealmObject implements ObjectWithUID, Serializ
         return this;
     }
 
-    public byte[] getPreview() {
-        return preview;
+    public String getPreviewFileName() {
+        return previewFileName;
     }
 
-    public ProjectModel setPreview(byte[] preview) {
-        this.preview = preview;
+    public ProjectModel setPreviewFileName(String previewFileName) {
+        this.previewFileName = previewFileName;
         return this;
     }
 

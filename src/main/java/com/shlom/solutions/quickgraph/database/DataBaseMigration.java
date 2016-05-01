@@ -1,4 +1,4 @@
-package com.shlom.solutions.quickgraph.etc;
+package com.shlom.solutions.quickgraph.database;
 
 import io.realm.DynamicRealm;
 import io.realm.RealmMigration;

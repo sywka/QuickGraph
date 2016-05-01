@@ -1,10 +1,11 @@
-package com.shlom.solutions.quickgraph.model;
+package com.shlom.solutions.quickgraph.database.model;
 
 import android.graphics.Color;
 import android.support.annotation.ColorInt;
 
 import com.shlom.solutions.quickgraph.App;
 import com.shlom.solutions.quickgraph.R;
+import com.shlom.solutions.quickgraph.database.ObjectWithUID;
 
 import java.io.Serializable;
 
@@ -84,11 +85,9 @@ public class DataSetModel extends RealmObject implements ObjectWithUID, Serializ
         return this;
     }
 
-    @Override
-    public void deleteFromRealm() {
+    public void deleteDependentsFromRealm() {
         if (functionRange != null) functionRange.deleteFromRealm();
-        coordinates.deleteAllFromRealm();
-        super.deleteFromRealm();
+        if (coordinates != null) coordinates.deleteAllFromRealm();
     }
 
     public String getSecondaryExtended() {

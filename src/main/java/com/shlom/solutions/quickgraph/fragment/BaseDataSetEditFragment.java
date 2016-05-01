@@ -19,13 +19,13 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.shlom.solutions.quickgraph.R;
-import com.shlom.solutions.quickgraph.etc.RealmHelper;
+import com.shlom.solutions.quickgraph.database.RealmHelper;
 import com.shlom.solutions.quickgraph.etc.Utils;
 import com.shlom.solutions.quickgraph.fragment.dialog.ColorPickerDialogFragment;
-import com.shlom.solutions.quickgraph.model.CoordinateModel;
-import com.shlom.solutions.quickgraph.model.DataSetModel;
-import com.shlom.solutions.quickgraph.model.FunctionRangeModel;
-import com.shlom.solutions.quickgraph.model.ProjectModel;
+import com.shlom.solutions.quickgraph.database.model.CoordinateModel;
+import com.shlom.solutions.quickgraph.database.model.DataSetModel;
+import com.shlom.solutions.quickgraph.database.model.FunctionRangeModel;
+import com.shlom.solutions.quickgraph.database.model.ProjectModel;
 import com.shlom.solutions.quickgraph.ui.AutofitRecyclerView;
 import com.shlom.solutions.quickgraph.ui.OnSeekBarChangeListener;
 import com.shlom.solutions.quickgraph.ui.TextWatcher;

@@ -22,18 +22,19 @@ import android.widget.ProgressBar;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.shlom.solutions.quickgraph.R;
+import com.shlom.solutions.quickgraph.database.RealmHelper;
+import com.shlom.solutions.quickgraph.database.model.CoordinateModel;
+import com.shlom.solutions.quickgraph.database.model.DataSetModel;
+import com.shlom.solutions.quickgraph.database.model.ProjectModel;
 import com.shlom.solutions.quickgraph.etc.AsyncRealmTask;
-import com.shlom.solutions.quickgraph.etc.ProjectPreviewSaver;
-import com.shlom.solutions.quickgraph.etc.RealmHelper;
+import com.shlom.solutions.quickgraph.etc.FileCacheHelper;
 import com.shlom.solutions.quickgraph.etc.Utils;
 import com.shlom.solutions.quickgraph.fragment.dialog.ColorPickerDialogFragment;
-import com.shlom.solutions.quickgraph.model.CoordinateModel;
-import com.shlom.solutions.quickgraph.model.DataSetModel;
-import com.shlom.solutions.quickgraph.model.ProjectModel;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import io.realm.Realm;
 import io.realm.RealmChangeListener;
@@ -49,6 +50,8 @@ public class GraphFragment extends BaseFragment implements ColorPickerDialogFrag
     private static final String TAG_CAN_GO_BACK = "can_go_back";
 
     private RealmHelper realmHelper;
+
+    private AsyncCacheCreator cacheCreator;
 
     private PercentFrameLayout graphLayout;
     private ImageView graphEmpty;
@@ -105,7 +108,7 @@ public class GraphFragment extends BaseFragment implements ColorPickerDialogFrag
                 if (projectModel.isLoaded()) {
                     if (projectModel.isValid()) {
                         updateLineChartConfig();
-                        new AsyncUpdater(GraphFragment.this).execute(realmHelper.getRealm().copyFromRealm(projectModel));
+                        new AsyncDataPreparer(GraphFragment.this).execute(realmHelper.getRealm().copyFromRealm(projectModel));
                     }
                 }
             }
@@ -262,9 +265,9 @@ public class GraphFragment extends BaseFragment implements ColorPickerDialogFrag
         return super.onOptionsItemSelected(item);
     }
 
-    private class AsyncUpdater extends AsyncRealmTask<ProjectModel, LineChartData> {
+    private class AsyncDataPreparer extends AsyncRealmTask<ProjectModel, LineChartData> {
 
-        public AsyncUpdater(@NonNull Fragment fragment) {
+        public AsyncDataPreparer(@NonNull Fragment fragment) {
             super(fragment);
         }
 
@@ -274,7 +277,6 @@ public class GraphFragment extends BaseFragment implements ColorPickerDialogFrag
 
             progressBar.setVisibility(View.VISIBLE);
             graphView.getChartData().finish();
-            graphView.destroyDrawingCache();
         }
 
         @Override
@@ -292,10 +294,10 @@ public class GraphFragment extends BaseFragment implements ColorPickerDialogFrag
             graphView.post(new Runnable() {
                 @Override
                 public void run() {
-                    if (graphView.getDrawingCache() != null) {
-                        Bitmap bitmap = empty ? null : graphView.getDrawingCache().copy(Bitmap.Config.ARGB_8888, false);
-                        ProjectPreviewSaver.savePreviewAsync(projectModel.getUid(), bitmap);
-                    }
+                    if (cacheCreator != null) cacheCreator.cancel(true);
+                    cacheCreator = new AsyncCacheCreator(GraphFragment.this);
+                    cacheCreator.execute(projectModel.getUid());
+                    graphView.destroyDrawingCache();
                 }
             });
         }
@@ -342,6 +344,55 @@ public class GraphFragment extends BaseFragment implements ColorPickerDialogFrag
                     .setTextColor(Color.GRAY)
             );
             return lineData;
+        }
+    }
+
+    private class AsyncCacheCreator extends AsyncRealmTask<Long, Void> {
+
+        private Bitmap preview = null;
+
+        public AsyncCacheCreator(@NonNull Fragment fragment) {
+            super(fragment);
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+            if (graphView.getDrawingCache() != null && !graphView.getLineChartData().getLines().isEmpty()) {
+                preview = Bitmap.createBitmap(graphView.getDrawingCache());
+            }
+        }
+
+        @Override
+        protected Void doInBackend(RealmHelper realmHelper, Long... params) {
+            if (isCancelled()) return null;
+
+            final ProjectModel projectModel = realmHelper.findObject(ProjectModel.class, params[0]);
+            if (projectModel == null) return null;
+
+            final String fileName;
+            if (projectModel.getPreviewFileName() == null) {
+                fileName = UUID.randomUUID().toString();
+            } else {
+                fileName = projectModel.getPreviewFileName();
+            }
+
+            Bitmap oldPreview = FileCacheHelper.getImageFromCache(fileName);
+            if ((preview == null && oldPreview == null) ||
+                    (preview != null && preview.sameAs(oldPreview))) return null;
+
+            final boolean isCached = FileCacheHelper.putImageToCache(fileName, preview);
+            realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
+                @Override
+                public void execute(Realm realm) {
+                    if (isCached) projectModel.setPreviewFileName(fileName);
+                    else projectModel.setPreviewFileName(null);
+                }
+            });
+            realmHelper.getRealm().refresh();
+
+            return null;
         }
     }
 }

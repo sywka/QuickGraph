@@ -4,6 +4,8 @@ import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 
+import com.shlom.solutions.quickgraph.database.RealmHelper;
+
 public abstract class AsyncRealmTask<Params, Result> extends AsyncTask<Params, Integer, Result> {
 
     private Fragment fragment;

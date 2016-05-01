@@ -23,17 +23,20 @@ import android.view.ViewGroup;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
+import com.shlom.solutions.quickgraph.App;
 import com.shlom.solutions.quickgraph.R;
 import com.shlom.solutions.quickgraph.activity.DataSetActivity;
 import com.shlom.solutions.quickgraph.adapter.BaseSimpleAdapter;
 import com.shlom.solutions.quickgraph.adapter.ProjectListAdapter;
+import com.shlom.solutions.quickgraph.database.RealmHelper;
+import com.shlom.solutions.quickgraph.database.model.DataSetModel;
+import com.shlom.solutions.quickgraph.database.model.FunctionRangeModel;
+import com.shlom.solutions.quickgraph.database.model.GraphParamsModel;
+import com.shlom.solutions.quickgraph.database.model.ProjectModel;
 import com.shlom.solutions.quickgraph.etc.ProgressAsyncRealmTask;
-import com.shlom.solutions.quickgraph.etc.RealmHelper;
 import com.shlom.solutions.quickgraph.etc.Utils;
-import com.shlom.solutions.quickgraph.model.DataSetModel;
-import com.shlom.solutions.quickgraph.model.FunctionRangeModel;
-import com.shlom.solutions.quickgraph.model.GraphParamsModel;
-import com.shlom.solutions.quickgraph.model.ProjectModel;
 import com.shlom.solutions.quickgraph.ui.AutofitRecyclerView;
 
 import java.util.List;
@@ -57,6 +60,8 @@ public class ProjectListFragment extends BaseFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         realmHelper = new RealmHelper();
+
+        ImageLoader.getInstance().init(new ImageLoaderConfiguration.Builder(App.getContext()).build());
 
         View rootView = inflater.inflate(R.layout.fragment_project_list, container, false);
 
@@ -86,6 +91,7 @@ public class ProjectListFragment extends BaseFragment {
             @Override
             public void onChange() {
                 if (projectModels.isLoaded()) {
+                    ImageLoader.getInstance().clearMemoryCache();
                     adapter.setItems(projectModels);
                 }
             }
@@ -209,12 +215,13 @@ public class ProjectListFragment extends BaseFragment {
     }
 
     private void removeItem(final int position) {
-        if (getView() == null) return;
+        if (getView() == null || adapter.getItemCount() == 0) return;
 
         final ProjectModel projectModel = realmHelper.getRealm().copyFromRealm(adapter.getItem(position));
         realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
+                adapter.getItem(position).deleteDependentsFromRealm();
                 adapter.getItem(position).deleteFromRealm();
             }
         });
@@ -237,14 +244,15 @@ public class ProjectListFragment extends BaseFragment {
     }
 
     private void removeAllItems() {
-        if (getView() == null) return;
-
-        if (adapter.getItemCount() == 0) return;
+        if (getView() == null || adapter.getItemCount() == 0) return;
 
         final List<ProjectModel> projectModels = realmHelper.getRealm().copyFromRealm(adapter.getItems());
         realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
+                for (ProjectModel projectModel : adapter.getItems()) {
+                    projectModel.deleteDependentsFromRealm();
+                }
                 ((RealmResults<ProjectModel>) adapter.getItems()).deleteAllFromRealm();
             }
         });

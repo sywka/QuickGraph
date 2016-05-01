@@ -30,12 +30,12 @@ import com.shlom.solutions.quickgraph.R;
 import com.shlom.solutions.quickgraph.activity.EditActivity;
 import com.shlom.solutions.quickgraph.adapter.BaseSimpleAdapter;
 import com.shlom.solutions.quickgraph.adapter.DataListAdapter;
+import com.shlom.solutions.quickgraph.database.RealmHelper;
+import com.shlom.solutions.quickgraph.database.model.DataSetModel;
+import com.shlom.solutions.quickgraph.database.model.ProjectModel;
 import com.shlom.solutions.quickgraph.etc.LogUtil;
-import com.shlom.solutions.quickgraph.etc.RealmHelper;
 import com.shlom.solutions.quickgraph.etc.Utils;
 import com.shlom.solutions.quickgraph.fragment.dialog.ColorPickerDialogFragment;
-import com.shlom.solutions.quickgraph.model.DataSetModel;
-import com.shlom.solutions.quickgraph.model.ProjectModel;
 import com.shlom.solutions.quickgraph.ui.ArrowAnimator;
 
 import java.util.Date;
@@ -323,12 +323,13 @@ public class DataSetListFragment extends BaseFragment
     }
 
     private void removeItem(final int position) {
-        if (getView() == null) return;
+        if (getView() == null || adapter.getItemCount() == 0) return;
 
         final DataSetModel dataSetModel = realmHelper.getRealm().copyFromRealm(adapter.getItem(position));
         realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
+                adapter.getItem(position).deleteDependentsFromRealm();
                 adapter.getItem(position).deleteFromRealm();
                 updateLastEditDate();
             }
@@ -353,14 +354,15 @@ public class DataSetListFragment extends BaseFragment
     }
 
     private void removeAllItems() {
-        if (getView() == null) return;
-
-        if (adapter.getItemCount() == 0) return;
+        if (getView() == null || adapter.getItemCount() == 0) return;
 
         final List<DataSetModel> dataSetModels = realmHelper.getRealm().copyFromRealm(adapter.getItems());
         realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
+                for (DataSetModel dataSet : adapter.getItems()) {
+                    dataSet.deleteDependentsFromRealm();
+                }
                 ((RealmList<DataSetModel>) adapter.getItems()).deleteAllFromRealm();
                 updateLastEditDate();
             }

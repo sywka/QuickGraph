@@ -1,6 +1,6 @@
 package com.shlom.solutions.quickgraph.adapter;
 
-import com.shlom.solutions.quickgraph.model.ObjectWithUID;
+import com.shlom.solutions.quickgraph.database.ObjectWithUID;
 
 import io.realm.RealmObject;
 

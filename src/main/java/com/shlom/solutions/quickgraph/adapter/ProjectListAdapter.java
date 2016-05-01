@@ -1,8 +1,7 @@
 package com.shlom.solutions.quickgraph.adapter;
 
 import android.content.Context;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,8 +10,12 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 import com.shlom.solutions.quickgraph.R;
-import com.shlom.solutions.quickgraph.model.ProjectModel;
+import com.shlom.solutions.quickgraph.database.model.ProjectModel;
+import com.shlom.solutions.quickgraph.etc.FileCacheHelper;
 import com.shlom.solutions.quickgraph.ui.BackEditText;
 
 import java.text.SimpleDateFormat;
@@ -35,13 +38,19 @@ public class ProjectListAdapter extends BaseRealmSimpleAdapter<ProjectModel, Pro
         holder.primaryText.setText(projectModel.getName());
         holder.secondaryText.setText(context.getString(R.string.project_date, dateFormat.format(projectModel.getDate())));
         holder.counterText.setText(String.valueOf(projectModel.getDataSets().size()));
-        byte[] b = projectModel.getPreview();
-        if (b != null && b.length != 0) {
-            holder.previewImage.setImageDrawable(new BitmapDrawable(holder.itemView.getResources(),
-                    BitmapFactory.decodeByteArray(b, 0, b.length)));
-        } else {
-            holder.previewImage.setImageResource(R.drawable.ic_empty_preview_white_24dp);
-        }
+
+        ImageLoader.getInstance().cancelDisplayTask(holder.previewImage);
+        ImageLoader.getInstance().displayImage(Uri.fromFile(
+                FileCacheHelper.getImageCache(projectModel.getPreviewFileName())).toString(),
+                holder.previewImage,
+                new DisplayImageOptions.Builder()
+                        .showImageOnLoading(R.drawable.ic_empty_preview_white_24dp)
+                        .showImageOnFail(R.drawable.ic_empty_preview_white_24dp)
+                        .cacheInMemory(true)
+                        .delayBeforeLoading(100)
+                        .displayer(new FadeInBitmapDisplayer(300))
+                        .build()
+        );
     }
 
     public OnItemTextChangedListener getOnItemTextChangedListener() {

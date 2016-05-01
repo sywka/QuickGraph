@@ -1,6 +1,8 @@
-package com.shlom.solutions.quickgraph.model;
+package com.shlom.solutions.quickgraph.database.model;
 
 import android.graphics.Color;
+
+import com.shlom.solutions.quickgraph.database.ObjectWithUID;
 
 import java.io.Serializable;
 
