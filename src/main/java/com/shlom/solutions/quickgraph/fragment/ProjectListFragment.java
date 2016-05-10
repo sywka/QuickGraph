@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -50,8 +51,9 @@ public class ProjectListFragment extends BaseFragment {
 
     private RealmHelper realmHelper;
     private RealmResults<ProjectModel> projectModels;
-    private RealmChangeListener projectChangeListener;
+    private RealmChangeListener<RealmResults<ProjectModel>> projectChangeListener;
 
+    private AppBarLayout appBarLayout;
     private AutofitRecyclerView recyclerView;
     private ProjectListAdapter adapter;
     private Snackbar snackbar;
@@ -65,6 +67,7 @@ public class ProjectListFragment extends BaseFragment {
 
         View rootView = inflater.inflate(R.layout.fragment_project_list, container, false);
 
+        appBarLayout = (AppBarLayout) rootView.findViewById(R.id.app_bar_layout);
         setupActivityActionBar((Toolbar) rootView.findViewById(R.id.toolbar), false);
         setupRecyclerView(rootView);
         setupFab(rootView);
@@ -84,12 +87,11 @@ public class ProjectListFragment extends BaseFragment {
         realmHelper.closeRealm();
     }
 
-
     private void loadData() {
         projectModels = realmHelper.findResultsAsync(ProjectModel.class, Sort.DESCENDING);
-        projectModels.addChangeListener(projectChangeListener = new RealmChangeListener() {
+        projectModels.addChangeListener(projectChangeListener = new RealmChangeListener<RealmResults<ProjectModel>>() {
             @Override
-            public void onChange() {
+            public void onChange(RealmResults<ProjectModel> element) {
                 if (projectModels.isLoaded()) {
                     ImageLoader.getInstance().clearMemoryCache();
                     adapter.setItems(projectModels);
@@ -126,7 +128,7 @@ public class ProjectListFragment extends BaseFragment {
 
             @Override
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-                removeItem(viewHolder.getLayoutPosition());
+                removeItem(viewHolder.getAdapterPosition());
             }
         }).attachToRecyclerView(recyclerView);
 
@@ -138,7 +140,12 @@ public class ProjectListFragment extends BaseFragment {
             }
         });
 
-        adapter.setOnItemTextChangedListener(new ProjectListAdapter.OnItemTextChangedListener() {
+        adapter.setOnItemEditorListener(new ProjectListAdapter.OnItemEditorListener() {
+            @Override
+            public void onStartEdit(ProjectListAdapter.ItemVH viewHolder) {
+                appBarLayout.setExpanded(false);
+            }
+
             @Override
             public void onTextChanged(final ProjectModel projectModel, final String str,
                                       ProjectListAdapter.ItemVH viewHolder) {
@@ -148,6 +155,11 @@ public class ProjectListFragment extends BaseFragment {
                         projectModel.setName(str);
                     }
                 });
+            }
+
+            @Override
+            public void onFinishEdit(ProjectListAdapter.ItemVH viewHolder) {
+                appBarLayout.setExpanded(true);
             }
         });
     }
@@ -222,7 +234,7 @@ public class ProjectListFragment extends BaseFragment {
             @Override
             public void execute(Realm realm) {
                 adapter.getItem(position).deleteDependentsFromRealm();
-                adapter.getItem(position).deleteFromRealm();
+                ((RealmResults<ProjectModel>) adapter.getItems()).deleteFromRealm(position);
             }
         });
 
@@ -289,7 +301,6 @@ public class ProjectListFragment extends BaseFragment {
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
 
-            realmHelper.getRealm().refresh();
             recyclerView.scrollToPosition(0);
         }
 

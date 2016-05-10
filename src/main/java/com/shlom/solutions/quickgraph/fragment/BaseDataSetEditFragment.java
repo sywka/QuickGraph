@@ -5,6 +5,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.support.annotation.ColorInt;
 import android.support.annotation.Nullable;
+import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.widget.RecyclerView;
@@ -15,18 +16,20 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.shlom.solutions.quickgraph.R;
 import com.shlom.solutions.quickgraph.database.RealmHelper;
-import com.shlom.solutions.quickgraph.etc.Utils;
-import com.shlom.solutions.quickgraph.fragment.dialog.ColorPickerDialogFragment;
 import com.shlom.solutions.quickgraph.database.model.CoordinateModel;
 import com.shlom.solutions.quickgraph.database.model.DataSetModel;
 import com.shlom.solutions.quickgraph.database.model.FunctionRangeModel;
 import com.shlom.solutions.quickgraph.database.model.ProjectModel;
+import com.shlom.solutions.quickgraph.etc.Utils;
+import com.shlom.solutions.quickgraph.fragment.dialog.ColorPickerDialogFragment;
 import com.shlom.solutions.quickgraph.ui.AutofitRecyclerView;
+import com.shlom.solutions.quickgraph.ui.BackEditText;
 import com.shlom.solutions.quickgraph.ui.OnSeekBarChangeListener;
 import com.shlom.solutions.quickgraph.ui.TextWatcher;
 
@@ -46,6 +49,7 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
     private DataSetModel dataSetModel;
     private DataSetModel standaloneDataSet;
 
+    private AppBarLayout appBarLayout;
     private FloatingActionButton fab;
     private DataSetEditAdapter adapter;
     private View colorView;
@@ -79,7 +83,6 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
 
                 standaloneDataSet = new DataSetModel()
                         .setUid(realmHelper.generateUID(DataSetModel.class))
-                        .setType(DataSetModel.Type.FROM_FUNCTION)
                         .setFunctionRange(functionRangeModel);
                 standaloneDataSet.setPrimary(standaloneDataSet.getPrimary() + " №" + (projectModel.getDataSets().size() + 1));
 
@@ -97,6 +100,7 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
 
         View rootView = inflater.inflate(R.layout.fragment_base_edit_data_set, container, false);
 
+        appBarLayout = (AppBarLayout) rootView.findViewById(R.id.app_bar_layout);
         Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.toolbar);
         setupActivityActionBar(toolbar, true);
         if (getBaseActivity().getSupportActionBar() != null)
@@ -182,6 +186,7 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
                 }
             });
         }
+        setFocusController(titleInput.getEditText());
         colorView = rootView.findViewById(R.id.edit_data_set_color);
         colorView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -202,6 +207,23 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
     private void updateColor() {
         if (colorView != null)
             ((GradientDrawable) colorView.getBackground()).setColor(getStandaloneDataSet().getColor());
+    }
+
+    protected void setFocusController(final EditText editText) {
+        if (editText != null && editText instanceof BackEditText) {
+            editText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+                @Override
+                public void onFocusChange(View v, boolean hasFocus) {
+                    appBarLayout.setExpanded(!hasFocus);
+                }
+            });
+            ((BackEditText) editText).setOnBackPressedListener(new BackEditText.OnBackPressedListener() {
+                @Override
+                public void onBackPressed() {
+                    editText.clearFocus();
+                }
+            });
+        }
     }
 
     private void setupGeneralSection() {
@@ -304,6 +326,10 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
 
     public FloatingActionButton getFab() {
         return fab;
+    }
+
+    public AppBarLayout getAppBarLayout() {
+        return appBarLayout;
     }
 
     public RealmHelper getRealmHelper() {

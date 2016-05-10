@@ -26,6 +26,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.shlom.solutions.quickgraph.R;
 import com.shlom.solutions.quickgraph.activity.EditActivity;
 import com.shlom.solutions.quickgraph.adapter.BaseSimpleAdapter;
@@ -44,6 +45,7 @@ import java.util.List;
 import io.realm.Realm;
 import io.realm.RealmChangeListener;
 import io.realm.RealmList;
+import io.realm.RealmResults;
 
 public class DataSetListFragment extends BaseFragment
         implements ColorPickerDialogFragment.OnColorChangedListener, View.OnKeyListener {
@@ -51,7 +53,7 @@ public class DataSetListFragment extends BaseFragment
     private static final String TAG_GRAPH_FRAGMENT = "graph_fragment";
 
     private RealmHelper realmHelper;
-    private RealmChangeListener projectChangeListener;
+    private RealmChangeListener<ProjectModel> projectChangeListener;
     private ProjectModel projectModel;
 
     private BottomSheetBehavior<FrameLayout> bottomSheetBehavior;
@@ -102,9 +104,9 @@ public class DataSetListFragment extends BaseFragment
 
     private void loadData() {
         projectModel = realmHelper.findObjectAsync(ProjectModel.class, Utils.getLong(this));
-        projectModel.addChangeListener(projectChangeListener = new RealmChangeListener() {
+        projectModel.addChangeListener(projectChangeListener = new RealmChangeListener<ProjectModel>() {
             @Override
-            public void onChange() {
+            public void onChange(ProjectModel element) {
                 if (projectModel.isLoaded()) {
                     if (projectModel.isValid()) {
                         adapter.setItems(projectModel.getDataSets());
@@ -156,7 +158,7 @@ public class DataSetListFragment extends BaseFragment
 
             @Override
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-                removeItem(viewHolder.getLayoutPosition());
+                removeItem(viewHolder.getAdapterPosition());
             }
         }).attachToRecyclerView(recyclerView);
 
@@ -176,7 +178,7 @@ public class DataSetListFragment extends BaseFragment
                     Utils.putLong(new ColorPickerDialogFragment(), item.getColor())
                             .show(getChildFragmentManager(), String.valueOf(item.getUid()));
                 } else {
-                    startActivity(Utils.putLong(new Intent(getContext(), EditActivity.class), item.getUid()));
+                    openEditWindow(item, item.getType());
                 }
             }
         });
@@ -187,11 +189,38 @@ public class DataSetListFragment extends BaseFragment
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getContext(), EditActivity.class);
-                Utils.putBoolean(intent, true);
-                startActivity(Utils.putLong(intent, projectModel.getUid()));
+                new MaterialDialog.Builder(getContext())
+                        .title("Выберите тип данных")
+                        .items(DataSetModel.getTypeName(DataSetModel.Type.FROM_TABLE),
+                                DataSetModel.getTypeName(DataSetModel.Type.FROM_FUNCTION))
+                        .itemsCallback(new MaterialDialog.ListCallback() {
+                            @Override
+                            public void onSelection(MaterialDialog dialog, View itemView, int which, CharSequence text) {
+                                openEditWindow(null, which == 0 ? DataSetModel.Type.FROM_TABLE : DataSetModel.Type.FROM_FUNCTION);
+                            }
+                        })
+                        .show();
             }
         });
+    }
+
+    private void openEditWindow(@Nullable DataSetModel dataSetModel, DataSetModel.Type type) {
+        Intent intent = new Intent(getContext(), EditActivity.class);
+        if (dataSetModel == null) {
+            Utils.putBoolean(intent, true);
+            Utils.putLong(intent, projectModel.getUid());
+        } else {
+            Utils.putLong(intent, dataSetModel.getUid());
+        }
+        switch (type) {
+            case FROM_FUNCTION:
+                Utils.putSerializable(intent, DataSetEditFunctionFragment.class);
+                break;
+            case FROM_TABLE:
+                Utils.putSerializable(intent, DataSetEditTableFragment.class);
+                break;
+        }
+        startActivity(intent);
     }
 
     private void setupBottomSheet(View rootView) {
@@ -330,7 +359,7 @@ public class DataSetListFragment extends BaseFragment
             @Override
             public void execute(Realm realm) {
                 adapter.getItem(position).deleteDependentsFromRealm();
-                adapter.getItem(position).deleteFromRealm();
+                ((RealmList<DataSetModel>) adapter.getItems()).deleteFromRealm(position);
                 updateLastEditDate();
             }
         });

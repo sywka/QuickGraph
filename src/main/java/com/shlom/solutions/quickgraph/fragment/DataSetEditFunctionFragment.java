@@ -10,8 +10,10 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.shlom.solutions.quickgraph.R;
+import com.shlom.solutions.quickgraph.database.model.DataSetModel;
 import com.shlom.solutions.quickgraph.etc.LogUtil;
 import com.shlom.solutions.quickgraph.etc.Utils;
+import com.shlom.solutions.quickgraph.ui.BackEditText;
 import com.shlom.solutions.quickgraph.ui.TextWatcher;
 
 public class DataSetEditFunctionFragment extends BaseDataSetEditFragment {
@@ -20,7 +22,8 @@ public class DataSetEditFunctionFragment extends BaseDataSetEditFragment {
     protected void onCreateView(View rootView, @Nullable Bundle savedInstanceState) {
         super.onCreateView(rootView, savedInstanceState);
 
-        addSection(0, new OnCreateItemCallback() {
+        getStandaloneDataSet().setType(DataSetModel.Type.FROM_FUNCTION);
+        addSection(1, new OnCreateItemCallback() {
             @Override
             public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent) {
                 return new FunctionVH(LayoutInflater.from(parent.getContext())
@@ -59,6 +62,11 @@ public class DataSetEditFunctionFragment extends BaseDataSetEditFragment {
                         });
                     }
                 };
+
+                setFocusController(holder.functionInput.getEditText());
+                setFocusController(holder.functionFromInput.getEditText());
+                setFocusController(holder.functionToInput.getEditText());
+                setFocusController(holder.functionDeltaInput.getEditText());
 
                 setupInput(holder.functionInput, getStandaloneDataSet().getSecondary(), callback);
                 setupInput(holder.functionFromInput, getStandaloneDataSet().getFunctionRange().getFrom(), callback);

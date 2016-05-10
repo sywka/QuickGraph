@@ -6,4 +6,5 @@ public class Config {
 
     public static final String TAG_LONG = "long";
     public static final String TAG_BOOLEAN = "boolean";
+    public static final String TAG_SERIALIZABLE = "serializable";
 }

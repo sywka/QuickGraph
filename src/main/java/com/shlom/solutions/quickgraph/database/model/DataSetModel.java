@@ -93,12 +93,24 @@ public class DataSetModel extends RealmObject implements ObjectWithUID, Serializ
     public String getSecondaryExtended() {
         switch (getType()) {
             case FROM_TABLE:
-                return App.getContext().getString(R.string.file_is, secondary);
+                return App.getContext().getString(R.string.table_is, secondary);
             case FROM_FUNCTION:
                 return App.getContext().getString(R.string.function_is, secondary);
             case UNKNOWN:
             default:
                 return App.getContext().getString(R.string.unknown_is, secondary);
+        }
+    }
+
+    public static String getTypeName(Type type) {
+        switch (type) {
+            case FROM_TABLE:
+                return App.getContext().getString(R.string.data_set_type_from_table);
+            case FROM_FUNCTION:
+                return App.getContext().getString(R.string.data_set_type_from_function);
+            case UNKNOWN:
+            default:
+                return App.getContext().getString(R.string.unknown);
         }
     }
 

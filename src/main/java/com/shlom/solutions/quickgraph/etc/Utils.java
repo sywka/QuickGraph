@@ -14,6 +14,8 @@ import com.shlom.solutions.quickgraph.database.model.CoordinateModel;
 
 import org.mariuszgromada.math.mxparser.Expression;
 
+import java.io.Serializable;
+
 import io.realm.RealmList;
 
 public abstract class Utils {
@@ -48,12 +50,23 @@ public abstract class Utils {
         return intent;
     }
 
+    public static Intent putSerializable(Intent intent, Serializable serializable) {
+        Bundle bundle = new Bundle();
+        bundle.putSerializable(Config.TAG_SERIALIZABLE, serializable);
+        intent.putExtras(bundle);
+        return intent;
+    }
+
     public static <T extends BaseActivity> long getLong(T activity) {
         return activity.getIntent().getExtras().getLong(Config.TAG_LONG, -1);
     }
 
     public static <T extends BaseActivity> boolean getBoolean(T activity) {
         return activity.getIntent().getExtras().getBoolean(Config.TAG_BOOLEAN, false);
+    }
+
+    public static <T extends BaseActivity> Serializable getSerializable(T activity) {
+        return activity.getIntent().getExtras().getSerializable(Config.TAG_SERIALIZABLE);
     }
 
     public static <T extends Fragment> T putLong(T fragment, long uid) {

@@ -24,7 +24,7 @@ import java.util.Locale;
 public class ProjectListAdapter extends BaseRealmSimpleAdapter<ProjectModel, ProjectListAdapter.ItemVH> {
 
     private SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss", Locale.getDefault());
-    private OnItemTextChangedListener onItemTextChangedListener;
+    private OnItemEditorListener onItemEditorListener;
 
     @Override
     public ItemVH onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -53,16 +53,18 @@ public class ProjectListAdapter extends BaseRealmSimpleAdapter<ProjectModel, Pro
         );
     }
 
-    public OnItemTextChangedListener getOnItemTextChangedListener() {
-        return onItemTextChangedListener;
+    public OnItemEditorListener getOnItemEditorListener() {
+        return onItemEditorListener;
     }
 
-    public void setOnItemTextChangedListener(OnItemTextChangedListener onItemTextChangedListener) {
-        this.onItemTextChangedListener = onItemTextChangedListener;
+    public void setOnItemEditorListener(OnItemEditorListener onItemEditorListener) {
+        this.onItemEditorListener = onItemEditorListener;
     }
 
-    public interface OnItemTextChangedListener {
+    public interface OnItemEditorListener {
+        void onStartEdit(ItemVH viewHolder);
         void onTextChanged(ProjectModel projectModel, String str, ItemVH viewHolder);
+        void onFinishEdit(ItemVH viewHolder);
     }
 
     public class ItemVH extends BaseSimpleAdapter.ItemViewHolder {
@@ -84,8 +86,8 @@ public class ProjectListAdapter extends BaseRealmSimpleAdapter<ProjectModel, Pro
                 @Override
                 public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                     if (actionId == EditorInfo.IME_ACTION_DONE) {
-                        if (onItemTextChangedListener != null) {
-                            onItemTextChangedListener.onTextChanged(
+                        if (onItemEditorListener != null) {
+                            onItemEditorListener.onTextChanged(
                                     getItem(getLayoutPosition()), v.getText().toString(), ItemVH.this);
                             primaryText.clearFocus();
                         }
@@ -101,6 +103,13 @@ public class ProjectListAdapter extends BaseRealmSimpleAdapter<ProjectModel, Pro
                         primaryText.setText(getItem(getLayoutPosition()).getName());
                         InputMethodManager imm = (InputMethodManager) primaryText.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                         imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                        if (onItemEditorListener != null) {
+                            onItemEditorListener.onFinishEdit(ItemVH.this);
+                        }
+                    } else {
+                        if (onItemEditorListener != null) {
+                            onItemEditorListener.onStartEdit(ItemVH.this);
+                        }
                     }
                 }
             });

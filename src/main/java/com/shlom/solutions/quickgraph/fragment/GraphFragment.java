@@ -59,7 +59,7 @@ public class GraphFragment extends BaseFragment implements ColorPickerDialogFrag
     private ProgressBar progressBar;
     private ProjectModel projectModel;
 
-    private RealmChangeListener projectChangeListener;
+    private RealmChangeListener<ProjectModel> projectChangeListener;
 
     public static GraphFragment newInstance(boolean canGoBack) {
         GraphFragment graphFragment = new GraphFragment();
@@ -102,9 +102,9 @@ public class GraphFragment extends BaseFragment implements ColorPickerDialogFrag
 
     private void loadData() {
         projectModel = realmHelper.findObjectAsync(ProjectModel.class, Utils.getLong(this));
-        projectModel.addChangeListener(projectChangeListener = new RealmChangeListener() {
+        projectModel.addChangeListener(projectChangeListener = new RealmChangeListener<ProjectModel>() {
             @Override
-            public void onChange() {
+            public void onChange(ProjectModel element) {
                 if (projectModel.isLoaded()) {
                     if (projectModel.isValid()) {
                         updateLineChartConfig();
@@ -390,7 +390,6 @@ public class GraphFragment extends BaseFragment implements ColorPickerDialogFrag
                     else projectModel.setPreviewFileName(null);
                 }
             });
-            realmHelper.getRealm().refresh();
 
             return null;
         }

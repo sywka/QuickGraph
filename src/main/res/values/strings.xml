@@ -33,9 +33,11 @@
     <string name="data_set_remove">DataSet \"%1$s\" removed</string>
     <string name="data_set_remove_all">DataSets removed: %1$s</string>
     <string name="color_picker_title">Choose color</string>
+    <string name="data_set_type_from_table">From table</string>
+    <string name="data_set_type_from_function">From function</string>
     <string name="unknown">Unknown</string>
     <string name="unknown_is">Unknown: %1$s</string>
-    <string name="file_is">File: %1$s</string>
+    <string name="table_is">Table: %1$s</string>
     <string name="function">Function</string>
     <string name="function_is">Function: %1$s</string>
     <string name="error">Error</string>
