@@ -2,6 +2,7 @@ package com.shlom.solutions.quickgraph.adapter;
 
 import android.content.Context;
 import android.net.Uri;
+import android.support.graphics.drawable.VectorDrawableCompat;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,9 +11,8 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.nostra13.universalimageloader.core.DisplayImageOptions;
-import com.nostra13.universalimageloader.core.ImageLoader;
-import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.shlom.solutions.quickgraph.R;
 import com.shlom.solutions.quickgraph.database.model.ProjectModel;
 import com.shlom.solutions.quickgraph.etc.FileCacheHelper;
@@ -39,18 +39,14 @@ public class ProjectListAdapter extends BaseRealmSimpleAdapter<ProjectModel, Pro
         holder.secondaryText.setText(context.getString(R.string.project_date, dateFormat.format(projectModel.getDate())));
         holder.counterText.setText(String.valueOf(projectModel.getDataSets().size()));
 
-        ImageLoader.getInstance().cancelDisplayTask(holder.previewImage);
-        ImageLoader.getInstance().displayImage(Uri.fromFile(
-                FileCacheHelper.getImageCache(projectModel.getPreviewFileName())).toString(),
-                holder.previewImage,
-                new DisplayImageOptions.Builder()
-                        .showImageOnLoading(R.drawable.ic_empty_preview_white_24dp)
-                        .showImageOnFail(R.drawable.ic_empty_preview_white_24dp)
-                        .cacheInMemory(true)
-                        .delayBeforeLoading(100)
-                        .displayer(new FadeInBitmapDisplayer(300))
-                        .build()
-        );
+        Glide.clear(holder.previewImage);
+        Glide.with(context)
+                .load(Uri.fromFile(FileCacheHelper.getImageCache(projectModel.getPreviewFileName())).toString())
+                .placeholder(VectorDrawableCompat.create(context.getResources(), R.drawable.ic_empty_preview_white_24dp, context.getTheme()))
+                .error(VectorDrawableCompat.create(context.getResources(), R.drawable.ic_empty_preview_white_24dp, context.getTheme()))
+                .diskCacheStrategy(DiskCacheStrategy.NONE)
+                .skipMemoryCache(true)
+                .into(holder.previewImage);
     }
 
     public OnItemEditorListener getOnItemEditorListener() {
@@ -63,7 +59,9 @@ public class ProjectListAdapter extends BaseRealmSimpleAdapter<ProjectModel, Pro
 
     public interface OnItemEditorListener {
         void onStartEdit(ItemVH viewHolder);
+
         void onTextChanged(ProjectModel projectModel, String str, ItemVH viewHolder);
+
         void onFinishEdit(ItemVH viewHolder);
     }
 

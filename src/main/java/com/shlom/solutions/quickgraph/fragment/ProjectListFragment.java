@@ -24,9 +24,7 @@ import android.view.ViewGroup;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
-import com.nostra13.universalimageloader.core.ImageLoader;
-import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
-import com.shlom.solutions.quickgraph.App;
+import com.bumptech.glide.Glide;
 import com.shlom.solutions.quickgraph.R;
 import com.shlom.solutions.quickgraph.activity.DataSetActivity;
 import com.shlom.solutions.quickgraph.adapter.BaseSimpleAdapter;
@@ -36,6 +34,7 @@ import com.shlom.solutions.quickgraph.database.model.DataSetModel;
 import com.shlom.solutions.quickgraph.database.model.FunctionRangeModel;
 import com.shlom.solutions.quickgraph.database.model.GraphParamsModel;
 import com.shlom.solutions.quickgraph.database.model.ProjectModel;
+import com.shlom.solutions.quickgraph.etc.LogUtil;
 import com.shlom.solutions.quickgraph.etc.ProgressAsyncRealmTask;
 import com.shlom.solutions.quickgraph.etc.Utils;
 import com.shlom.solutions.quickgraph.ui.AutofitRecyclerView;
@@ -62,8 +61,6 @@ public class ProjectListFragment extends BaseFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         realmHelper = new RealmHelper();
-
-        ImageLoader.getInstance().init(new ImageLoaderConfiguration.Builder(App.getContext()).build());
 
         View rootView = inflater.inflate(R.layout.fragment_project_list, container, false);
 
@@ -93,7 +90,7 @@ public class ProjectListFragment extends BaseFragment {
             @Override
             public void onChange(RealmResults<ProjectModel> element) {
                 if (projectModels.isLoaded()) {
-                    ImageLoader.getInstance().clearMemoryCache();
+                    Glide.get(getContext()).clearMemory();
                     adapter.setItems(projectModels);
                 }
             }
