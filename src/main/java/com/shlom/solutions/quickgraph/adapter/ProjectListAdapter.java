@@ -13,9 +13,11 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.shlom.solutions.quickgraph.App;
 import com.shlom.solutions.quickgraph.R;
 import com.shlom.solutions.quickgraph.database.model.ProjectModel;
 import com.shlom.solutions.quickgraph.etc.FileCacheHelper;
+import com.shlom.solutions.quickgraph.etc.LogUtil;
 import com.shlom.solutions.quickgraph.ui.BackEditText;
 
 import java.text.SimpleDateFormat;
@@ -40,12 +42,12 @@ public class ProjectListAdapter extends BaseRealmSimpleAdapter<ProjectModel, Pro
         holder.counterText.setText(String.valueOf(projectModel.getDataSets().size()));
 
         Glide.clear(holder.previewImage);
-        Glide.with(context)
+        Glide.with(App.getContext())
                 .load(Uri.fromFile(FileCacheHelper.getImageCache(projectModel.getPreviewFileName())).toString())
                 .placeholder(VectorDrawableCompat.create(context.getResources(), R.drawable.ic_empty_preview_white_24dp, context.getTheme()))
                 .error(VectorDrawableCompat.create(context.getResources(), R.drawable.ic_empty_preview_white_24dp, context.getTheme()))
                 .diskCacheStrategy(DiskCacheStrategy.NONE)
-                .skipMemoryCache(true)
+                .skipMemoryCache(true)      //TODO исправить очистку кэша
                 .into(holder.previewImage);
     }
 
@@ -98,9 +100,11 @@ public class ProjectListAdapter extends BaseRealmSimpleAdapter<ProjectModel, Pro
                 @Override
                 public void onFocusChange(View v, boolean hasFocus) {
                     if (!hasFocus) {
-                        primaryText.setText(getItem(getLayoutPosition()).getName());
+                        if (getLayoutPosition() > 0 && getLayoutPosition() < getItemCount()) {
+                            primaryText.setText(getItem(getLayoutPosition()).getName());
+                        }
                         InputMethodManager imm = (InputMethodManager) primaryText.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                        imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                        imm.hideSoftInputFromWindow(v.getWindowToken(), InputMethodManager.HIDE_IMPLICIT_ONLY);
                         if (onItemEditorListener != null) {
                             onItemEditorListener.onFinishEdit(ItemVH.this);
                         }

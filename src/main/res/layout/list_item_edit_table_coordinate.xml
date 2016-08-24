@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingLeft="15dp"
+    android:paddingRight="15dp"
+    android:layout_weight="1"
+    android:orientation="horizontal">
+
+    <android.support.design.widget.TextInputLayout
+        android:id="@+id/edit_data_set_table_coordinate_x"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.5">
+
+        <com.shlom.solutions.quickgraph.ui.BackEditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/x"
+            android:imeOptions="actionNext"
+            android:inputType="numberDecimal|numberSigned"
+            android:maxLines="1" />
+
+    </android.support.design.widget.TextInputLayout>
+
+    <android.support.design.widget.TextInputLayout
+        android:id="@+id/edit_data_set_table_coordinate_y"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.5">
+
+        <com.shlom.solutions.quickgraph.ui.BackEditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/y"
+            android:imeOptions="actionNext"
+            android:inputType="numberDecimal|numberSigned"
+            android:maxLines="1" />
+
+    </android.support.design.widget.TextInputLayout>
+
+    <ImageView
+        android:id="@+id/edit_data_set_table_coordinate_delete"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        app:srcCompat="@android:drawable/ic_menu_delete" />
+
+</LinearLayout>

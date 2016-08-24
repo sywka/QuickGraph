@@ -23,6 +23,7 @@
     <string name="action_cancel">Cancel</string>
     <string name="action_undo">Undo</string>
     <string name="action_demo_project">Demo project</string>
+    <string name="action_import">Import</string>
 
     <string name="project_creation">Project creation</string>
     <string name="project_enter_name">Enter the name</string>
@@ -37,12 +38,15 @@
     <string name="data_set_type_from_function">From function</string>
     <string name="unknown">Unknown</string>
     <string name="unknown_is">Unknown: %1$s</string>
-    <string name="table_is">Table: %1$s</string>
+    <string name="table_is">Table of %1$s rows</string>
+    <string name="table_is_imported">Imported from: \"%1$s\"</string>
     <string name="function">Function</string>
     <string name="function_is">Function: %1$s</string>
     <string name="error">Error</string>
     <string name="error_incorrect_function">Incorrect function</string>
     <string name="error_enter">Enter</string>
+    <string name="x">X</string>
+    <string name="y">Y</string>
     <string name="from">From</string>
     <string name="to">To</string>
     <string name="delta">Delta</string>

@@ -7,6 +7,9 @@ import com.shlom.solutions.quickgraph.App;
 import com.shlom.solutions.quickgraph.R;
 import com.shlom.solutions.quickgraph.database.ObjectWithUID;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 import io.realm.Realm;
@@ -65,6 +68,7 @@ public class DataSetModel extends RealmObject implements ObjectWithUID, Serializ
         cubicCurve = false;
         checked = true;
         typeIndex = Type.UNKNOWN.ordinal();
+        coordinates = new RealmList<>();
     }
 
     public DataSetModel copyToRealm(Realm realm) {
@@ -93,7 +97,11 @@ public class DataSetModel extends RealmObject implements ObjectWithUID, Serializ
     public String getSecondaryExtended() {
         switch (getType()) {
             case FROM_TABLE:
-                return App.getContext().getString(R.string.table_is, secondary);
+                String secondaryExtended = App.getContext().getString(R.string.table_is, String.valueOf(coordinates.size()));
+                if (!secondary.isEmpty()) {
+                    secondaryExtended += ", " + App.getContext().getString(R.string.table_is_imported, secondary);
+                }
+                return secondaryExtended;
             case FROM_FUNCTION:
                 return App.getContext().getString(R.string.function_is, secondary);
             case UNKNOWN:
@@ -111,6 +119,29 @@ public class DataSetModel extends RealmObject implements ObjectWithUID, Serializ
             case UNKNOWN:
             default:
                 return App.getContext().getString(R.string.unknown);
+        }
+    }
+
+    private void writeObject(ObjectOutputStream out) throws IOException {
+        RealmList<CoordinateModel> tempCoordinates = new RealmList<>();
+        if (coordinates != null) {
+            tempCoordinates.addAll(coordinates);
+            coordinates = null;
+        }
+        out.defaultWriteObject();
+        coordinates = tempCoordinates;
+        out.writeInt(coordinates.size());
+        for (CoordinateModel coordinate : coordinates) {
+            out.writeObject(coordinate);
+        }
+    }
+
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        int size = in.readInt();
+        coordinates = new RealmList<>();
+        for (int i = 0; i < size; i++) {
+            coordinates.add((CoordinateModel) in.readObject());
         }
     }
 

@@ -26,6 +26,7 @@ import com.shlom.solutions.quickgraph.database.model.CoordinateModel;
 import com.shlom.solutions.quickgraph.database.model.DataSetModel;
 import com.shlom.solutions.quickgraph.database.model.FunctionRangeModel;
 import com.shlom.solutions.quickgraph.database.model.ProjectModel;
+import com.shlom.solutions.quickgraph.etc.LogUtil;
 import com.shlom.solutions.quickgraph.etc.Utils;
 import com.shlom.solutions.quickgraph.fragment.dialog.ColorPickerDialogFragment;
 import com.shlom.solutions.quickgraph.ui.AutofitRecyclerView;
@@ -42,7 +43,6 @@ import io.realm.RealmList;
 public abstract class BaseDataSetEditFragment extends BaseFragment implements ColorPickerDialogFragment.OnColorChangedListener {
 
     private static final String TAG_DATA_SET = "data_set";
-    private static final String TAG_COORDINATES = "coordinates";
 
     private RealmHelper realmHelper;
     private ProjectModel projectModel;
@@ -91,11 +91,6 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
             }
         } else {
             standaloneDataSet = (DataSetModel) savedInstanceState.getSerializable(TAG_DATA_SET);
-            ArrayList<CoordinateModel> coordinateList = (ArrayList) savedInstanceState.getSerializable(TAG_COORDINATES);
-            if (coordinateList != null) {
-                CoordinateModel[] coordinateArray = coordinateList.toArray(new CoordinateModel[coordinateList.size()]);
-                standaloneDataSet.setCoordinates(new RealmList<>(coordinateArray));
-            }
         }
 
         View rootView = inflater.inflate(R.layout.fragment_base_edit_data_set, container, false);
@@ -127,11 +122,6 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
-        // кривой костыль
-        if (standaloneDataSet.getCoordinates() != null && !standaloneDataSet.getCoordinates().isEmpty()) {
-            outState.putSerializable(TAG_COORDINATES, new ArrayList<>(standaloneDataSet.getCoordinates()));
-            standaloneDataSet.setCoordinates(null);
-        }
         outState.putSerializable(TAG_DATA_SET, standaloneDataSet);
     }
 
@@ -227,7 +217,7 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
     }
 
     private void setupGeneralSection() {
-        addSection(0, new OnCreateItemCallback() {
+        addAdapterImpl(new Delegate() {
             @Override
             public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent) {
                 return new GeneralSectionVH(LayoutInflater.from(parent.getContext())
@@ -235,7 +225,7 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
             }
 
             @Override
-            public void onBindViewHolder(RecyclerView.ViewHolder viewHolder) {
+            public void onBindViewHolder(RecyclerView.ViewHolder viewHolder, int position) {
                 final GeneralSectionVH holder = (GeneralSectionVH) viewHolder;
 
                 CompoundButton.OnCheckedChangeListener onCheckedChangeListener = new CompoundButton.OnCheckedChangeListener() {
@@ -308,12 +298,26 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
                     }
                 });
             }
+
+            @Override
+            public boolean isCurrent(int position) {
+                return position == 0;
+            }
+
+            @Override
+            public int getItemCount() {
+                return 1;
+            }
         });
     }
 
-    protected void addSection(int position, OnCreateItemCallback onCreateItemCallback) {
-        adapter.onCreateItemCallbacks.add(position, onCreateItemCallback);
+    protected void addAdapterImpl(Delegate adapterImpl) {
+        adapter.adapterImpls.add(adapterImpl);
         adapter.notifyDataSetChanged();
+    }
+
+    public DataSetEditAdapter getAdapter() {
+        return adapter;
     }
 
     public DataSetModel getStandaloneDataSet() {
@@ -336,10 +340,14 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
         return realmHelper;
     }
 
-    protected interface OnCreateItemCallback {
+    public interface Delegate {
         RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent);
 
-        void onBindViewHolder(RecyclerView.ViewHolder viewHolder);
+        void onBindViewHolder(RecyclerView.ViewHolder viewHolder, int position);
+
+        boolean isCurrent(int position);
+
+        int getItemCount();
     }
 
     private class GeneralSectionVH extends RecyclerView.ViewHolder {
@@ -371,29 +379,39 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
         }
     }
 
-    private class DataSetEditAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+    protected class DataSetEditAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-        private List<OnCreateItemCallback> onCreateItemCallbacks = new ArrayList<>();
+        private List<Delegate> adapterImpls = new ArrayList<>();
 
         @Override
-
         public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            return onCreateItemCallbacks.get(viewType).onCreateViewHolder(parent);
+            return adapterImpls.get(viewType).onCreateViewHolder(parent);
         }
 
         @Override
         public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-            onCreateItemCallbacks.get(position).onBindViewHolder(holder);
-        }
-
-        @Override
-        public int getItemCount() {
-            return onCreateItemCallbacks.size();
+            adapterImpls.get(getItemViewType(position)).onBindViewHolder(holder, position);
         }
 
         @Override
         public int getItemViewType(int position) {
-            return position;
+            int type = -1;
+            for (int i = 0; i < adapterImpls.size(); i++) {
+                if (adapterImpls.get(i).isCurrent(position)) {
+                    if (type == -1) type = i;
+                    else throw new RuntimeException("more than one type of position");
+                }
+            }
+            return type;
+        }
+
+        @Override
+        public int getItemCount() {
+            int size = 0;
+            for (Delegate adapterImpl : adapterImpls) {
+                size += adapterImpl.getItemCount();
+            }
+            return size;
         }
     }
 }

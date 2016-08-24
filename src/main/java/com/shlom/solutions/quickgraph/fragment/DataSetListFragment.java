@@ -397,7 +397,7 @@ public class DataSetListFragment extends BaseFragment
             }
         });
 
-        snackbar = Snackbar.make(recyclerView, getString(R.string.data_set_remove_all, dataSetModels.size()), Snackbar.LENGTH_LONG)
+        snackbar = Snackbar.make(recyclerView, getString(R.string.data_set_remove_all, String.valueOf(dataSetModels.size())), Snackbar.LENGTH_LONG)
                 .setAction(R.string.action_undo, new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {

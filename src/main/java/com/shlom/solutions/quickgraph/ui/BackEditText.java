@@ -4,7 +4,6 @@ import android.content.Context;
 import android.support.design.widget.TextInputEditText;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
-import android.widget.EditText;
 
 public class BackEditText extends TextInputEditText {
 

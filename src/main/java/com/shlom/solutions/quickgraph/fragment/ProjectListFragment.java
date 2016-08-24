@@ -25,6 +25,7 @@ import android.view.ViewGroup;
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.bumptech.glide.Glide;
+import com.shlom.solutions.quickgraph.App;
 import com.shlom.solutions.quickgraph.R;
 import com.shlom.solutions.quickgraph.activity.DataSetActivity;
 import com.shlom.solutions.quickgraph.adapter.BaseSimpleAdapter;
@@ -90,7 +91,7 @@ public class ProjectListFragment extends BaseFragment {
             @Override
             public void onChange(RealmResults<ProjectModel> element) {
                 if (projectModels.isLoaded()) {
-                    Glide.get(getContext()).clearMemory();
+                    Glide.get(App.getContext()).clearMemory();
                     adapter.setItems(projectModels);
                 }
             }
@@ -266,7 +267,7 @@ public class ProjectListFragment extends BaseFragment {
             }
         });
 
-        snackbar = Snackbar.make(recyclerView, getString(R.string.project_remove_all, projectModels.size()), Snackbar.LENGTH_LONG)
+        snackbar = Snackbar.make(recyclerView, getString(R.string.project_remove_all, String.valueOf(projectModels.size())), Snackbar.LENGTH_LONG)
                 .setAction(R.string.action_undo, new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {

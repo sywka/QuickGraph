@@ -34,6 +34,7 @@ public class ProjectModel extends RealmObject implements ObjectWithUID, Serializ
     public ProjectModel() {
         name = App.getContext().getString(R.string.action_demo_project);
         date = new Date();
+        dataSets = new RealmList<>();
     }
 
     public ProjectModel copyToRealm(Realm realm) {

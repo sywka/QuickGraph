@@ -13,7 +13,6 @@ import com.shlom.solutions.quickgraph.R;
 import com.shlom.solutions.quickgraph.database.model.DataSetModel;
 import com.shlom.solutions.quickgraph.etc.LogUtil;
 import com.shlom.solutions.quickgraph.etc.Utils;
-import com.shlom.solutions.quickgraph.ui.BackEditText;
 import com.shlom.solutions.quickgraph.ui.TextWatcher;
 
 public class DataSetEditFunctionFragment extends BaseDataSetEditFragment {
@@ -23,7 +22,7 @@ public class DataSetEditFunctionFragment extends BaseDataSetEditFragment {
         super.onCreateView(rootView, savedInstanceState);
 
         getStandaloneDataSet().setType(DataSetModel.Type.FROM_FUNCTION);
-        addSection(1, new OnCreateItemCallback() {
+        addAdapterImpl(new Delegate() {
             @Override
             public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent) {
                 return new FunctionVH(LayoutInflater.from(parent.getContext())
@@ -31,7 +30,7 @@ public class DataSetEditFunctionFragment extends BaseDataSetEditFragment {
             }
 
             @Override
-            public void onBindViewHolder(RecyclerView.ViewHolder viewHolder) {
+            public void onBindViewHolder(RecyclerView.ViewHolder viewHolder, int position) {
                 final FunctionVH holder = (FunctionVH) viewHolder;
 
                 InputCallback callback = new InputCallback() {
@@ -77,6 +76,16 @@ public class DataSetEditFunctionFragment extends BaseDataSetEditFragment {
                         checkFrom(holder.functionFromInput) &&
                         checkTo(holder.functionToInput) &&
                         checkDelta(holder.functionDeltaInput));
+            }
+
+            @Override
+            public boolean isCurrent(int position) {
+                return position == 1;
+            }
+
+            @Override
+            public int getItemCount() {
+                return 1;
             }
         });
     }
