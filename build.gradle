@@ -19,8 +19,8 @@ android {
         applicationId "com.shlom.solutions.quckgraph"
         minSdkVersion 14
         targetSdkVersion 24
-        versionCode 3
-        versionName "0.2a"
+        versionCode 4
+        versionName "0.2.1a"
 
         vectorDrawables.useSupportLibrary = true
     }
