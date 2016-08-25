@@ -4,8 +4,12 @@
 
     <item
         android:id="@+id/action_import"
-        android:icon="@drawable/ic_vertical_align_bottom_white_24dp"
         android:title="@string/action_import"
-        app:showAsAction="always" />
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_clear_all"
+        android:title="@string/action_clear_all"
+        app:showAsAction="never" />
 
 </menu>

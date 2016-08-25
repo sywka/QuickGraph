@@ -1,11 +1,15 @@
 package com.shlom.solutions.quickgraph.fragment;
 
 import android.Manifest;
-import android.content.Intent;
+import android.annotation.TargetApi;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
@@ -21,19 +25,19 @@ import android.widget.ImageView;
 import com.shlom.solutions.quickgraph.R;
 import com.shlom.solutions.quickgraph.database.model.CoordinateModel;
 import com.shlom.solutions.quickgraph.database.model.DataSetModel;
-import com.shlom.solutions.quickgraph.etc.FileManager;
-import com.shlom.solutions.quickgraph.imp.Coordinate;
-import com.shlom.solutions.quickgraph.imp.ImportManager;
+import com.shlom.solutions.quickgraph.fragment.dialog.imp.Coordinate;
+import com.shlom.solutions.quickgraph.fragment.dialog.imp.ImportDialogFragment;
 import com.shlom.solutions.quickgraph.ui.TextWatcher;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
-public class DataSetEditTableFragment extends BaseDataSetEditFragment {
+public class DataSetEditTableFragment extends BaseDataSetEditFragment implements ImportDialogFragment.OnReceivedImportResult {
 
     private static final int REQUEST_PERMISSIONS_CODE = 123;
-    private FileManager.Delegate onReceivedDelegate;
+    private static final String TAG_IMPORT_DIALOG = "import_dialog";
+    private Runnable runnable;
 
     @Override
     protected void onCreateView(View rootView, @Nullable Bundle savedInstanceState) {
@@ -107,30 +111,35 @@ public class DataSetEditTableFragment extends BaseDataSetEditFragment {
         }
     }
 
-    private void showImportChooser() {
-        onReceivedDelegate = new ImportManager().showImportTypeChooser(this, new ImportManager.OnReceivedResult() {
-            @Override
-            public void onReceivedResult(File file, List<Coordinate> result) {
-                getStandaloneDataSet().getCoordinates().clear();
-                for (Coordinate coordinate : result) {
-                    getStandaloneDataSet().getCoordinates().add(
-                            new CoordinateModel()
-                                    .setX(coordinate.getX())
-                                    .setY(coordinate.getY()));
-                }
-                getStandaloneDataSet().setSecondary(file.getName());
-                getAdapter().notifyDataSetChanged();
+    @Override
+    public void onReceivedImportResult(Uri uri, List<Coordinate> result) {
+        getStandaloneDataSet().getCoordinates().clear();
+        for (Coordinate coordinate : result) {
+            getStandaloneDataSet().getCoordinates().add(
+                    new CoordinateModel()
+                            .setX(coordinate.getX())
+                            .setY(coordinate.getY()));
+        }
+        Cursor cursor = getContext().getContentResolver().query(uri, null, null, null, null);
+        if (cursor != null && cursor.moveToNext()) {
+            try {
+                getStandaloneDataSet().setSecondary(cursor.getString(cursor.getColumnIndex("_display_name")));
+            } finally {
+                cursor.close();
             }
-        });
+        } else {
+            getStandaloneDataSet().setSecondary(new File(uri.getPath()).getName());
+        }
+        getAdapter().notifyDataSetChanged();
     }
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
+    public void onResume() {
+        super.onResume();
 
-        if (onReceivedDelegate != null) {
-            onReceivedDelegate.onActivityResult(requestCode, resultCode, data);
-            onReceivedDelegate = null;
+        if (runnable != null) {
+            runnable.run();
+            runnable = null;
         }
     }
 
@@ -143,9 +152,23 @@ public class DataSetEditTableFragment extends BaseDataSetEditFragment {
                 int index = Arrays.asList(permissions).indexOf(Manifest.permission.READ_EXTERNAL_STORAGE);
                 if (index != -1) {
                     if (grantResults[index] == PackageManager.PERMISSION_GRANTED) {
-                        showImportChooser();
+                        runnable = new Runnable() {
+                            @Override
+                            public void run() {
+                                showImportDialog();
+                            }
+                        };
                     } else {
-
+                        if (getView() != null) {
+                            Snackbar.make(getView(), getString(R.string.error_required_permission), Snackbar.LENGTH_LONG)
+                                    .setAction(getString(R.string.action_retry), new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View view) {
+                                            showImportDialog();
+                                        }
+                                    })
+                                    .show();
+                        }
                     }
                 }
                 break;
@@ -163,14 +186,22 @@ public class DataSetEditTableFragment extends BaseDataSetEditFragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_import:
-                if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-                    showImportChooser();
-                } else {
-                    requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_PERMISSIONS_CODE);
-                }
+                showImportDialog();
+                break;
+            case R.id.action_clear_all:
+                getStandaloneDataSet().getCoordinates().clear();
+                getAdapter().notifyDataSetChanged();
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void showImportDialog() {
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            new ImportDialogFragment().show(getChildFragmentManager(), TAG_IMPORT_DIALOG);
+        } else {
+            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_PERMISSIONS_CODE);
+        }
     }
 
     private class CoordinateItemVH extends RecyclerView.ViewHolder {

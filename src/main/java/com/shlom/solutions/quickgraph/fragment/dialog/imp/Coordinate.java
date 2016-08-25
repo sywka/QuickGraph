@@ -1,4 +1,4 @@
-package com.shlom.solutions.quickgraph.imp;
+package com.shlom.solutions.quickgraph.fragment.dialog.imp;
 
 public class Coordinate {
 

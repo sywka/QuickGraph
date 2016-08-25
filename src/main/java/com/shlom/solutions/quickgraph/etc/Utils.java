@@ -26,7 +26,7 @@ public abstract class Utils {
         Resources resources = context.getResources();
         DisplayMetrics metrics = resources.getDisplayMetrics();
         int px = (int) (dp * ((float) metrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT));
-        return px;
+        return px == 0 ? 1 : px;
     }
 
     public static float pxToDp(int px) {

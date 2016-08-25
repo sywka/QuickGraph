@@ -20,7 +20,9 @@ import io.realm.annotations.Required;
 
 public class DataSetModel extends RealmObject implements ObjectWithUID, Serializable {
 
+    public static final float MIN_LINE_WIDTH = 0.1f;
     public static final float MAX_LINE_WIDTH = 5f;
+    public static final float MIN_POINTS_RADIUS = 0.1f;
     public static final float MAX_POINTS_RADIUS = 5f;
 
     public enum Type {UNKNOWN, FROM_FUNCTION, FROM_TABLE}
@@ -186,12 +188,14 @@ public class DataSetModel extends RealmObject implements ObjectWithUID, Serializ
     }
 
     public float getLineWidth() {
-        if (Float.compare(lineWidth, MAX_LINE_WIDTH) == 1) lineWidth = MAX_LINE_WIDTH;
+        if (Float.compare(lineWidth, MAX_LINE_WIDTH) == 1) return MAX_LINE_WIDTH;
+        if (Float.compare(lineWidth, MIN_LINE_WIDTH) == -1) return MIN_LINE_WIDTH;
         return lineWidth;
     }
 
     public DataSetModel setLineWidth(float lineWidth) {
-        if (Float.compare(lineWidth, MAX_LINE_WIDTH) == 1) throw new IllegalArgumentException();
+        if (Float.compare(lineWidth, MAX_LINE_WIDTH) == 1) throw new IllegalArgumentException("Line width > MAX_LINE_WIDTH");
+        if (Float.compare(lineWidth, MIN_LINE_WIDTH) == -1) throw new IllegalArgumentException("Line width < MIN_LINE_WIDTH");
         this.lineWidth = lineWidth;
         return this;
     }
@@ -224,12 +228,14 @@ public class DataSetModel extends RealmObject implements ObjectWithUID, Serializ
     }
 
     public float getPointsRadius() {
-        if (Float.compare(pointsRadius, MAX_POINTS_RADIUS) == 1) pointsRadius = MAX_POINTS_RADIUS;
+        if (Float.compare(pointsRadius, MAX_POINTS_RADIUS) == 1) return MAX_POINTS_RADIUS;
+        if (Float.compare(pointsRadius, MIN_POINTS_RADIUS) == -1) return MIN_POINTS_RADIUS;
         return pointsRadius;
     }
 
     public DataSetModel setPointsRadius(float pointsRadius) {
-        if (Float.compare(pointsRadius, MAX_POINTS_RADIUS) == 1) throw new IllegalArgumentException();
+        if (Float.compare(pointsRadius, MAX_POINTS_RADIUS) == 1) throw new IllegalArgumentException("Points radius > MAX_POINTS_RADIUS");
+        if (Float.compare(pointsRadius, MIN_POINTS_RADIUS) == -1) throw new IllegalArgumentException("Points radius < MIN_POINTS_RADIUS");
         this.pointsRadius = pointsRadius;
         return this;
     }

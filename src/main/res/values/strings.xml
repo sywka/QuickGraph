@@ -9,7 +9,7 @@
     <string name="fab_scrolling_view_behavior" translatable="false">com.shlom.solutions.quickgraph.ui.ScrollingFABBehavior</string>
 
     <string name="action_settings">Settings</string>
-    <string name="action_remove_all">Clear</string>
+    <string name="action_clear_all">Clear</string>
     <string name="action_check_all">Check all</string>
     <string name="action_uncheck_all">Uncheck all</string>
     <string name="action_axis">Axis</string>
@@ -21,9 +21,13 @@
     <string name="action_color_grid">Color grid</string>
     <string name="action_ok">OK</string>
     <string name="action_cancel">Cancel</string>
+    <string name="action_hide">Hide</string>
     <string name="action_undo">Undo</string>
+    <string name="action_retry">Retry</string>
     <string name="action_demo_project">Demo project</string>
     <string name="action_import">Import</string>
+    <string name="action_select_file">Select file</string>
+    <string name="action_select_data_type">Select data type</string>
 
     <string name="project_creation">Project creation</string>
     <string name="project_enter_name">Enter the name</string>
@@ -58,5 +62,8 @@
     <string name="draw_points">Draw points</string>
     <string name="draw_points_label">Draw points label</string>
     <string name="can_empty">It may be empty</string>
+    <string name="error_need_file_manager">You need file manager</string>
+    <string name="error_file_not_found">File not found</string>
+    <string name="error_required_permission">Required permissions</string>
 
 </resources>

@@ -22,11 +22,9 @@ import android.widget.TextView;
 
 import com.shlom.solutions.quickgraph.R;
 import com.shlom.solutions.quickgraph.database.RealmHelper;
-import com.shlom.solutions.quickgraph.database.model.CoordinateModel;
 import com.shlom.solutions.quickgraph.database.model.DataSetModel;
 import com.shlom.solutions.quickgraph.database.model.FunctionRangeModel;
 import com.shlom.solutions.quickgraph.database.model.ProjectModel;
-import com.shlom.solutions.quickgraph.etc.LogUtil;
 import com.shlom.solutions.quickgraph.etc.Utils;
 import com.shlom.solutions.quickgraph.fragment.dialog.ColorPickerDialogFragment;
 import com.shlom.solutions.quickgraph.ui.AutofitRecyclerView;
@@ -38,7 +36,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.realm.Realm;
-import io.realm.RealmList;
 
 public abstract class BaseDataSetEditFragment extends BaseFragment implements ColorPickerDialogFragment.OnColorChangedListener {
 
@@ -255,10 +252,12 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
                 holder.lineCheckBox.setChecked(getStandaloneDataSet().isDrawLine());
                 holder.lineCheckBox.setOnCheckedChangeListener(onCheckedChangeListener);
 
-                final int maxLineWidth = 30;
-                int curProgressLineWidth = (int) (getStandaloneDataSet().getLineWidth() * (float) maxLineWidth / DataSetModel.MAX_LINE_WIDTH);
+                final int maxLineWidth = 19;
+                int curProgressLineWidth = calculateProgress(
+                        getStandaloneDataSet().getLineWidth(), DataSetModel.MIN_LINE_WIDTH, DataSetModel.MAX_LINE_WIDTH, maxLineWidth
+                );
                 holder.lineWidthTextView.setEnabled(getStandaloneDataSet().isDrawLine());
-                holder.lineWidthTextView.setText(getString(R.string.line_width, curProgressLineWidth));
+                holder.lineWidthTextView.setText(getString(R.string.line_width, String.valueOf(curProgressLineWidth + 1)));
                 holder.lineWidthSeekBar.setEnabled(getStandaloneDataSet().isDrawLine());
                 holder.lineWidthSeekBar.setMax(maxLineWidth);
                 holder.lineWidthSeekBar.setProgress(curProgressLineWidth);
@@ -266,8 +265,10 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
                     @Override
                     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                         super.onProgressChanged(seekBar, progress, fromUser);
-                        getStandaloneDataSet().setLineWidth(DataSetModel.MAX_LINE_WIDTH * (float) progress / (float) maxLineWidth);
-                        holder.lineWidthTextView.setText(getString(R.string.line_width, progress));
+                        getStandaloneDataSet().setLineWidth(calculateValue(
+                                progress, DataSetModel.MIN_LINE_WIDTH, DataSetModel.MAX_LINE_WIDTH, maxLineWidth
+                        ));
+                        holder.lineWidthTextView.setText(getString(R.string.line_width, String.valueOf(progress + 1)));
                     }
                 });
 
@@ -282,10 +283,12 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
                 holder.pointsLabelCheckBox.setChecked(getStandaloneDataSet().isDrawPointsLabel());
                 holder.pointsLabelCheckBox.setOnCheckedChangeListener(onCheckedChangeListener);
 
-                final int maxPointsRadius = 30;
-                int curProgressPointsRadius = (int) (getStandaloneDataSet().getPointsRadius() * (float) maxPointsRadius / DataSetModel.MAX_POINTS_RADIUS);
+                final int maxPointsRadius = 19;
+                int curProgressPointsRadius = calculateProgress(
+                        getStandaloneDataSet().getPointsRadius(), DataSetModel.MIN_POINTS_RADIUS, DataSetModel.MAX_POINTS_RADIUS, maxPointsRadius
+                );
                 holder.pointsRadiusTextView.setEnabled(getStandaloneDataSet().isDrawPoints());
-                holder.pointsRadiusTextView.setText(getString(R.string.point_radius, curProgressPointsRadius));
+                holder.pointsRadiusTextView.setText(getString(R.string.point_radius, String.valueOf(curProgressPointsRadius + 1)));
                 holder.pointsRadiusSeekBar.setEnabled(getStandaloneDataSet().isDrawPoints());
                 holder.pointsRadiusSeekBar.setMax(maxPointsRadius);
                 holder.pointsRadiusSeekBar.setProgress(curProgressPointsRadius);
@@ -293,8 +296,10 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
                     @Override
                     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                         super.onProgressChanged(seekBar, progress, fromUser);
-                        getStandaloneDataSet().setPointsRadius(DataSetModel.MAX_POINTS_RADIUS * (float) progress / (float) maxPointsRadius);
-                        holder.pointsRadiusTextView.setText(getString(R.string.point_radius, progress));
+                        getStandaloneDataSet().setPointsRadius(
+                                calculateValue(progress, DataSetModel.MIN_POINTS_RADIUS, DataSetModel.MAX_POINTS_RADIUS, maxPointsRadius)
+                        );
+                        holder.pointsRadiusTextView.setText(getString(R.string.point_radius, String.valueOf(progress + 1)));
                     }
                 });
             }
@@ -309,6 +314,14 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
                 return 1;
             }
         });
+    }
+
+    private int calculateProgress(float currentValue, float minValue, float maxValue, int maxProgress) {
+        return (int) ((currentValue - minValue) * (float) maxProgress / (maxValue - minValue));
+    }
+
+    private float calculateValue(int currentProgress, float minValue, float maxValue, int maxProgress) {
+        return minValue + (float) currentProgress * (maxValue - minValue) / (float) maxProgress;
     }
 
     protected void addAdapterImpl(Delegate adapterImpl) {

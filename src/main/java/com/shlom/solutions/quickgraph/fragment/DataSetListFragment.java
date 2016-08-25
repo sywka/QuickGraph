@@ -190,7 +190,7 @@ public class DataSetListFragment extends BaseFragment
             @Override
             public void onClick(View v) {
                 new MaterialDialog.Builder(getContext())
-                        .title("Выберите тип данных")
+                        .title(getString(R.string.action_select_data_type))
                         .items(DataSetModel.getTypeName(DataSetModel.Type.FROM_TABLE),
                                 DataSetModel.getTypeName(DataSetModel.Type.FROM_FUNCTION))
                         .itemsCallback(new MaterialDialog.ListCallback() {
