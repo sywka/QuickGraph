@@ -2,6 +2,7 @@ package com.shlom.solutions.quickgraph;
 
 import android.app.Application;
 import android.content.Context;
+import android.support.multidex.MultiDex;
 
 import com.shlom.solutions.quickgraph.etc.Config;
 
@@ -26,5 +27,12 @@ public class App extends Application {
                 .deleteRealmIfMigrationNeeded()
 //                .migration(new DataBaseMigration())
                 .build());
+    }
+
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(base);
+
+        MultiDex.install(this);
     }
 }

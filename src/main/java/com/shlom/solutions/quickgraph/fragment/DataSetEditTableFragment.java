@@ -1,12 +1,11 @@
 package com.shlom.solutions.quickgraph.fragment;
 
 import android.Manifest;
-import android.annotation.TargetApi;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
+import android.provider.OpenableColumns;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -25,13 +24,14 @@ import android.widget.ImageView;
 import com.shlom.solutions.quickgraph.R;
 import com.shlom.solutions.quickgraph.database.model.CoordinateModel;
 import com.shlom.solutions.quickgraph.database.model.DataSetModel;
-import com.shlom.solutions.quickgraph.fragment.dialog.imp.Coordinate;
 import com.shlom.solutions.quickgraph.fragment.dialog.imp.ImportDialogFragment;
 import com.shlom.solutions.quickgraph.ui.TextWatcher;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
+
+import io.realm.RealmList;
 
 public class DataSetEditTableFragment extends BaseDataSetEditFragment implements ImportDialogFragment.OnReceivedImportResult {
 
@@ -112,18 +112,12 @@ public class DataSetEditTableFragment extends BaseDataSetEditFragment implements
     }
 
     @Override
-    public void onReceivedImportResult(Uri uri, List<Coordinate> result) {
-        getStandaloneDataSet().getCoordinates().clear();
-        for (Coordinate coordinate : result) {
-            getStandaloneDataSet().getCoordinates().add(
-                    new CoordinateModel()
-                            .setX(coordinate.getX())
-                            .setY(coordinate.getY()));
-        }
+    public void onReceivedImportResult(Uri uri, List<CoordinateModel> result) {
+        getStandaloneDataSet().setCoordinates(new RealmList<>(result.toArray(new CoordinateModel[result.size()])));
         Cursor cursor = getContext().getContentResolver().query(uri, null, null, null, null);
         if (cursor != null && cursor.moveToNext()) {
             try {
-                getStandaloneDataSet().setSecondary(cursor.getString(cursor.getColumnIndex("_display_name")));
+                getStandaloneDataSet().setSecondary(cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)));
             } finally {
                 cursor.close();
             }

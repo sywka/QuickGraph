@@ -53,12 +53,7 @@ public class DataSetEditFunctionFragment extends BaseDataSetEditFragment {
                                         checkFrom(holder.functionFromInput) &&
                                         checkTo(holder.functionToInput) &&
                                         checkDelta(holder.functionDeltaInput);
-                        getFab().post(new Runnable() {
-                            @Override
-                            public void run() {
-                                setEnabledFab(enabledFab);
-                            }
-                        });
+                        setEnabledFab(enabledFab);
                     }
                 };
 
@@ -110,11 +105,11 @@ public class DataSetEditFunctionFragment extends BaseDataSetEditFragment {
     }
 
     private void setEnabledFab(final boolean enabled) {
-        getFab().setEnabled(enabled);
+//        getFab().setEnabled(enabled);
         if (enabled) {
-            getFab().show();
+            getFab().setVisibility(View.VISIBLE);
         } else {
-            getFab().hide();
+            getFab().setVisibility(View.INVISIBLE);
         }
     }
 

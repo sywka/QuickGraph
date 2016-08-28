@@ -3,26 +3,30 @@ package com.shlom.solutions.quickgraph.fragment.dialog.imp;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.StringRes;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
 
 import com.shlom.solutions.quickgraph.R;
+import com.shlom.solutions.quickgraph.database.model.CoordinateModel;
 
 import java.io.FileNotFoundException;
-import java.io.InputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ImportDialogFragment extends DialogFragment {
 
     private static final int FILE_CHOOSER_CODE = 123;
+    private static final String KEY_SELECTED_HANDLER = "selected_handler";
 
     private List<ImportHandler> importHandlers = new ArrayList<>();
     private ImportHandler selectedImportHandler;
@@ -40,42 +44,76 @@ public class ImportDialogFragment extends DialogFragment {
             }
         }
 
-        importHandlers.add(new ImportFromTxt());
+        importHandlers.add(new ImportFromTXT());
+        importHandlers.add(new ImportFromCSV());
         importHandlers.add(new ImportFromExcel());
+
+        if (savedInstanceState != null) {
+            selectedImportHandler = (ImportHandler) savedInstanceState.getSerializable(KEY_SELECTED_HANDLER);
+        }
     }
 
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
+        if (importHandlers == null || importHandlers.isEmpty()) {
+            return super.onCreateDialog(savedInstanceState);
+        }
+        if (importHandlers.size() == 1) {
+            selectedImportHandler = importHandlers.get(0);
+            showFileChooser();
+            return super.onCreateDialog(savedInstanceState);
+        }
+
         List<String> importsHandlerNames = new ArrayList<>();
         for (ImportHandler importHandler : importHandlers) {
-            importsHandlerNames.add(importHandler.getName());
+            importsHandlerNames.add(getString(importHandler.getNameResource()));
         }
         return new AlertDialog.Builder(getContext())
                 .setTitle(getString(R.string.action_import))
-                .setSingleChoiceItems(importsHandlerNames.toArray(new String[importsHandlerNames.size()]), -1, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        selectedImportHandler = importHandlers.get(i);
-                        showFileChooser();
-                    }
-                })
+                .setSingleChoiceItems(
+                        importsHandlerNames.toArray(new String[importsHandlerNames.size()]),
+                        importHandlers.indexOf(selectedImportHandler),
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                selectedImportHandler = importHandlers.get(i);
+                                showFileChooser();
+                            }
+                        })
                 .setNegativeButton(getString(R.string.action_cancel), null)
                 .create();
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        outState.putSerializable(KEY_SELECTED_HANDLER, selectedImportHandler);
+    }
+
     private void showFileChooser() {
         try {
-            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-            intent.setType(selectedImportHandler.getMimeType());
+            Intent intent;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+                intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                intent.putExtra(Intent.EXTRA_MIME_TYPES, selectedImportHandler.getMimeTypes());
+                intent.setType("*/*");
+            } else {
+                intent = new Intent(Intent.ACTION_GET_CONTENT);
+                intent.setType(selectedImportHandler.getMimeType());
+            }
             intent.addCategory(Intent.CATEGORY_OPENABLE);
             startActivityForResult(
                     Intent.createChooser(intent, getString(R.string.action_select_file)),
                     FILE_CHOOSER_CODE);
-        } catch (ActivityNotFoundException ex) {    // TODO: 26.08.2016 показывать ошибки в диалоге
-            if (getView() != null) {
-                Snackbar.make(getView(), getString(R.string.error_need_file_manager), Snackbar.LENGTH_SHORT).show();
-            }
+        } catch (ActivityNotFoundException ex) {
+            Snackbar.make(
+                    getActivity().findViewById(android.R.id.content),
+                    getString(R.string.error_need_file_manager),
+                    Snackbar.LENGTH_SHORT)
+                    .show();
+            getDialog().cancel();
         }
     }
 
@@ -86,13 +124,17 @@ public class ImportDialogFragment extends DialogFragment {
             case FILE_CHOOSER_CODE:
                 if (resultCode == Activity.RESULT_OK) {
                     try {
-                        onReceivedImportResult.onReceivedImportResult(data.getData(), selectedImportHandler.readFromStream(
-                                getContext().getContentResolver().openInputStream(data.getData())
-                        ));
-                    } catch (FileNotFoundException e) {     // TODO: 26.08.2016 показывать ошибки в диалоге
-                        if (getView() != null) {
-                            Snackbar.make(getView(), getString(R.string.error_file_not_found), Snackbar.LENGTH_SHORT).show();
+                        List<CoordinateModel> list = selectedImportHandler.readFromUri(getContext(), data.getData());
+                        if (list == null || list.isEmpty()) {
+                            throw new EmptyException();
                         }
+                        onReceivedImportResult.onReceivedImportResult(data.getData(), list);
+                    } catch (FileNotFoundException e) {
+                        showError(getString(R.string.error_file_not_found));
+                    } catch (EmptyException e) {
+                        showError(getString(R.string.error_file_empty));
+                    } catch (Exception e) {
+                        showError(getString(R.string.error_file_read));
                     }
                 }
                 getDialog().cancel();
@@ -100,16 +142,33 @@ public class ImportDialogFragment extends DialogFragment {
         }
     }
 
-    public interface OnReceivedImportResult {
-        void onReceivedImportResult(Uri uri, List<Coordinate> result);
+    private void showError(String errorMessage) {
+        Snackbar.make(
+                getActivity().findViewById(android.R.id.content),
+                errorMessage,
+                Snackbar.LENGTH_SHORT)
+                .show();
     }
 
-    public interface ImportHandler {
+    public interface OnReceivedImportResult {
+        void onReceivedImportResult(Uri uri, List<CoordinateModel> result);
+    }
 
+    public interface ImportHandler extends Serializable {
+
+        @NonNull
         String getMimeType();
 
-        String getName();
+        @NonNull
+        String[] getMimeTypes();
 
-        List<Coordinate> readFromStream(InputStream stream);
+        @StringRes
+        int getNameResource();
+
+        List<CoordinateModel> readFromUri(Context context, Uri uri) throws Exception;
+    }
+
+    private class EmptyException extends RuntimeException {
+
     }
 }

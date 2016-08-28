@@ -64,6 +64,11 @@
     <string name="can_empty">It may be empty</string>
     <string name="error_need_file_manager">You need file manager</string>
     <string name="error_file_not_found">File not found</string>
+    <string name="error_file_read">Failed to read the file</string>
+    <string name="error_file_empty">Points not found</string>
     <string name="error_required_permission">Required permissions</string>
+    <string name="import_from_txt">From text file</string>
+    <string name="import_from_csv">From csv file</string>
+    <string name="import_from_excel">From excel file</string>
 
 </resources>
