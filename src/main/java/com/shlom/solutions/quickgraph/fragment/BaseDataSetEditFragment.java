@@ -1,11 +1,13 @@
 package com.shlom.solutions.quickgraph.fragment;
 
+import android.content.Context;
 import android.graphics.Rect;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.support.annotation.ColorInt;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.widget.RecyclerView;
@@ -14,12 +16,14 @@ import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.pluscubed.recyclerfastscroll.RecyclerFastScroller;
 import com.shlom.solutions.quickgraph.R;
 import com.shlom.solutions.quickgraph.database.RealmHelper;
 import com.shlom.solutions.quickgraph.database.model.DataSetModel;
@@ -140,6 +144,10 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
         recyclerView.setLayoutManager(manager);
         recyclerView.setHasFixedSize(true);
         recyclerView.setAdapter(adapter = new DataSetEditAdapter());
+
+        RecyclerFastScroller fastScroller = (RecyclerFastScroller) rootView.findViewById(R.id.fast_scroller);
+        fastScroller.attachRecyclerView(recyclerView);
+        fastScroller.attachAppBarLayout((CoordinatorLayout) rootView, appBarLayout);
     }
 
     private void setupFab(View rootView) {
@@ -202,6 +210,10 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
                 @Override
                 public void onFocusChange(View v, boolean hasFocus) {
                     appBarLayout.setExpanded(!hasFocus);
+                    if (!hasFocus) {
+                        InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                        imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                    }
                 }
             });
             ((BackEditText) editText).setOnBackPressedListener(new BackEditText.OnBackPressedListener() {

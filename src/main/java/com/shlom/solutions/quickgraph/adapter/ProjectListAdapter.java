@@ -104,7 +104,7 @@ public class ProjectListAdapter extends BaseRealmSimpleAdapter<ProjectModel, Pro
                             primaryText.setText(getItem(getLayoutPosition()).getName());
                         }
                         InputMethodManager imm = (InputMethodManager) primaryText.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                        imm.hideSoftInputFromWindow(v.getWindowToken(), InputMethodManager.HIDE_IMPLICIT_ONLY);
+                        imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
                         if (onItemEditorListener != null) {
                             onItemEditorListener.onFinishEdit(ItemVH.this);
                         }

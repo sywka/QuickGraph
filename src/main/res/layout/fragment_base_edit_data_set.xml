@@ -34,9 +34,13 @@
         android:paddingLeft="@dimen/project_recycler_view_padding_horizontal"
         android:paddingRight="@dimen/project_recycler_view_padding_horizontal"
         android:paddingTop="@dimen/project_recycler_view_padding_vertical"
-        android:scrollbarStyle="outsideOverlay"
-        android:scrollbars="vertical"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
+    <com.pluscubed.recyclerfastscroll.RecyclerFastScroller
+        android:id="@+id/fast_scroller"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="end" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
