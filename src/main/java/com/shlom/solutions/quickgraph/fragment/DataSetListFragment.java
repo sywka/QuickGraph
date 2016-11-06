@@ -46,6 +46,7 @@ import java.util.List;
 import io.realm.Realm;
 import io.realm.RealmChangeListener;
 import io.realm.RealmList;
+import io.realm.RealmResults;
 
 public class DataSetListFragment extends BaseFragment
         implements ColorPickerDialogFragment.OnColorChangedListener, View.OnKeyListener {
@@ -54,7 +55,9 @@ public class DataSetListFragment extends BaseFragment
 
     private RealmHelper realmHelper;
     private RealmChangeListener<ProjectModel> projectChangeListener;
+    private RealmChangeListener<RealmResults<DataSetModel>> dataSetsChangeListener;
     private ProjectModel projectModel;
+    private RealmResults<DataSetModel> dataSetModels;
 
     private BottomSheetBehavior<FrameLayout> bottomSheetBehavior;
     private Toolbar fakeToolbar;
@@ -98,7 +101,7 @@ public class DataSetListFragment extends BaseFragment
         projectModel.addChangeListener(projectChangeListener = new RealmChangeListener<ProjectModel>() {
             @Override
             public void onChange(ProjectModel element) {
-                if (projectModel.isLoaded() && projectModel.isValid()) {
+                if (element.isLoaded() && element.isValid()) {
                     adapter.setItems(projectModel.getDataSets());
                     invalidateOptionsMenu();
                 }

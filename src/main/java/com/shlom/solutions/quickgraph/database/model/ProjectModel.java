@@ -59,7 +59,9 @@ public class ProjectModel extends RealmObject implements ObjectWithUID, Serializ
     }
 
     public void deleteDependentsFromRealm(Context context) {
-        if (params != null) params.deleteFromRealm();
+        if (params != null) {
+            params.deleteFromRealm();
+        }
         if (dataSets != null) {
             for (DataSetModel dataSetModel : dataSets) {
                 dataSetModel.deleteDependentsFromRealm();

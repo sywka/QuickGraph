@@ -1,6 +1,7 @@
 package com.shlom.solutions.quickgraph.database.model;
 
 import android.graphics.Color;
+import android.support.annotation.ColorInt;
 
 import com.shlom.solutions.quickgraph.database.ObjectWithUID;
 
@@ -9,17 +10,24 @@ import java.io.Serializable;
 import io.realm.Realm;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
+import io.realm.annotations.Required;
 
 public class GraphParamsModel extends RealmObject implements ObjectWithUID, Serializable {
 
     @PrimaryKey
     private long uid;
 
-    private int colorGrid;
-
+    @Required
     private String xAxisTitle;
 
+    @Required
     private String yAxisTitle;
+
+    private int colorGrid;
+
+    private int colorAxis;
+
+    private boolean drawGrid;
 
     private boolean drawAxis;
 
@@ -28,12 +36,14 @@ public class GraphParamsModel extends RealmObject implements ObjectWithUID, Seri
     private boolean fitScreen;
 
     public GraphParamsModel() {
-        colorGrid = Color.GRAY;
-        drawAxis = true;
-        drawLegend = true;
-        fitScreen = true;
         xAxisTitle = "X";
         yAxisTitle = "Y";
+        colorAxis = Color.GRAY;
+        colorGrid = Color.GRAY;
+        drawAxis = true;
+        drawGrid = true;
+        drawLegend = true;
+        fitScreen = true;
     }
 
     public GraphParamsModel copyToRealm(Realm realm) {
@@ -74,11 +84,22 @@ public class GraphParamsModel extends RealmObject implements ObjectWithUID, Seri
         return this;
     }
 
+    @ColorInt
+    public int getColorAxis() {
+        return colorAxis;
+    }
+
+    public GraphParamsModel setColorAxis(@ColorInt int colorAxis) {
+        this.colorAxis = colorAxis;
+        return this;
+    }
+
+    @ColorInt
     public int getColorGrid() {
         return colorGrid;
     }
 
-    public GraphParamsModel setColorGrid(int colorGrid) {
+    public GraphParamsModel setColorGrid(@ColorInt int colorGrid) {
         this.colorGrid = colorGrid;
         return this;
     }
@@ -89,6 +110,15 @@ public class GraphParamsModel extends RealmObject implements ObjectWithUID, Seri
 
     public GraphParamsModel setDrawAxis(boolean drawAxis) {
         this.drawAxis = drawAxis;
+        return this;
+    }
+
+    public boolean isDrawGrid() {
+        return drawGrid;
+    }
+
+    public GraphParamsModel setDrawGrid(boolean drawGrid) {
+        this.drawGrid = drawGrid;
         return this;
     }
 

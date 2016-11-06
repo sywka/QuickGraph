@@ -1,5 +1,6 @@
 package com.shlom.solutions.quickgraph.etc;
 
+import android.content.Context;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
@@ -8,10 +9,12 @@ import com.shlom.solutions.quickgraph.database.RealmHelper;
 
 public abstract class AsyncRealmTask<Params, Progress, Result> extends AsyncTask<Params, Progress, Result> {
 
+    private Context context;
     private Fragment fragment;
 
     public AsyncRealmTask(@NonNull Fragment fragment) {
         this.fragment = fragment;
+        this.context = fragment.getContext().getApplicationContext();
     }
 
     @Override
@@ -45,5 +48,9 @@ public abstract class AsyncRealmTask<Params, Progress, Result> extends AsyncTask
     public AsyncRealmTask setFragment(Fragment fragment) {
         this.fragment = fragment;
         return this;
+    }
+
+    public Context getAppContext() {
+        return context;
     }
 }

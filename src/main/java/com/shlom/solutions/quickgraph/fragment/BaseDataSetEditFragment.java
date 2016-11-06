@@ -37,6 +37,7 @@ import com.shlom.solutions.quickgraph.ui.OnSeekBarChangeListener;
 import com.shlom.solutions.quickgraph.ui.TextWatcher;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import io.realm.Realm;
@@ -159,7 +160,11 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
                     @Override
                     public void execute(Realm realm) {
                         dataSetModel = realmHelper.getRealm().copyToRealmOrUpdate(standaloneDataSet);
-                        if (projectModel != null) projectModel.getDataSets().add(0, dataSetModel);
+                        if (projectModel != null) {
+                            projectModel
+                                    .setDate(new Date())
+                                    .getDataSets().add(0, dataSetModel);
+                        }
                     }
                 });
                 getBaseActivity().finish();

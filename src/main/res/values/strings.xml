@@ -13,11 +13,14 @@
     <string name="action_check_all">Check all</string>
     <string name="action_uncheck_all">Uncheck all</string>
     <string name="action_axis">Axis</string>
+    <string name="action_grid">Grid</string>
     <string name="action_draw_axis">Draw axis</string>
+    <string name="action_draw_grid">Draw grid</string>
     <string name="action_draw_x_axis_title">X-axis title</string>
     <string name="action_draw_y_axis_title">Y-axis title</string>
     <string name="action_draw_legend">Draw legend</string>
     <string name="action_fit_screen">Fit screen</string>
+    <string name="action_color_axis">Color axis</string>
     <string name="action_color_grid">Color grid</string>
     <string name="action_ok">OK</string>
     <string name="action_cancel">Cancel</string>

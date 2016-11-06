@@ -79,9 +79,9 @@ public class ProjectListFragment extends BaseFragment {
         projectModels.addChangeListener(projectChangeListener = new RealmChangeListener<RealmResults<ProjectModel>>() {
             @Override
             public void onChange(RealmResults<ProjectModel> element) {
-                if (projectModels.isLoaded() && projectModels.isValid()) {
+                if (element.isLoaded() && element.isValid()) {
                     Glide.get(getContext()).clearMemory();
-                    adapter.setItems(projectModels);
+                    adapter.setItems(element);
                 }
             }
         });
@@ -304,22 +304,20 @@ public class ProjectListFragment extends BaseFragment {
             realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
                 @Override
                 public void execute(Realm realm) {
-                    ProgressParams progressParams = new ProgressParams(0, 10, getFragment().getString(R.string.project_generate_demo));
+                    ProgressParams progressParams = new ProgressParams(0, 10, getAppContext().getString(R.string.project_generate_demo));
                     publishProgress(progressParams);
-
-                    GraphParamsModel graphParamsModel = new GraphParamsModel()
-                            .setUid(realmHelper.generateUID(GraphParamsModel.class))
-                            .copyToRealm(realm);
 
                     ProjectModel projectModel = new ProjectModel()
                             .setUid(realmHelper.generateUID(ProjectModel.class))
-                            .setName(getFragment().getString(R.string.action_demo_project))
-                            .setParams(graphParamsModel)
+                            .setName(getAppContext().getString(R.string.action_demo_project))
+                            .setParams(new GraphParamsModel()
+                                    .setUid(realmHelper.generateUID(GraphParamsModel.class))
+                                    .copyToRealm(realm))
                             .copyToRealm(realm);
 
                     int a = 1;
                     @ColorInt int color = -20000;
-                    for (int i = 1; i < 11; i++) {
+                    for (int i = progressParams.getProgress() + 1; i < progressParams.getTotal() + 1; i++) {
                         a += i;
                         color -= 1000000;
                         publishProgress(progressParams.setProgress(progressParams.getProgress() + 1));
@@ -334,7 +332,7 @@ public class ProjectListFragment extends BaseFragment {
                         String function = a + " + x^2";
                         DataSetModel dataSetModel = new DataSetModel()
                                 .setUid(realmHelper.generateUID(DataSetModel.class))
-                                .setPrimary(getFragment().getString(R.string.data_set))
+                                .setPrimary(getAppContext().getString(R.string.data_set))
                                 .setSecondary(function)
                                 .setColor(color)
                                 .setType(DataSetModel.Type.FROM_FUNCTION)
