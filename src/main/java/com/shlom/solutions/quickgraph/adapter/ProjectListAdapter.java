@@ -13,11 +13,9 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.shlom.solutions.quickgraph.App;
 import com.shlom.solutions.quickgraph.R;
 import com.shlom.solutions.quickgraph.database.model.ProjectModel;
 import com.shlom.solutions.quickgraph.etc.FileCacheHelper;
-import com.shlom.solutions.quickgraph.etc.LogUtil;
 import com.shlom.solutions.quickgraph.ui.BackEditText;
 
 import java.text.SimpleDateFormat;
@@ -36,14 +34,15 @@ public class ProjectListAdapter extends BaseRealmSimpleAdapter<ProjectModel, Pro
     @Override
     public void onBindViewHolder(ItemVH holder, int position) {
         Context context = holder.itemView.getContext();
+
         ProjectModel projectModel = getItem(position);
         holder.primaryText.setText(projectModel.getName());
         holder.secondaryText.setText(context.getString(R.string.project_date, dateFormat.format(projectModel.getDate())));
         holder.counterText.setText(String.valueOf(projectModel.getDataSets().size()));
 
         Glide.clear(holder.previewImage);
-        Glide.with(App.getContext())
-                .load(Uri.fromFile(FileCacheHelper.getImageCache(projectModel.getPreviewFileName())).toString())
+        Glide.with(context)
+                .load(Uri.fromFile(FileCacheHelper.getImageCache(context, projectModel.getPreviewFileName())).toString())
                 .placeholder(VectorDrawableCompat.create(context.getResources(), R.drawable.ic_empty_preview_white_24dp, context.getTheme()))
                 .error(VectorDrawableCompat.create(context.getResources(), R.drawable.ic_empty_preview_white_24dp, context.getTheme()))
                 .diskCacheStrategy(DiskCacheStrategy.NONE)
@@ -74,7 +73,7 @@ public class ProjectListAdapter extends BaseRealmSimpleAdapter<ProjectModel, Pro
         public TextView secondaryText;
         public TextView counterText;
 
-        public ItemVH(View itemView) {
+        public ItemVH(final View itemView) {
             super(itemView);
 
             previewImage = (ImageView) itemView.findViewById(R.id.project_list_item_preview_image);
@@ -100,7 +99,7 @@ public class ProjectListAdapter extends BaseRealmSimpleAdapter<ProjectModel, Pro
                 @Override
                 public void onFocusChange(View v, boolean hasFocus) {
                     if (!hasFocus) {
-                        if (getLayoutPosition() > 0 && getLayoutPosition() < getItemCount()) {
+                        if (isValid() && getLayoutPosition() < getItemCount()) {
                             primaryText.setText(getItem(getLayoutPosition()).getName());
                         }
                         InputMethodManager imm = (InputMethodManager) primaryText.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -118,8 +117,9 @@ public class ProjectListAdapter extends BaseRealmSimpleAdapter<ProjectModel, Pro
 
             primaryText.setOnBackPressedListener(new BackEditText.OnBackPressedListener() {
                 @Override
-                public void onBackPressed() {
+                public boolean onBackPressed() {
                     primaryText.clearFocus();
+                    return true;
                 }
             });
         }

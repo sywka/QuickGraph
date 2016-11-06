@@ -20,16 +20,14 @@ import io.realm.RealmList;
 
 public abstract class Utils {
 
-    private static Context context = App.getContext();
-
-    public static int dpToPx(float dp) {
+    public static int dpToPx(Context context, float dp) {
         Resources resources = context.getResources();
         DisplayMetrics metrics = resources.getDisplayMetrics();
         int px = (int) (dp * ((float) metrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT));
         return px == 0 ? 1 : px;
     }
 
-    public static float pxToDp(int px) {
+    public static float pxToDp(Context context, int px) {
         Resources resources = context.getResources();
         DisplayMetrics metrics = resources.getDisplayMetrics();
         float dp = px / ((float) metrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT);

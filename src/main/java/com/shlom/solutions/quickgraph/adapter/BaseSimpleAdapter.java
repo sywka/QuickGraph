@@ -14,9 +14,13 @@ import java.util.List;
 public abstract class BaseSimpleAdapter<ItemType, ViewHolder extends BaseSimpleAdapter.ItemViewHolder>
         extends RecyclerView.Adapter<ViewHolder> {
 
-    private List<ItemType> items = new ArrayList<>();
+    private List<ItemType> items;
     private OnItemClickListener<ItemType, ViewHolder> onItemClickListener;
     private OnItemLongClickListener<ItemType, ViewHolder> onItemLongClickListener;
+
+    public BaseSimpleAdapter() {
+        this.items = new ArrayList<>();
+    }
 
     @Override
     public int getItemCount() {

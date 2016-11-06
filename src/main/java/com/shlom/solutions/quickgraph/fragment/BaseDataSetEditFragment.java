@@ -84,6 +84,7 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
 
                 standaloneDataSet = new DataSetModel()
                         .setUid(realmHelper.generateUID(DataSetModel.class))
+                        .setPrimary(getString(R.string.data_set))
                         .setFunctionRange(functionRangeModel);
                 standaloneDataSet.setPrimary(standaloneDataSet.getPrimary() + " №" + (projectModel.getDataSets().size() + 1));
 
@@ -99,8 +100,6 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
         appBarLayout = (AppBarLayout) rootView.findViewById(R.id.app_bar_layout);
         Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.toolbar);
         setupActivityActionBar(toolbar, true);
-        if (getBaseActivity().getSupportActionBar() != null)
-            getBaseActivity().getSupportActionBar().setTitle("");
 
         setupHeader(rootView);
         setupRecyclerView(rootView);
@@ -218,8 +217,9 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
             });
             ((BackEditText) editText).setOnBackPressedListener(new BackEditText.OnBackPressedListener() {
                 @Override
-                public void onBackPressed() {
+                public boolean onBackPressed() {
                     editText.clearFocus();
+                    return true;
                 }
             });
         }

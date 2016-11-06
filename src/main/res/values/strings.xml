@@ -29,26 +29,34 @@
     <string name="action_select_file">Select file</string>
     <string name="action_select_data_type">Select data type</string>
 
+    <string name="error">Error</string>
+    <string name="error_enter">Enter</string>
+    <string name="error_incorrect_function">Incorrect function</string>
+    <string name="error_need_file_manager">You need file manager</string>
+    <string name="error_file_not_found">File not found</string>
+    <string name="error_file_read">Failed to read the file</string>
+    <string name="error_file_empty">Points not found</string>
+    <string name="error_required_permission">Required permissions</string>
+
+    <string name="unknown">Unknown</string>
+    <string name="unknown_is">Unknown: %1$s</string>
+
     <string name="project_creation">Project creation</string>
     <string name="project_enter_name">Enter the name</string>
     <string name="project_date">Last edit: %1$s</string>
     <string name="project_remove">Project \"%1$s\" removed</string>
     <string name="project_remove_all">Projects removed: %1$s</string>
+    <string name="project_generate_demo">Generation demo data&#8230;</string>
     <string name="data_set">DataSet</string>
     <string name="data_set_remove">DataSet \"%1$s\" removed</string>
     <string name="data_set_remove_all">DataSets removed: %1$s</string>
     <string name="color_picker_title">Choose color</string>
     <string name="data_set_type_from_table">From table</string>
     <string name="data_set_type_from_function">From function</string>
-    <string name="unknown">Unknown</string>
-    <string name="unknown_is">Unknown: %1$s</string>
     <string name="table_is">Table of %1$s rows</string>
     <string name="table_is_imported">Imported from: \"%1$s\"</string>
     <string name="function">Function</string>
     <string name="function_is">Function: %1$s</string>
-    <string name="error">Error</string>
-    <string name="error_incorrect_function">Incorrect function</string>
-    <string name="error_enter">Enter</string>
     <string name="x">X</string>
     <string name="y">Y</string>
     <string name="from">From</string>
@@ -62,11 +70,6 @@
     <string name="draw_points">Draw points</string>
     <string name="draw_points_label">Draw points label</string>
     <string name="can_empty">It may be empty</string>
-    <string name="error_need_file_manager">You need file manager</string>
-    <string name="error_file_not_found">File not found</string>
-    <string name="error_file_read">Failed to read the file</string>
-    <string name="error_file_empty">Points not found</string>
-    <string name="error_required_permission">Required permissions</string>
     <string name="import_from_txt">From text file</string>
     <string name="import_from_csv">From csv file</string>
     <string name="import_from_excel">From excel file</string>

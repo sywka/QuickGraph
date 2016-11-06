@@ -10,23 +10,12 @@ import com.afollestad.materialdialogs.MaterialDialog;
 
 public class ProgressDialogFragment extends DialogFragment {
 
-    private static final String TAG_CONTENT = "content";
-
     private OnProgressCancel onProgressCancel;
-
-    public static ProgressDialogFragment newInstance(String content) {
-        ProgressDialogFragment progressDialogFragment = new ProgressDialogFragment();
-        Bundle bundle = new Bundle();
-        bundle.putString(TAG_CONTENT, content);
-        progressDialogFragment.setArguments(bundle);
-        return progressDialogFragment;
-    }
 
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         return new MaterialDialog.Builder(getContext())
-                .content(getArguments().getString(TAG_CONTENT, ""))
                 .progress(false, 100)
                 .build();
     }

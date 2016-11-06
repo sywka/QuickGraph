@@ -1,7 +1,10 @@
 package com.shlom.solutions.quickgraph.adapter;
 
 import com.shlom.solutions.quickgraph.database.ObjectWithUID;
+import com.shlom.solutions.quickgraph.etc.LogUtil;
 
+import io.realm.OrderedRealmCollection;
+import io.realm.RealmList;
 import io.realm.RealmObject;
 
 public abstract class BaseRealmSimpleAdapter<ItemType extends RealmObject & ObjectWithUID,
@@ -9,6 +12,7 @@ public abstract class BaseRealmSimpleAdapter<ItemType extends RealmObject & Obje
         extends BaseSimpleAdapter<ItemType, ViewHolder> {
 
     public BaseRealmSimpleAdapter() {
+        setItems(new RealmList<ItemType>());
         setHasStableIds(true);
     }
 
@@ -17,10 +21,41 @@ public abstract class BaseRealmSimpleAdapter<ItemType extends RealmObject & Obje
         return getItem(position).getUid();
     }
 
+    @Override
+    public OrderedRealmCollection<ItemType> getItems() {
+        return (OrderedRealmCollection<ItemType>) super.getItems();
+    }
+
+    @Override
+    public int getItemCount() {
+        return isValid() ? super.getItemCount() : 0;
+    }
+
+    @Override
+    public void removeItem(ItemType item) {
+        removeItem(getItems().indexOf(item));
+    }
+
+    @Override
+    public void removeItem(int position) {
+        getItems().deleteFromRealm(position);
+        notifyItemRemoved(position);
+    }
+
+    @Override
+    public void removeAll() {
+        getItems().deleteAllFromRealm();
+        notifyDataSetChanged();
+    }
+
     public int getItemPosition(long id) {
         for (int i = 0; i < getItemCount(); i++) {
             if (getItemId(i) == id) return i;
         }
         return -1;
+    }
+
+    public boolean isValid() {
+        return getItems().isValid();
     }
 }

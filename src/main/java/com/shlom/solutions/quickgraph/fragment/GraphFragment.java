@@ -1,6 +1,5 @@
 package com.shlom.solutions.quickgraph.fragment;
 
-import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -72,8 +71,6 @@ public class GraphFragment extends BaseFragment implements ColorPickerDialogFrag
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        realmHelper = new RealmHelper();
-
         View rootView = inflater.inflate(R.layout.fragment_graph, container, false);
 
         progressBar = (ProgressBar) rootView.findViewById(R.id.graph_progress_bar);
@@ -87,37 +84,32 @@ public class GraphFragment extends BaseFragment implements ColorPickerDialogFrag
 
         setupGraphLayout(rootView);
 
-        loadData();
-
         return rootView;
     }
 
     @Override
-    public void onDestroyView() {
-        super.onDestroyView();
+    public void onStart() {
+        super.onStart();
 
-        projectModel.removeChangeListener(projectChangeListener);
-        realmHelper.closeRealm();
-    }
-
-    private void loadData() {
+        realmHelper = new RealmHelper();
         projectModel = realmHelper.findObjectAsync(ProjectModel.class, Utils.getLong(this));
         projectModel.addChangeListener(projectChangeListener = new RealmChangeListener<ProjectModel>() {
             @Override
             public void onChange(ProjectModel element) {
-                if (projectModel.isLoaded()) {
-                    if (projectModel.isValid()) {
-                        updateLineChartConfig();
-                        new AsyncDataPreparer(GraphFragment.this).execute(realmHelper.getRealm().copyFromRealm(projectModel));
-                    }
+                if (projectModel.isLoaded() && projectModel.isValid()) {
+                    updateLineChartConfig();
+                    new AsyncDataPreparer(GraphFragment.this).execute(realmHelper.getRealm().copyFromRealm(projectModel));
                 }
             }
         });
     }
 
-    private void updateLastEditDate(ProjectModel projectModel) {
-        projectModel.setDate(new Date());
-        getActivity().setResult(Activity.RESULT_OK);
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        projectModel.removeChangeListener(projectChangeListener);
+        realmHelper.closeRealm();
     }
 
     @Override
@@ -125,8 +117,9 @@ public class GraphFragment extends BaseFragment implements ColorPickerDialogFrag
         realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                projectModel.getParams().setColorGrid(color);
-                updateLastEditDate(projectModel);
+                projectModel
+                        .setDate(new Date())
+                        .getParams().setColorGrid(color);
             }
         });
     }
@@ -198,8 +191,9 @@ public class GraphFragment extends BaseFragment implements ColorPickerDialogFrag
                 realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
                     @Override
                     public void execute(Realm realm) {
-                        projectModel.getParams().setDrawLegend(item.isChecked());
-                        updateLastEditDate(projectModel);
+                        projectModel
+                                .setDate(new Date())
+                                .getParams().setDrawLegend(item.isChecked());
                     }
                 });
                 return true;
@@ -207,8 +201,9 @@ public class GraphFragment extends BaseFragment implements ColorPickerDialogFrag
                 realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
                     @Override
                     public void execute(Realm realm) {
-                        projectModel.getParams().setDrawAxis(item.isChecked());
-                        updateLastEditDate(projectModel);
+                        projectModel
+                                .setDate(new Date())
+                                .getParams().setDrawAxis(item.isChecked());
                     }
                 });
                 return true;
@@ -226,8 +221,9 @@ public class GraphFragment extends BaseFragment implements ColorPickerDialogFrag
                                 realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
                                     @Override
                                     public void execute(Realm realm) {
-                                        projectModel.getParams().setXAxisTitle(input.toString());
-                                        updateLastEditDate(projectModel);
+                                        projectModel
+                                                .setDate(new Date())
+                                                .getParams().setXAxisTitle(input.toString());
                                     }
                                 });
                             }
@@ -244,8 +240,9 @@ public class GraphFragment extends BaseFragment implements ColorPickerDialogFrag
                                 realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
                                     @Override
                                     public void execute(Realm realm) {
-                                        projectModel.getParams().setYAxisTitle(input.toString());
-                                        updateLastEditDate(projectModel);
+                                        projectModel
+                                                .setDate(new Date())
+                                                .getParams().setYAxisTitle(input.toString());
                                     }
                                 });
                             }
@@ -256,8 +253,9 @@ public class GraphFragment extends BaseFragment implements ColorPickerDialogFrag
                 realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
                     @Override
                     public void execute(Realm realm) {
-                        projectModel.getParams().setFitScreen(item.isChecked());
-                        updateLastEditDate(projectModel);
+                        projectModel
+                                .setDate(new Date())
+                                .getParams().setFitScreen(item.isChecked());
                     }
                 });
                 return true;
@@ -265,7 +263,7 @@ public class GraphFragment extends BaseFragment implements ColorPickerDialogFrag
         return super.onOptionsItemSelected(item);
     }
 
-    private class AsyncDataPreparer extends AsyncRealmTask<ProjectModel, LineChartData> {
+    private class AsyncDataPreparer extends AsyncRealmTask<ProjectModel, Void, LineChartData> {
 
         public AsyncDataPreparer(@NonNull Fragment fragment) {
             super(fragment);
@@ -315,9 +313,9 @@ public class GraphFragment extends BaseFragment implements ColorPickerDialogFrag
                 }
                 lines.add(new Line(values)
                         .setColor(dataSetModel.getColor())
-                        .setStrokeWidth(Utils.dpToPx(dataSetModel.getLineWidth()))
+                        .setStrokeWidth(Utils.dpToPx(getFragment().getContext(), dataSetModel.getLineWidth()))
                         .setPointColor(dataSetModel.getColor())
-                        .setPointRadius(Utils.dpToPx(dataSetModel.getPointsRadius()))
+                        .setPointRadius(Utils.dpToPx(getFragment().getContext(), dataSetModel.getPointsRadius()))
                         .setHasPoints(dataSetModel.isDrawPoints())
                         .setHasLabels(dataSetModel.isDrawPointsLabel())
                         .setHasLabelsOnlyForSelected(!dataSetModel.isDrawPointsLabel())
@@ -347,7 +345,7 @@ public class GraphFragment extends BaseFragment implements ColorPickerDialogFrag
         }
     }
 
-    private class AsyncCacheCreator extends AsyncRealmTask<Long, Void> {
+    private class AsyncCacheCreator extends AsyncRealmTask<Long, Void, Void> {
 
         private Bitmap preview = null;
 
@@ -378,11 +376,11 @@ public class GraphFragment extends BaseFragment implements ColorPickerDialogFrag
                 fileName = projectModel.getPreviewFileName();
             }
 
-            Bitmap oldPreview = FileCacheHelper.getImageFromCache(fileName);
+            Bitmap oldPreview = FileCacheHelper.getImageFromCache(getFragment().getContext(), fileName);
             if ((preview == null && oldPreview == null) ||
                     (preview != null && preview.sameAs(oldPreview))) return null;
 
-            final boolean isCached = FileCacheHelper.putImageToCache(fileName, preview);
+            final boolean isCached = FileCacheHelper.putImageToCache(getFragment().getContext(), fileName, preview);
             realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
                 @Override
                 public void execute(Realm realm) {

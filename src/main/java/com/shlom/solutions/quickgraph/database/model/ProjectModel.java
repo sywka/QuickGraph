@@ -1,5 +1,7 @@
 package com.shlom.solutions.quickgraph.database.model;
 
+import android.content.Context;
+
 import com.shlom.solutions.quickgraph.App;
 import com.shlom.solutions.quickgraph.R;
 import com.shlom.solutions.quickgraph.database.ObjectWithUID;
@@ -32,7 +34,7 @@ public class ProjectModel extends RealmObject implements ObjectWithUID, Serializ
     private RealmList<DataSetModel> dataSets;
 
     public ProjectModel() {
-        name = App.getContext().getString(R.string.action_demo_project);
+        name = "Project";
         date = new Date();
         dataSets = new RealmList<>();
     }
@@ -56,7 +58,7 @@ public class ProjectModel extends RealmObject implements ObjectWithUID, Serializ
         return this;
     }
 
-    public void deleteDependentsFromRealm() {
+    public void deleteDependentsFromRealm(Context context) {
         if (params != null) params.deleteFromRealm();
         if (dataSets != null) {
             for (DataSetModel dataSetModel : dataSets) {
@@ -65,7 +67,7 @@ public class ProjectModel extends RealmObject implements ObjectWithUID, Serializ
             dataSets.deleteAllFromRealm();
         }
         if (previewFileName != null) {
-            LogUtil.d(FileCacheHelper.getImageCache(previewFileName).delete());
+            LogUtil.d(FileCacheHelper.getImageCache(context, previewFileName).delete());
         }
     }
 

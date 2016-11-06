@@ -1,5 +1,6 @@
 package com.shlom.solutions.quickgraph.adapter;
 
+import android.content.Context;
 import android.graphics.drawable.GradientDrawable;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,16 +19,20 @@ public class DataListAdapter extends BaseRealmSimpleAdapter<DataSetModel, DataLi
 
     @Override
     public void onBindViewHolder(ItemVH holder, int position) {
+        Context context = holder.itemView.getContext();
+
         DataSetModel dataSetModel = getItem(position);
         holder.primaryText.setText(dataSetModel.getPrimary());
         holder.checkBox.setChecked(dataSetModel.isChecked());
-        holder.secondaryText.setText(dataSetModel.getSecondaryExtended());
+        holder.secondaryText.setText(dataSetModel.getSecondaryExtended(context));
         ((GradientDrawable) holder.colorView.getBackground()).setColor(dataSetModel.getColor());
     }
 
     public boolean isCheckedAll() {
-        for (DataSetModel dataSetModel : getItems()) {
-            if (!dataSetModel.isChecked()) return false;
+        if (isValid()) {
+            for (DataSetModel dataSetModel : getItems()) {
+                if (!dataSetModel.isChecked()) return false;
+            }
         }
         return true;
     }

@@ -1,7 +1,9 @@
 package com.shlom.solutions.quickgraph.database.model;
 
+import android.content.Context;
 import android.graphics.Color;
 import android.support.annotation.ColorInt;
+import android.support.annotation.StringRes;
 
 import com.shlom.solutions.quickgraph.App;
 import com.shlom.solutions.quickgraph.R;
@@ -59,7 +61,7 @@ public class DataSetModel extends RealmObject implements ObjectWithUID, Serializ
     private RealmList<CoordinateModel> coordinates;
 
     public DataSetModel() {
-        primary = App.getContext().getString(R.string.data_set);
+        primary = "";
         secondary = "";
         color = Color.BLUE;
         lineWidth = 0.5f;
@@ -96,31 +98,32 @@ public class DataSetModel extends RealmObject implements ObjectWithUID, Serializ
         if (coordinates != null) coordinates.deleteAllFromRealm();
     }
 
-    public String getSecondaryExtended() {
+    public String getSecondaryExtended(Context context) {
         switch (getType()) {
             case FROM_TABLE:
-                String secondaryExtended = App.getContext().getString(R.string.table_is, String.valueOf(coordinates.size()));
+                String secondaryExtended = context.getString(R.string.table_is, String.valueOf(coordinates.size()));
                 if (!secondary.isEmpty()) {
-                    secondaryExtended += ", " + App.getContext().getString(R.string.table_is_imported, secondary);
+                    secondaryExtended += ", " +context.getString(R.string.table_is_imported, secondary);
                 }
                 return secondaryExtended;
             case FROM_FUNCTION:
-                return App.getContext().getString(R.string.function_is, secondary);
+                return context.getString(R.string.function_is, secondary);
             case UNKNOWN:
             default:
-                return App.getContext().getString(R.string.unknown_is, secondary);
+                return context.getString(R.string.unknown_is, secondary);
         }
     }
 
-    public static String getTypeName(Type type) {
+    @StringRes
+    public static int getTypeNameResource(Type type) {
         switch (type) {
             case FROM_TABLE:
-                return App.getContext().getString(R.string.data_set_type_from_table);
+                return R.string.data_set_type_from_table;
             case FROM_FUNCTION:
-                return App.getContext().getString(R.string.data_set_type_from_function);
+                return R.string.data_set_type_from_function;
             case UNKNOWN:
             default:
-                return App.getContext().getString(R.string.unknown);
+                return R.string.unknown;
         }
     }
 

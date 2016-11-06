@@ -6,9 +6,9 @@ import android.support.v4.app.Fragment;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.shlom.solutions.quickgraph.fragment.dialog.ProgressDialogFragment;
 
-public abstract class ProgressAsyncRealmTask<Params, Result> extends AsyncRealmTask<Params, Result> {
+public abstract class ProgressAsyncRealmTask<Params, Result> extends AsyncRealmTask<Params, ProgressParams, Result> {
 
-    private static final String TAG_PROGRESS_DIALOG = "progress_dialog";
+    private static final String TAG_PROGRESS_DIALOG = "async_progress_dialog";
 
     private boolean cancelableProgress = true;
 
@@ -24,7 +24,7 @@ public abstract class ProgressAsyncRealmTask<Params, Result> extends AsyncRealmT
     protected void onPreExecute() {
         super.onPreExecute();
 
-        ProgressDialogFragment progress = ProgressDialogFragment.newInstance("Генерирование демо данных...");
+        ProgressDialogFragment progress = new ProgressDialogFragment();
         progress.setRetainInstance(true);
         progress.setCancelable(cancelableProgress);
         progress.setOnProgressCancel(new ProgressDialogFragment.OnProgressCancel() {
@@ -45,14 +45,17 @@ public abstract class ProgressAsyncRealmTask<Params, Result> extends AsyncRealmT
     }
 
     @Override
-    protected void onProgressUpdate(Integer... values) {
+    protected void onProgressUpdate(ProgressParams... values) {
         super.onProgressUpdate(values);
+        ProgressParams progressParams = values[0];
 
         if (findProgressDialog() != null) {
-            int percent = values[0] * 100 / values[1];
+            int percent = progressParams.getProgress() * 100 / progressParams.getTotal();
             MaterialDialog dialog = (MaterialDialog) findProgressDialog().getDialog();
-            if (dialog != null)
+            if (dialog != null) {
+                dialog.setContent(progressParams.getDescription());
                 dialog.setProgress(percent);
+            }
         }
     }
 

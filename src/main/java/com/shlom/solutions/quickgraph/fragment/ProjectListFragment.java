@@ -25,7 +25,6 @@ import android.view.ViewGroup;
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.bumptech.glide.Glide;
-import com.shlom.solutions.quickgraph.App;
 import com.shlom.solutions.quickgraph.R;
 import com.shlom.solutions.quickgraph.activity.DataSetActivity;
 import com.shlom.solutions.quickgraph.adapter.BaseSimpleAdapter;
@@ -35,8 +34,8 @@ import com.shlom.solutions.quickgraph.database.model.DataSetModel;
 import com.shlom.solutions.quickgraph.database.model.FunctionRangeModel;
 import com.shlom.solutions.quickgraph.database.model.GraphParamsModel;
 import com.shlom.solutions.quickgraph.database.model.ProjectModel;
-import com.shlom.solutions.quickgraph.etc.LogUtil;
 import com.shlom.solutions.quickgraph.etc.ProgressAsyncRealmTask;
+import com.shlom.solutions.quickgraph.etc.ProgressParams;
 import com.shlom.solutions.quickgraph.etc.Utils;
 import com.shlom.solutions.quickgraph.ui.AutofitRecyclerView;
 
@@ -61,8 +60,6 @@ public class ProjectListFragment extends BaseFragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        realmHelper = new RealmHelper();
-
         View rootView = inflater.inflate(R.layout.fragment_project_list, container, false);
 
         appBarLayout = (AppBarLayout) rootView.findViewById(R.id.app_bar_layout);
@@ -70,32 +67,32 @@ public class ProjectListFragment extends BaseFragment {
         setupRecyclerView(rootView);
         setupFab(rootView);
 
-        loadData();
-
         return rootView;
     }
 
     @Override
-    public void onDestroyView() {
-        super.onDestroyView();
+    public void onStart() {
+        super.onStart();
 
-        if (projectModels != null && projectChangeListener != null) {
-            projectModels.removeChangeListener(projectChangeListener);
-        }
-        realmHelper.closeRealm();
-    }
-
-    private void loadData() {
+        realmHelper = new RealmHelper();
         projectModels = realmHelper.findResultsAsync(ProjectModel.class, Sort.DESCENDING);
         projectModels.addChangeListener(projectChangeListener = new RealmChangeListener<RealmResults<ProjectModel>>() {
             @Override
             public void onChange(RealmResults<ProjectModel> element) {
-                if (projectModels.isLoaded()) {
-                    Glide.get(App.getContext()).clearMemory();
+                if (projectModels.isLoaded() && projectModels.isValid()) {
+                    Glide.get(getContext()).clearMemory();
                     adapter.setItems(projectModels);
                 }
             }
         });
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        projectModels.removeChangeListener(projectChangeListener);
+        realmHelper.closeRealm();
     }
 
     private void setupRecyclerView(View rootView) {
@@ -231,8 +228,8 @@ public class ProjectListFragment extends BaseFragment {
         realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                adapter.getItem(position).deleteDependentsFromRealm();
-                ((RealmResults<ProjectModel>) adapter.getItems()).deleteFromRealm(position);
+                adapter.getItem(position).deleteDependentsFromRealm(getContext());
+                adapter.removeItem(position);
             }
         });
 
@@ -261,9 +258,9 @@ public class ProjectListFragment extends BaseFragment {
             @Override
             public void execute(Realm realm) {
                 for (ProjectModel projectModel : adapter.getItems()) {
-                    projectModel.deleteDependentsFromRealm();
+                    projectModel.deleteDependentsFromRealm(getContext());
                 }
-                ((RealmResults<ProjectModel>) adapter.getItems()).deleteAllFromRealm();
+                adapter.removeAll();
             }
         });
 
@@ -307,9 +304,8 @@ public class ProjectListFragment extends BaseFragment {
             realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
                 @Override
                 public void execute(Realm realm) {
-                    int stepSize = 10;
-                    int step = 0;
-                    publishProgress(step, stepSize);
+                    ProgressParams progressParams = new ProgressParams(0, 10, getFragment().getString(R.string.project_generate_demo));
+                    publishProgress(progressParams);
 
                     GraphParamsModel graphParamsModel = new GraphParamsModel()
                             .setUid(realmHelper.generateUID(GraphParamsModel.class))
@@ -317,6 +313,7 @@ public class ProjectListFragment extends BaseFragment {
 
                     ProjectModel projectModel = new ProjectModel()
                             .setUid(realmHelper.generateUID(ProjectModel.class))
+                            .setName(getFragment().getString(R.string.action_demo_project))
                             .setParams(graphParamsModel)
                             .copyToRealm(realm);
 
@@ -325,7 +322,7 @@ public class ProjectListFragment extends BaseFragment {
                     for (int i = 1; i < 11; i++) {
                         a += i;
                         color -= 1000000;
-                        publishProgress(step++, stepSize);
+                        publishProgress(progressParams.setProgress(progressParams.getProgress() + 1));
 
                         FunctionRangeModel functionRangeModel = new FunctionRangeModel()
                                 .setUid(realmHelper.generateUID(FunctionRangeModel.class))
@@ -337,6 +334,7 @@ public class ProjectListFragment extends BaseFragment {
                         String function = a + " + x^2";
                         DataSetModel dataSetModel = new DataSetModel()
                                 .setUid(realmHelper.generateUID(DataSetModel.class))
+                                .setPrimary(getFragment().getString(R.string.data_set))
                                 .setSecondary(function)
                                 .setColor(color)
                                 .setType(DataSetModel.Type.FROM_FUNCTION)

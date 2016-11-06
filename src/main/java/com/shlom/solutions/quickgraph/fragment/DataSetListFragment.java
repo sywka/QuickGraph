@@ -13,6 +13,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewCompat;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -45,7 +46,6 @@ import java.util.List;
 import io.realm.Realm;
 import io.realm.RealmChangeListener;
 import io.realm.RealmList;
-import io.realm.RealmResults;
 
 public class DataSetListFragment extends BaseFragment
         implements ColorPickerDialogFragment.OnColorChangedListener, View.OnKeyListener {
@@ -66,9 +66,8 @@ public class DataSetListFragment extends BaseFragment
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        realmHelper = new RealmHelper();
-
         View rootView = inflater.inflate(R.layout.fragment_data_set_list, container, false);
+
         Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.toolbar);
 
         rootView.setFocusableInTouchMode(true);
@@ -87,34 +86,32 @@ public class DataSetListFragment extends BaseFragment
                         TAG_GRAPH_FRAGMENT)
                 .commit();
 
-        loadData();
-
         return rootView;
     }
 
     @Override
-    public void onDestroyView() {
-        super.onDestroyView();
+    public void onStart() {
+        super.onStart();
 
-        if (projectModel != null && projectChangeListener != null) {
-            projectModel.removeChangeListener(projectChangeListener);
-        }
-        realmHelper.closeRealm();
-    }
-
-    private void loadData() {
+        realmHelper = new RealmHelper();
         projectModel = realmHelper.findObjectAsync(ProjectModel.class, Utils.getLong(this));
         projectModel.addChangeListener(projectChangeListener = new RealmChangeListener<ProjectModel>() {
             @Override
             public void onChange(ProjectModel element) {
-                if (projectModel.isLoaded()) {
-                    if (projectModel.isValid()) {
-                        adapter.setItems(projectModel.getDataSets());
-                        invalidateOptionsMenu();
-                    }
+                if (projectModel.isLoaded() && projectModel.isValid()) {
+                    adapter.setItems(projectModel.getDataSets());
+                    invalidateOptionsMenu();
                 }
             }
         });
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        projectModel.removeChangeListener(projectChangeListener);
+        realmHelper.closeRealm();
     }
 
     @Override
@@ -139,6 +136,7 @@ public class DataSetListFragment extends BaseFragment
     private void setupRecyclerView(View rootView) {
         recyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        recyclerView.addItemDecoration(new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL));
         recyclerView.setHasFixedSize(true);
         recyclerView.setAdapter(adapter = new DataListAdapter());
 
@@ -191,8 +189,8 @@ public class DataSetListFragment extends BaseFragment
             public void onClick(View v) {
                 new MaterialDialog.Builder(getContext())
                         .title(getString(R.string.action_select_data_type))
-                        .items(DataSetModel.getTypeName(DataSetModel.Type.FROM_TABLE),
-                                DataSetModel.getTypeName(DataSetModel.Type.FROM_FUNCTION))
+                        .items(getString(DataSetModel.getTypeNameResource(DataSetModel.Type.FROM_TABLE)),
+                                getString(DataSetModel.getTypeNameResource(DataSetModel.Type.FROM_FUNCTION)))
                         .itemsCallback(new MaterialDialog.ListCallback() {
                             @Override
                             public void onSelection(MaterialDialog dialog, View itemView, int which, CharSequence text) {
@@ -229,7 +227,6 @@ public class DataSetListFragment extends BaseFragment
 
         final FrameLayout content = (FrameLayout) rootView.findViewById(R.id.graph_content);
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
-        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         fakeToolbar = (Toolbar) bottomSheet.findViewById(R.id.fake_toolbar);
         fakeToolbar.setTitle(R.string.activity_graph);
         View.OnClickListener onClickListener = new View.OnClickListener() {
@@ -250,8 +247,8 @@ public class DataSetListFragment extends BaseFragment
             @Override
             public void onStateChanged(@NonNull View bottomSheet, int newState) {
                 fakeToolbar.setClickable(newState != BottomSheetBehavior.STATE_EXPANDED);
-                if (newState == BottomSheetBehavior.STATE_EXPANDED)
-                    fab.setVisibility(View.GONE);
+                if (newState == BottomSheetBehavior.STATE_EXPANDED) setFabScale(0);
+                if (newState == BottomSheetBehavior.STATE_COLLAPSED) setFabScale(1);
             }
 
             @Override
@@ -312,11 +309,9 @@ public class DataSetListFragment extends BaseFragment
     public void onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
 
-        if (adapter != null) {
-            boolean checkedAll = adapter.isCheckedAll();
-            menu.findItem(R.id.action_check_all).setVisible(!checkedAll);
-            menu.findItem(R.id.action_uncheck_all).setVisible(checkedAll);
-        }
+        boolean checkedAll = adapter.isCheckedAll();
+        menu.findItem(R.id.action_check_all).setVisible(!checkedAll);
+        menu.findItem(R.id.action_uncheck_all).setVisible(checkedAll);
     }
 
     @Override
@@ -359,7 +354,7 @@ public class DataSetListFragment extends BaseFragment
             @Override
             public void execute(Realm realm) {
                 adapter.getItem(position).deleteDependentsFromRealm();
-                ((RealmList<DataSetModel>) adapter.getItems()).deleteFromRealm(position);
+                adapter.removeItem(position);
                 updateLastEditDate();
             }
         });
@@ -392,7 +387,7 @@ public class DataSetListFragment extends BaseFragment
                 for (DataSetModel dataSet : adapter.getItems()) {
                     dataSet.deleteDependentsFromRealm();
                 }
-                ((RealmList<DataSetModel>) adapter.getItems()).deleteAllFromRealm();
+                adapter.removeAll();
                 updateLastEditDate();
             }
         });

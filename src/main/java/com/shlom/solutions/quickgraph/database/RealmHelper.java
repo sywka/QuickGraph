@@ -3,6 +3,8 @@ package com.shlom.solutions.quickgraph.database;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.shlom.solutions.quickgraph.etc.LogUtil;
+
 import io.realm.Realm;
 import io.realm.RealmObject;
 import io.realm.RealmResults;
@@ -32,6 +34,10 @@ public class RealmHelper {
 
     public void closeRealm() {
         realm.close();
+    }
+
+    public boolean realmIsClosed() {
+        return realm.isClosed();
     }
 
     @Nullable

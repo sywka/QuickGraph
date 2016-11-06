@@ -24,7 +24,7 @@ public class BackEditText extends TextInputEditText {
     @Override
     public boolean onKeyPreIme(int keyCode, KeyEvent event) {
         if (onBackPressedListener != null && event.getKeyCode() == KeyEvent.KEYCODE_BACK)
-            onBackPressedListener.onBackPressed();
+            return onBackPressedListener.onBackPressed() || super.onKeyPreIme(keyCode, event);
         return super.onKeyPreIme(keyCode, event);
     }
 
@@ -37,6 +37,6 @@ public class BackEditText extends TextInputEditText {
     }
 
     public interface OnBackPressedListener {
-        void onBackPressed();
+        boolean onBackPressed();
     }
 }
