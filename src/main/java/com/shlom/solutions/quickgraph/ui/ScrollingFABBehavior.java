@@ -8,6 +8,7 @@ import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
 
+@SuppressWarnings("unused")
 public class ScrollingFABBehavior extends FloatingActionButton.Behavior {
 
     private int toolbarHeight;

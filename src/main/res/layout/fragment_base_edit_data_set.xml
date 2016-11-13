@@ -49,6 +49,7 @@
         android:layout_margin="@dimen/fab_margin"
         app:layout_anchor="@id/app_bar_layout"
         app:layout_anchorGravity="bottom|right|end"
+        app:layout_behavior="@string/fab_manual_hide_behavior"
         app:srcCompat="@drawable/ic_check_white_24dp" />
 
 </android.support.design.widget.CoordinatorLayout>

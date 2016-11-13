@@ -7,6 +7,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.shlom.solutions.quickgraph.R;
 
 public class ProgressDialogFragment extends DialogFragment {
 
@@ -15,9 +16,12 @@ public class ProgressDialogFragment extends DialogFragment {
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        return new MaterialDialog.Builder(getContext())
-                .progress(false, 100)
-                .build();
+        MaterialDialog.Builder dialogBuilder = new MaterialDialog.Builder(getContext())
+                .progress(false, 100);
+        if (isCancelable()) {
+            dialogBuilder.negativeText(R.string.action_cancel);
+        }
+        return dialogBuilder.build();
     }
 
     @Override

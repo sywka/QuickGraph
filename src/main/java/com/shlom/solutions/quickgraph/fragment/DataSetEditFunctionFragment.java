@@ -13,7 +13,7 @@ import com.shlom.solutions.quickgraph.R;
 import com.shlom.solutions.quickgraph.database.model.DataSetModel;
 import com.shlom.solutions.quickgraph.etc.LogUtil;
 import com.shlom.solutions.quickgraph.etc.Utils;
-import com.shlom.solutions.quickgraph.ui.TextWatcher;
+import com.shlom.solutions.quickgraph.etc.interfaces.TextWatcher;
 
 public class DataSetEditFunctionFragment extends BaseDataSetEditFragment {
 
@@ -89,6 +89,7 @@ public class DataSetEditFunctionFragment extends BaseDataSetEditFragment {
     protected void onConfirmationSaving() {
         super.onConfirmationSaving();
 
+        LogUtil.d(getFab().isShown());
         if (!getStandaloneDataSet().getFunctionRange().isFilled()) return;
 
         if (getDataSet() == null ||
@@ -105,12 +106,9 @@ public class DataSetEditFunctionFragment extends BaseDataSetEditFragment {
     }
 
     private void setEnabledFab(final boolean enabled) {
-//        getFab().setEnabled(enabled);
-        if (enabled) {
-            getFab().setVisibility(View.VISIBLE);
-        } else {
-            getFab().setVisibility(View.INVISIBLE);
-        }
+        getFab().setEnabled(enabled);
+        if (enabled) getFab().show();
+        else getFab().hide();
     }
 
     private void setupInput(@NonNull final TextInputLayout textInputLayout, @Nullable Float defaultValue, @NonNull final InputCallback callback) {

@@ -1,9 +1,8 @@
 package com.shlom.solutions.quickgraph.database.model;
 
 import android.content.Context;
+import android.support.annotation.ColorInt;
 
-import com.shlom.solutions.quickgraph.App;
-import com.shlom.solutions.quickgraph.R;
 import com.shlom.solutions.quickgraph.database.ObjectWithUID;
 import com.shlom.solutions.quickgraph.etc.FileCacheHelper;
 import com.shlom.solutions.quickgraph.etc.LogUtil;
@@ -47,19 +46,9 @@ public class ProjectModel extends RealmObject implements ObjectWithUID, Serializ
         return realm.copyToRealmOrUpdate(this);
     }
 
-    public ProjectModel addDataSet(int position, DataSetModel dataSet) {
-        if (dataSets == null) dataSets = new RealmList<>();
-        dataSets.add(position, dataSet);
-        return this;
-    }
-
-    public ProjectModel addDataSet(DataSetModel dataSet) {
-        addDataSet(dataSets.size(), dataSet);
-        return this;
-    }
-
     public void deleteDependentsFromRealm(Context context) {
         if (params != null) {
+            params.deleteDependentsFromRealm();
             params.deleteFromRealm();
         }
         if (dataSets != null) {
@@ -73,7 +62,22 @@ public class ProjectModel extends RealmObject implements ObjectWithUID, Serializ
         }
     }
 
-    // generated getters
+    public ProjectModel addDataSet(int position, DataSetModel dataSet) {
+        if (dataSets == null) dataSets = new RealmList<>();
+        dataSets.add(position, dataSet);
+        return this;
+    }
+
+    public ProjectModel addDataSet(DataSetModel dataSet) {
+        addDataSet(dataSets.size(), dataSet);
+        return this;
+    }
+
+    public GraphParamsModel setFitScreen(boolean fitScreen) {
+        return getParams().setFitScreen(fitScreen);
+    }
+
+    // generated getters and setters
 
     @Override
     public long getUid() {

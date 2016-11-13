@@ -10,40 +10,26 @@ import java.io.Serializable;
 import io.realm.Realm;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
-import io.realm.annotations.Required;
 
 public class GraphParamsModel extends RealmObject implements ObjectWithUID, Serializable {
 
     @PrimaryKey
     private long uid;
 
-    @Required
-    private String xAxisTitle;
-
-    @Required
-    private String yAxisTitle;
-
-    private int colorGrid;
-
-    private int colorAxis;
-
-    private boolean drawGrid;
-
-    private boolean drawAxis;
-
     private boolean drawLegend;
 
     private boolean fitScreen;
 
+    private int colorBackground;
+
+    private AxisParamsModel axisXParams;
+
+    private AxisParamsModel axisYParams;
+
     public GraphParamsModel() {
-        xAxisTitle = "X";
-        yAxisTitle = "Y";
-        colorAxis = Color.GRAY;
-        colorGrid = Color.GRAY;
-        drawAxis = true;
-        drawGrid = true;
         drawLegend = true;
         fitScreen = true;
+        colorBackground = Color.WHITE;
     }
 
     public GraphParamsModel copyToRealm(Realm realm) {
@@ -52,6 +38,17 @@ public class GraphParamsModel extends RealmObject implements ObjectWithUID, Seri
 
     public GraphParamsModel copyToRealmOrUpdate(Realm realm) {
         return realm.copyToRealmOrUpdate(this);
+    }
+
+    public void deleteDependentsFromRealm() {
+        if (axisXParams != null) {
+            axisXParams.deleteDependentsFromRealm();
+            axisXParams.deleteFromRealm();
+        }
+        if (axisYParams != null) {
+            axisYParams.deleteDependentsFromRealm();
+            axisYParams.deleteFromRealm();
+        }
     }
 
     // generated getters and setters
@@ -63,62 +60,6 @@ public class GraphParamsModel extends RealmObject implements ObjectWithUID, Seri
 
     public GraphParamsModel setUid(long uid) {
         this.uid = uid;
-        return this;
-    }
-
-    public String getXAxisTitle() {
-        return xAxisTitle;
-    }
-
-    public GraphParamsModel setXAxisTitle(String xAxisTitle) {
-        this.xAxisTitle = xAxisTitle;
-        return this;
-    }
-
-    public String getYAxisTitle() {
-        return yAxisTitle;
-    }
-
-    public GraphParamsModel setYAxisTitle(String yAxisTitle) {
-        this.yAxisTitle = yAxisTitle;
-        return this;
-    }
-
-    @ColorInt
-    public int getColorAxis() {
-        return colorAxis;
-    }
-
-    public GraphParamsModel setColorAxis(@ColorInt int colorAxis) {
-        this.colorAxis = colorAxis;
-        return this;
-    }
-
-    @ColorInt
-    public int getColorGrid() {
-        return colorGrid;
-    }
-
-    public GraphParamsModel setColorGrid(@ColorInt int colorGrid) {
-        this.colorGrid = colorGrid;
-        return this;
-    }
-
-    public boolean isDrawAxis() {
-        return drawAxis;
-    }
-
-    public GraphParamsModel setDrawAxis(boolean drawAxis) {
-        this.drawAxis = drawAxis;
-        return this;
-    }
-
-    public boolean isDrawGrid() {
-        return drawGrid;
-    }
-
-    public GraphParamsModel setDrawGrid(boolean drawGrid) {
-        this.drawGrid = drawGrid;
         return this;
     }
 
@@ -137,6 +78,34 @@ public class GraphParamsModel extends RealmObject implements ObjectWithUID, Seri
 
     public GraphParamsModel setFitScreen(boolean fitScreen) {
         this.fitScreen = fitScreen;
+        return this;
+    }
+
+    public AxisParamsModel getAxisXParams() {
+        return axisXParams;
+    }
+
+    public GraphParamsModel setAxisXParams(AxisParamsModel axisXParams) {
+        this.axisXParams = axisXParams;
+        return this;
+    }
+
+    public AxisParamsModel getAxisYParams() {
+        return axisYParams;
+    }
+
+    public GraphParamsModel setAxisYParams(AxisParamsModel axisYParams) {
+        this.axisYParams = axisYParams;
+        return this;
+    }
+
+    @ColorInt
+    public int getColorBackground() {
+        return colorBackground;
+    }
+
+    public GraphParamsModel setColorBackground(@ColorInt int colorBackground) {
+        this.colorBackground = colorBackground;
         return this;
     }
 }

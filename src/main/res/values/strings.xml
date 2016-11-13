@@ -6,6 +6,7 @@
     <string name="activity_data_set_list">DataSets</string>
     <string name="activity_graph">Graphic</string>
 
+    <string name="fab_manual_hide_behavior" translatable="false">com.shlom.solutions.quickgraph.ui.FabManualHideBehavior</string>
     <string name="fab_scrolling_view_behavior" translatable="false">com.shlom.solutions.quickgraph.ui.ScrollingFABBehavior</string>
 
     <string name="action_settings">Settings</string>
@@ -14,14 +15,17 @@
     <string name="action_uncheck_all">Uncheck all</string>
     <string name="action_axis">Axis</string>
     <string name="action_grid">Grid</string>
-    <string name="action_draw_axis">Draw axis</string>
-    <string name="action_draw_grid">Draw grid</string>
-    <string name="action_draw_x_axis_title">X-axis title</string>
-    <string name="action_draw_y_axis_title">Y-axis title</string>
+    <string name="action_x_axis">X-axis</string>
+    <string name="action_y_axis">Y-axis</string>
+    <string name="action_x_grid">X-grid</string>
+    <string name="action_y_grid">Y-grid</string>
+    <string name="action_title">Title</string>
+    <string name="action_draw">Draw</string>
+    <string name="action_draw_axis_labels">Draw labels</string>
     <string name="action_draw_legend">Draw legend</string>
     <string name="action_fit_screen">Fit screen</string>
-    <string name="action_color_axis">Color axis</string>
-    <string name="action_color_grid">Color grid</string>
+    <string name="action_color">Color</string>
+    <string name="action_color_background">Color background</string>
     <string name="action_ok">OK</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_hide">Hide</string>
@@ -31,6 +35,8 @@
     <string name="action_import">Import</string>
     <string name="action_select_file">Select file</string>
     <string name="action_select_data_type">Select data type</string>
+    <string name="action_create_file">Create file</string>
+    <string name="action_export_to_png">Export to png</string>
 
     <string name="error">Error</string>
     <string name="error_enter">Enter</string>
@@ -38,6 +44,7 @@
     <string name="error_need_file_manager">You need file manager</string>
     <string name="error_file_not_found">File not found</string>
     <string name="error_file_read">Failed to read the file</string>
+    <string name="error_file_write">Failed to write the file</string>
     <string name="error_file_empty">Points not found</string>
     <string name="error_required_permission">Required permissions</string>
 
@@ -76,5 +83,8 @@
     <string name="import_from_txt">From text file</string>
     <string name="import_from_csv">From csv file</string>
     <string name="import_from_excel">From excel file</string>
+    <string name="export_preview">Export preview</string>
+    <string name="export_resolution_label">Image resolution</string>
+    <string name="export_resolution">%1$sx%2$s</string>
 
 </resources>

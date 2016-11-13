@@ -1,4 +1,4 @@
-package com.shlom.solutions.quickgraph.etc;
+package com.shlom.solutions.quickgraph.asynctask;
 
 public class ProgressParams {
 
@@ -10,6 +10,10 @@ public class ProgressParams {
         this.progress = progress;
         this.total = total;
         this.description = description;
+    }
+
+    public void increment() {
+        progress++;
     }
 
     public int getProgress() {
@@ -37,5 +41,14 @@ public class ProgressParams {
     public ProgressParams setDescription(String description) {
         this.description = description;
         return this;
+    }
+
+    @Override
+    public String toString() {
+        return "ProgressParams{" +
+                "progress=" + progress +
+                ", total=" + total +
+                ", description='" + description + '\'' +
+                '}';
     }
 }

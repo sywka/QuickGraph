@@ -1,15 +1,16 @@
 package com.shlom.solutions.quickgraph.fragment;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Rect;
 import android.os.Bundle;
-import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
@@ -29,13 +30,12 @@ import com.shlom.solutions.quickgraph.R;
 import com.shlom.solutions.quickgraph.activity.DataSetActivity;
 import com.shlom.solutions.quickgraph.adapter.BaseSimpleAdapter;
 import com.shlom.solutions.quickgraph.adapter.ProjectListAdapter;
+import com.shlom.solutions.quickgraph.asynctask.DemoGenerator;
+import com.shlom.solutions.quickgraph.asynctask.ProgressAsyncTaskLoader;
+import com.shlom.solutions.quickgraph.asynctask.ProgressParams;
 import com.shlom.solutions.quickgraph.database.RealmHelper;
-import com.shlom.solutions.quickgraph.database.model.DataSetModel;
-import com.shlom.solutions.quickgraph.database.model.FunctionRangeModel;
-import com.shlom.solutions.quickgraph.database.model.GraphParamsModel;
+import com.shlom.solutions.quickgraph.database.RealmModelFactory;
 import com.shlom.solutions.quickgraph.database.model.ProjectModel;
-import com.shlom.solutions.quickgraph.etc.ProgressAsyncRealmTask;
-import com.shlom.solutions.quickgraph.etc.ProgressParams;
 import com.shlom.solutions.quickgraph.etc.Utils;
 import com.shlom.solutions.quickgraph.ui.AutofitRecyclerView;
 
@@ -46,7 +46,11 @@ import io.realm.RealmChangeListener;
 import io.realm.RealmResults;
 import io.realm.Sort;
 
-public class ProjectListFragment extends BaseFragment {
+public class ProjectListFragment extends BaseFragment implements
+        LoaderManager.LoaderCallbacks,
+        ProgressAsyncTaskLoader.OnProgressChangeListener<ProgressParams> {
+
+    private static final int LOADER_ID_GENERATE_DEMO = 100;
 
     private RealmHelper realmHelper;
     private RealmResults<ProjectModel> projectModels;
@@ -56,6 +60,9 @@ public class ProjectListFragment extends BaseFragment {
     private AutofitRecyclerView recyclerView;
     private ProjectListAdapter adapter;
     private Snackbar snackbar;
+
+    private DemoGenerator demoGenerator;
+    private MaterialDialog progressDialog;
 
     @Nullable
     @Override
@@ -75,24 +82,81 @@ public class ProjectListFragment extends BaseFragment {
         super.onStart();
 
         realmHelper = new RealmHelper();
-        projectModels = realmHelper.findResultsAsync(ProjectModel.class, Sort.DESCENDING);
+        projectModels = realmHelper.findResults(ProjectModel.class, Sort.DESCENDING);
         projectModels.addChangeListener(projectChangeListener = new RealmChangeListener<RealmResults<ProjectModel>>() {
             @Override
             public void onChange(RealmResults<ProjectModel> element) {
-                if (element.isLoaded() && element.isValid()) {
+                if (element.isValid()) {
                     Glide.get(getContext()).clearMemory();
                     adapter.setItems(element);
                 }
             }
         });
+        projectChangeListener.onChange(projectModels);
+
+        demoGenerator = (DemoGenerator) getLoaderManager()
+                .initLoader(LOADER_ID_GENERATE_DEMO, Bundle.EMPTY, this);
+        demoGenerator.setOnProgressChangeListener(this);
     }
 
     @Override
     public void onStop() {
         super.onStop();
 
+        dismissProgressDialog();
+        demoGenerator.removeOnProgressListener();
         projectModels.removeChangeListener(projectChangeListener);
         realmHelper.closeRealm();
+    }
+
+    @Override
+    public Loader onCreateLoader(int id, Bundle args) {
+        switch (id) {
+            case LOADER_ID_GENERATE_DEMO:
+                return new DemoGenerator(getContext());
+            default:
+                return null;
+        }
+    }
+
+    @Override
+    public void onProgressChange(ProgressAsyncTaskLoader loader, ProgressParams progressParams) {
+        switch (loader.getId()) {
+            case LOADER_ID_GENERATE_DEMO:
+                if (progressDialog == null) {
+                    progressDialog = new MaterialDialog.Builder(getContext())
+                            .progress(false, 100)
+                            .negativeText(R.string.action_cancel)
+                            .build();
+                    progressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                        @Override
+                        public void onCancel(DialogInterface dialogInterface) {
+                            demoGenerator.cancelLoad();
+                        }
+                    });
+                }
+                progressDialog.setProgress(progressParams.getProgress());
+                progressDialog.setMaxProgress(progressParams.getTotal());
+                progressDialog.setContent(progressParams.getDescription());
+                progressDialog.show();
+                break;
+        }
+    }
+
+    @Override
+    public void onLoadFinished(Loader loader, Object data) {
+        switch (loader.getId()) {
+            case LOADER_ID_GENERATE_DEMO:
+                if (progressDialog != null && progressDialog.isShowing()) {
+                    recyclerView.scrollToPosition(0);
+                }
+                dismissProgressDialog();
+                break;
+        }
+    }
+
+    @Override
+    public void onLoaderReset(Loader loader) {
     }
 
     private void setupRecyclerView(View rootView) {
@@ -173,7 +237,7 @@ public class ProjectListFragment extends BaseFragment {
                             @Override
                             public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                                 dismissSnackBar();
-                                new CreateDemoAsync(ProjectListFragment.this).execute();
+                                demoGenerator.forceLoad();
                             }
                         })
                         .input(getString(R.string.project_enter_name), null, false, new MaterialDialog.InputCallback() {
@@ -183,19 +247,10 @@ public class ProjectListFragment extends BaseFragment {
                                 realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
                                     @Override
                                     public void execute(Realm realm) {
-                                        GraphParamsModel graphParamsModel = new GraphParamsModel()
-                                                .setUid(realmHelper.generateUID(GraphParamsModel.class))
-                                                .copyToRealm(realmHelper.getRealm());
-
-                                        new ProjectModel()
-                                                .setUid(realmHelper.generateUID(ProjectModel.class))
-                                                .setName(input.toString())
-                                                .setParams(graphParamsModel)
-                                                .copyToRealm(realmHelper.getRealm());
-
-                                        recyclerView.scrollToPosition(0);
+                                        RealmModelFactory.newProject(realm, input.toString());
                                     }
                                 });
+                                recyclerView.scrollToPosition(0);
                             }
                         })
                         .build()
@@ -286,71 +341,9 @@ public class ProjectListFragment extends BaseFragment {
             snackbar.dismiss();
     }
 
-    private class CreateDemoAsync extends ProgressAsyncRealmTask<Void, Void> {
-
-        public CreateDemoAsync(@NonNull Fragment fragment) {
-            super(fragment);
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-
-            recyclerView.scrollToPosition(0);
-        }
-
-        @Override
-        protected Void doInBackend(final RealmHelper realmHelper, Void... params) {
-            realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
-                @Override
-                public void execute(Realm realm) {
-                    ProgressParams progressParams = new ProgressParams(0, 10, getAppContext().getString(R.string.project_generate_demo));
-                    publishProgress(progressParams);
-
-                    ProjectModel projectModel = new ProjectModel()
-                            .setUid(realmHelper.generateUID(ProjectModel.class))
-                            .setName(getAppContext().getString(R.string.action_demo_project))
-                            .setParams(new GraphParamsModel()
-                                    .setUid(realmHelper.generateUID(GraphParamsModel.class))
-                                    .copyToRealm(realm))
-                            .copyToRealm(realm);
-
-                    int a = 1;
-                    @ColorInt int color = -20000;
-                    for (int i = progressParams.getProgress() + 1; i < progressParams.getTotal() + 1; i++) {
-                        a += i;
-                        color -= 1000000;
-                        publishProgress(progressParams.setProgress(progressParams.getProgress() + 1));
-
-                        FunctionRangeModel functionRangeModel = new FunctionRangeModel()
-                                .setUid(realmHelper.generateUID(FunctionRangeModel.class))
-                                .setFrom(-10f)
-                                .setTo(10f)
-                                .setDelta(0.5f)
-                                .copyToRealm(realm);
-
-                        String function = a + " + x^2";
-                        DataSetModel dataSetModel = new DataSetModel()
-                                .setUid(realmHelper.generateUID(DataSetModel.class))
-                                .setPrimary(getAppContext().getString(R.string.data_set))
-                                .setSecondary(function)
-                                .setColor(color)
-                                .setType(DataSetModel.Type.FROM_FUNCTION)
-                                .setFunctionRange(functionRangeModel)
-                                .setCoordinates(Utils.generateCoordinates(realmHelper,
-                                        function,
-                                        functionRangeModel.getFrom(),
-                                        functionRangeModel.getTo(),
-                                        functionRangeModel.getDelta()))
-                                .copyToRealm(realm);
-
-                        dataSetModel.setPrimary(dataSetModel.getPrimary() + " №" + (projectModel.getDataSets().size() + 1));
-
-                        projectModel.addDataSet(0, dataSetModel);
-                    }
-                }
-            });
-            return null;
+    private void dismissProgressDialog() {
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
         }
     }
 }

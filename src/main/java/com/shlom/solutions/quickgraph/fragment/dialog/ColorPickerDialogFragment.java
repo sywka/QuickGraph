@@ -1,15 +1,16 @@
 package com.shlom.solutions.quickgraph.fragment.dialog;
 
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
+import android.support.v7.app.AlertDialog;
+import android.view.LayoutInflater;
 import android.view.View;
 
-import com.afollestad.materialdialogs.DialogAction;
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.larswerkman.holocolorpicker.ColorPicker;
 import com.larswerkman.holocolorpicker.SVBar;
 import com.shlom.solutions.quickgraph.R;
@@ -40,35 +41,31 @@ public class ColorPickerDialogFragment extends DialogFragment {
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        MaterialDialog dialog = new MaterialDialog.Builder(getActivity())
-                .title(R.string.color_picker_title)
-                .positiveText(R.string.action_ok)
-                .negativeText(R.string.action_cancel)
-                .customView(R.layout.dialog_color_picker, true)
-                .onPositive(new MaterialDialog.SingleButtonCallback() {
+        View customView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_color_picker, null);
+
+        ColorPicker colorPicker = (ColorPicker) customView.findViewById(R.id.color_picker);
+        colorPicker.addSVBar((SVBar) customView.findViewById(R.id.svbar));
+        colorPicker.setOldCenterColor(selectedColor);
+        colorPicker.setNewCenterColor(selectedColor);
+        colorPicker.setColor(selectedColor);
+        colorPicker.setOnColorChangedListener(new ColorPicker.OnColorChangedListener() {
+            @Override
+            public void onColorChanged(int color) {
+                selectedColor = color;
+            }
+        });
+
+        return new AlertDialog.Builder(getContext())
+                .setTitle(R.string.color_picker_title)
+                .setPositiveButton(R.string.action_ok, new DialogInterface.OnClickListener() {
                     @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                    public void onClick(DialogInterface dialogInterface, int i) {
                         onColorChangedListener.onColorChanged(getTag(), selectedColor);
                     }
                 })
-                .build();
-
-        View customView = dialog.getCustomView();
-        if (customView != null) {
-            ColorPicker colorPicker = (ColorPicker) customView.findViewById(R.id.color_picker);
-            colorPicker.addSVBar((SVBar) customView.findViewById(R.id.svbar));
-            colorPicker.setOldCenterColor(selectedColor);
-            colorPicker.setNewCenterColor(selectedColor);
-            colorPicker.setColor(selectedColor);
-            colorPicker.setOnColorChangedListener(new ColorPicker.OnColorChangedListener() {
-                @Override
-                public void onColorChanged(int color) {
-                    selectedColor = color;
-                }
-            });
-        }
-
-        return dialog;
+                .setNegativeButton(R.string.action_cancel, null)
+                .setView(customView)
+                .create();
     }
 
     public interface OnColorChangedListener {

@@ -46,7 +46,6 @@ import java.util.List;
 import io.realm.Realm;
 import io.realm.RealmChangeListener;
 import io.realm.RealmList;
-import io.realm.RealmResults;
 
 public class DataSetListFragment extends BaseFragment
         implements ColorPickerDialogFragment.OnColorChangedListener, View.OnKeyListener {
@@ -55,9 +54,7 @@ public class DataSetListFragment extends BaseFragment
 
     private RealmHelper realmHelper;
     private RealmChangeListener<ProjectModel> projectChangeListener;
-    private RealmChangeListener<RealmResults<DataSetModel>> dataSetsChangeListener;
     private ProjectModel projectModel;
-    private RealmResults<DataSetModel> dataSetModels;
 
     private BottomSheetBehavior<FrameLayout> bottomSheetBehavior;
     private Toolbar fakeToolbar;
@@ -83,11 +80,13 @@ public class DataSetListFragment extends BaseFragment
         setupFab(rootView);
         setupBottomSheet(rootView);
 
-        getFragmentManager()
-                .beginTransaction()
-                .replace(R.id.graph_content, Utils.putLong(GraphFragment.newInstance(canGoBack), Utils.getLong(this)),
-                        TAG_GRAPH_FRAGMENT)
-                .commit();
+        if (savedInstanceState == null) {
+            getFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.graph_content, Utils.putLong(GraphFragment.newInstance(canGoBack), Utils.getLong(this)),
+                            TAG_GRAPH_FRAGMENT)
+                    .commit();
+        }
 
         return rootView;
     }
@@ -97,16 +96,17 @@ public class DataSetListFragment extends BaseFragment
         super.onStart();
 
         realmHelper = new RealmHelper();
-        projectModel = realmHelper.findObjectAsync(ProjectModel.class, Utils.getLong(this));
+        projectModel = realmHelper.findObject(ProjectModel.class, Utils.getLong(this));
         projectModel.addChangeListener(projectChangeListener = new RealmChangeListener<ProjectModel>() {
             @Override
             public void onChange(ProjectModel element) {
-                if (element.isLoaded() && element.isValid()) {
-                    adapter.setItems(projectModel.getDataSets());
+                if (element.isValid()) {
+                    adapter.setItems(element.getDataSets());
                     invalidateOptionsMenu();
                 }
             }
         });
+        projectChangeListener.onChange(projectModel);
     }
 
     @Override
@@ -258,12 +258,8 @@ public class DataSetListFragment extends BaseFragment
             public void onSlide(@NonNull View bottomSheet, float slideOffset) {
                 content.getForeground().setAlpha((int) (255f - 255f * slideOffset));
                 fakeToolbar.setNavigationIcon(drawables[(int) ((drawables.length - 1) * slideOffset)]);
-
                 setStatusBarColor(slideOffset == 1 ? BottomSheetBehavior.STATE_EXPANDED : BottomSheetBehavior.STATE_COLLAPSED);
-                float limit = 0.8f;
-                if (slideOffset <= limit) {
-                    setFabScale(1 - slideOffset / limit);
-                }
+                setFabScale(1 - slideOffset);
             }
         });
     }
