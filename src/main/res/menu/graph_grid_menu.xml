@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_grid"
+        android:icon="@drawable/ic_grid_on_black_24dp"
+        android:title="@string/action_grid"
+        app:showAsAction="ifRoom">
+        <menu>
+            <item
+                android:id="@+id/action_x_grid"
+                android:icon="@drawable/ic_grid_x_black_24dp"
+                android:title="@string/action_x_grid"
+                app:showAsAction="ifRoom">
+                <menu>
+                    <item
+                        android:id="@+id/action_draw_x_grid"
+                        android:checkable="true"
+                        android:title="@string/action_draw"
+                        app:showAsAction="never" />
+                    <group android:id="@+id/group_draw_x_grid">
+                        <item
+                            android:id="@+id/action_color_x_grid"
+                            android:title="@string/action_color"
+                            app:showAsAction="never" />
+                    </group>
+                </menu>
+            </item>
+            <item
+                android:id="@+id/action_y_grid"
+                android:icon="@drawable/ic_grid_y_black_24dp"
+                android:title="@string/action_y_grid"
+                app:showAsAction="ifRoom">
+                <menu>
+                    <item
+                        android:id="@+id/action_draw_y_grid"
+                        android:checkable="true"
+                        android:title="@string/action_draw"
+                        app:showAsAction="never" />
+                    <group android:id="@+id/group_draw_y_grid">
+                        <item
+                            android:id="@+id/action_color_y_grid"
+                            android:title="@string/action_color"
+                            app:showAsAction="never" />
+                    </group>
+                </menu>
+            </item>
+        </menu>
+    </item>
+</menu>

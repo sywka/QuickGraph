@@ -25,6 +25,7 @@
                 android:layout_height="match_parent"
                 android:layout_above="@+id/project_list_item_text_layout"
                 android:layout_alignParentTop="true"
+                android:scaleType="centerCrop"
                 android:background="@android:color/darker_gray" />
 
             <LinearLayout

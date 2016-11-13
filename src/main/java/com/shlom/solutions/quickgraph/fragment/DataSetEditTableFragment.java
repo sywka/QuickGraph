@@ -1,16 +1,11 @@
 package com.shlom.solutions.quickgraph.fragment;
 
-import android.Manifest;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.OpenableColumns;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -25,19 +20,16 @@ import com.shlom.solutions.quickgraph.R;
 import com.shlom.solutions.quickgraph.database.model.CoordinateModel;
 import com.shlom.solutions.quickgraph.database.model.DataSetModel;
 import com.shlom.solutions.quickgraph.fragment.dialog.imp.ImportDialogFragment;
-import com.shlom.solutions.quickgraph.ui.TextWatcher;
+import com.shlom.solutions.quickgraph.etc.interfaces.TextWatcher;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.List;
 
 import io.realm.RealmList;
 
 public class DataSetEditTableFragment extends BaseDataSetEditFragment implements ImportDialogFragment.OnReceivedImportResult {
 
-    private static final int REQUEST_PERMISSIONS_CODE = 123;
     private static final String TAG_IMPORT_DIALOG = "import_dialog";
-    private Runnable runnable;
 
     @Override
     protected void onCreateView(View rootView, @Nullable Bundle savedInstanceState) {
@@ -128,48 +120,6 @@ public class DataSetEditTableFragment extends BaseDataSetEditFragment implements
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-
-        if (runnable != null) {
-            runnable.run();
-            runnable = null;
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        switch (requestCode) {
-            case REQUEST_PERMISSIONS_CODE:
-                int index = Arrays.asList(permissions).indexOf(Manifest.permission.READ_EXTERNAL_STORAGE);
-                if (index != -1) {
-                    if (grantResults[index] == PackageManager.PERMISSION_GRANTED) {
-                        runnable = new Runnable() {
-                            @Override
-                            public void run() {
-                                showImportDialog();
-                            }
-                        };
-                    } else {
-                        if (getView() != null) {
-                            Snackbar.make(getView(), getString(R.string.error_required_permission), Snackbar.LENGTH_LONG)
-                                    .setAction(getString(R.string.action_retry), new View.OnClickListener() {
-                                        @Override
-                                        public void onClick(View view) {
-                                            showImportDialog();
-                                        }
-                                    })
-                                    .show();
-                        }
-                    }
-                }
-                break;
-        }
-    }
-
-    @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
 
@@ -180,7 +130,7 @@ public class DataSetEditTableFragment extends BaseDataSetEditFragment implements
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_import:
-                showImportDialog();
+                new ImportDialogFragment().show(getChildFragmentManager(), TAG_IMPORT_DIALOG);
                 break;
             case R.id.action_clear_all:
                 getStandaloneDataSet().getCoordinates().clear();
@@ -188,14 +138,6 @@ public class DataSetEditTableFragment extends BaseDataSetEditFragment implements
                 break;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    private void showImportDialog() {
-        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-            new ImportDialogFragment().show(getChildFragmentManager(), TAG_IMPORT_DIALOG);
-        } else {
-            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_PERMISSIONS_CODE);
-        }
     }
 
     private class CoordinateItemVH extends RecyclerView.ViewHolder {

@@ -80,11 +80,13 @@ public class DataSetListFragment extends BaseFragment
         setupFab(rootView);
         setupBottomSheet(rootView);
 
-        getFragmentManager()
-                .beginTransaction()
-                .replace(R.id.graph_content, Utils.putLong(GraphFragment.newInstance(canGoBack), Utils.getLong(this)),
-                        TAG_GRAPH_FRAGMENT)
-                .commit();
+        if (savedInstanceState == null) {
+            getFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.graph_content, Utils.putLong(GraphFragment.newInstance(canGoBack), Utils.getLong(this)),
+                            TAG_GRAPH_FRAGMENT)
+                    .commit();
+        }
 
         return rootView;
     }
@@ -94,16 +96,17 @@ public class DataSetListFragment extends BaseFragment
         super.onStart();
 
         realmHelper = new RealmHelper();
-        projectModel = realmHelper.findObjectAsync(ProjectModel.class, Utils.getLong(this));
+        projectModel = realmHelper.findObject(ProjectModel.class, Utils.getLong(this));
         projectModel.addChangeListener(projectChangeListener = new RealmChangeListener<ProjectModel>() {
             @Override
             public void onChange(ProjectModel element) {
-                if (projectModel.isLoaded() && projectModel.isValid()) {
-                    adapter.setItems(projectModel.getDataSets());
+                if (element.isValid()) {
+                    adapter.setItems(element.getDataSets());
                     invalidateOptionsMenu();
                 }
             }
         });
+        projectChangeListener.onChange(projectModel);
     }
 
     @Override
@@ -255,12 +258,8 @@ public class DataSetListFragment extends BaseFragment
             public void onSlide(@NonNull View bottomSheet, float slideOffset) {
                 content.getForeground().setAlpha((int) (255f - 255f * slideOffset));
                 fakeToolbar.setNavigationIcon(drawables[(int) ((drawables.length - 1) * slideOffset)]);
-
                 setStatusBarColor(slideOffset == 1 ? BottomSheetBehavior.STATE_EXPANDED : BottomSheetBehavior.STATE_COLLAPSED);
-                float limit = 0.8f;
-                if (slideOffset <= limit) {
-                    setFabScale(1 - slideOffset / limit);
-                }
+                setFabScale(1 - slideOffset);
             }
         });
     }

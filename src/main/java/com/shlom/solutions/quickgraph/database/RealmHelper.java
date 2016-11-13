@@ -24,7 +24,11 @@ public class RealmHelper {
 
     public static void execute(@NonNull Executor executor) {
         RealmHelper realmHelper = new RealmHelper();
-        executor.execute(realmHelper);
+        try {
+            executor.execute(realmHelper);
+        } catch (Exception e) {
+            LogUtil.d(e);
+        }
         realmHelper.closeRealm();
     }
 
@@ -47,6 +51,10 @@ public class RealmHelper {
 
     public <T extends RealmObject & ObjectWithUID> T findObjectAsync(Class<T> cl, long uid) {
         return realm.where(cl).equalTo("uid", uid).findFirstAsync();
+    }
+
+    public <T extends RealmObject> RealmResults<T> findResults(Class<T> cl, Sort sort) {
+        return realm.where(cl).findAllSorted("date", sort);
     }
 
     public <T extends RealmObject> RealmResults<T> findResultsAsync(Class<T> cl, Sort sort) {

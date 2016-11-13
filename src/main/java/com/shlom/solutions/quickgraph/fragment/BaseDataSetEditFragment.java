@@ -33,10 +33,11 @@ import com.shlom.solutions.quickgraph.etc.Utils;
 import com.shlom.solutions.quickgraph.fragment.dialog.ColorPickerDialogFragment;
 import com.shlom.solutions.quickgraph.ui.AutofitRecyclerView;
 import com.shlom.solutions.quickgraph.ui.BackEditText;
-import com.shlom.solutions.quickgraph.ui.OnSeekBarChangeListener;
-import com.shlom.solutions.quickgraph.ui.TextWatcher;
+import com.shlom.solutions.quickgraph.etc.interfaces.OnSeekBarChangeListener;
+import com.shlom.solutions.quickgraph.etc.interfaces.TextWatcher;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import io.realm.Realm;
@@ -44,6 +45,9 @@ import io.realm.Realm;
 public abstract class BaseDataSetEditFragment extends BaseFragment implements ColorPickerDialogFragment.OnColorChangedListener {
 
     private static final String TAG_DATA_SET = "data_set";
+
+    private static final int SEEKBAR_STEP_COUNT = 20;
+    private static final int SEEKBAR_MAX = SEEKBAR_STEP_COUNT - 1;
 
     private RealmHelper realmHelper;
     private ProjectModel projectModel;
@@ -159,7 +163,11 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
                     @Override
                     public void execute(Realm realm) {
                         dataSetModel = realmHelper.getRealm().copyToRealmOrUpdate(standaloneDataSet);
-                        if (projectModel != null) projectModel.getDataSets().add(0, dataSetModel);
+                        if (projectModel != null) {
+                            projectModel
+                                    .setDate(new Date())
+                                    .getDataSets().add(0, dataSetModel);
+                        }
                     }
                 });
                 getBaseActivity().finish();
@@ -264,21 +272,20 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
                 holder.lineCheckBox.setChecked(getStandaloneDataSet().isDrawLine());
                 holder.lineCheckBox.setOnCheckedChangeListener(onCheckedChangeListener);
 
-                final int maxLineWidth = 19;
-                int curProgressLineWidth = calculateProgress(
-                        getStandaloneDataSet().getLineWidth(), DataSetModel.MIN_LINE_WIDTH, DataSetModel.MAX_LINE_WIDTH, maxLineWidth
+                int curProgressLineWidth = Utils.calculateProgress(
+                        getStandaloneDataSet().getLineWidth(), DataSetModel.MIN_LINE_WIDTH, DataSetModel.MAX_LINE_WIDTH, SEEKBAR_MAX
                 );
                 holder.lineWidthTextView.setEnabled(getStandaloneDataSet().isDrawLine());
                 holder.lineWidthTextView.setText(getString(R.string.line_width, String.valueOf(curProgressLineWidth + 1)));
                 holder.lineWidthSeekBar.setEnabled(getStandaloneDataSet().isDrawLine());
-                holder.lineWidthSeekBar.setMax(maxLineWidth);
+                holder.lineWidthSeekBar.setMax(SEEKBAR_MAX);
                 holder.lineWidthSeekBar.setProgress(curProgressLineWidth);
                 holder.lineWidthSeekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
                     @Override
                     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                         super.onProgressChanged(seekBar, progress, fromUser);
-                        getStandaloneDataSet().setLineWidth(calculateValue(
-                                progress, DataSetModel.MIN_LINE_WIDTH, DataSetModel.MAX_LINE_WIDTH, maxLineWidth
+                        getStandaloneDataSet().setLineWidth(Utils.calculateValue(
+                                progress, DataSetModel.MIN_LINE_WIDTH, DataSetModel.MAX_LINE_WIDTH, SEEKBAR_MAX
                         ));
                         holder.lineWidthTextView.setText(getString(R.string.line_width, String.valueOf(progress + 1)));
                     }
@@ -295,21 +302,20 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
                 holder.pointsLabelCheckBox.setChecked(getStandaloneDataSet().isDrawPointsLabel());
                 holder.pointsLabelCheckBox.setOnCheckedChangeListener(onCheckedChangeListener);
 
-                final int maxPointsRadius = 19;
-                int curProgressPointsRadius = calculateProgress(
-                        getStandaloneDataSet().getPointsRadius(), DataSetModel.MIN_POINTS_RADIUS, DataSetModel.MAX_POINTS_RADIUS, maxPointsRadius
+                int curProgressPointsRadius = Utils.calculateProgress(
+                        getStandaloneDataSet().getPointsRadius(), DataSetModel.MIN_POINTS_RADIUS, DataSetModel.MAX_POINTS_RADIUS, SEEKBAR_MAX
                 );
                 holder.pointsRadiusTextView.setEnabled(getStandaloneDataSet().isDrawPoints());
                 holder.pointsRadiusTextView.setText(getString(R.string.point_radius, String.valueOf(curProgressPointsRadius + 1)));
                 holder.pointsRadiusSeekBar.setEnabled(getStandaloneDataSet().isDrawPoints());
-                holder.pointsRadiusSeekBar.setMax(maxPointsRadius);
+                holder.pointsRadiusSeekBar.setMax(SEEKBAR_MAX);
                 holder.pointsRadiusSeekBar.setProgress(curProgressPointsRadius);
                 holder.pointsRadiusSeekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
                     @Override
                     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                         super.onProgressChanged(seekBar, progress, fromUser);
                         getStandaloneDataSet().setPointsRadius(
-                                calculateValue(progress, DataSetModel.MIN_POINTS_RADIUS, DataSetModel.MAX_POINTS_RADIUS, maxPointsRadius)
+                                Utils.calculateValue(progress, DataSetModel.MIN_POINTS_RADIUS, DataSetModel.MAX_POINTS_RADIUS, SEEKBAR_MAX)
                         );
                         holder.pointsRadiusTextView.setText(getString(R.string.point_radius, String.valueOf(progress + 1)));
                     }
@@ -326,14 +332,6 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
                 return 1;
             }
         });
-    }
-
-    private int calculateProgress(float currentValue, float minValue, float maxValue, int maxProgress) {
-        return (int) ((currentValue - minValue) * (float) maxProgress / (maxValue - minValue));
-    }
-
-    private float calculateValue(int currentProgress, float minValue, float maxValue, int maxProgress) {
-        return minValue + (float) currentProgress * (maxValue - minValue) / (float) maxProgress;
     }
 
     protected void addAdapterImpl(Delegate adapterImpl) {

@@ -1,6 +1,7 @@
 package com.shlom.solutions.quickgraph.database.model;
 
 import android.graphics.Color;
+import android.support.annotation.ColorInt;
 
 import com.shlom.solutions.quickgraph.database.ObjectWithUID;
 
@@ -15,25 +16,20 @@ public class GraphParamsModel extends RealmObject implements ObjectWithUID, Seri
     @PrimaryKey
     private long uid;
 
-    private int colorGrid;
-
-    private String xAxisTitle;
-
-    private String yAxisTitle;
-
-    private boolean drawAxis;
-
     private boolean drawLegend;
 
     private boolean fitScreen;
 
+    private int colorBackground;
+
+    private AxisParamsModel axisXParams;
+
+    private AxisParamsModel axisYParams;
+
     public GraphParamsModel() {
-        colorGrid = Color.GRAY;
-        drawAxis = true;
         drawLegend = true;
         fitScreen = true;
-        xAxisTitle = "X";
-        yAxisTitle = "Y";
+        colorBackground = Color.WHITE;
     }
 
     public GraphParamsModel copyToRealm(Realm realm) {
@@ -42,6 +38,17 @@ public class GraphParamsModel extends RealmObject implements ObjectWithUID, Seri
 
     public GraphParamsModel copyToRealmOrUpdate(Realm realm) {
         return realm.copyToRealmOrUpdate(this);
+    }
+
+    public void deleteDependentsFromRealm() {
+        if (axisXParams != null) {
+            axisXParams.deleteDependentsFromRealm();
+            axisXParams.deleteFromRealm();
+        }
+        if (axisYParams != null) {
+            axisYParams.deleteDependentsFromRealm();
+            axisYParams.deleteFromRealm();
+        }
     }
 
     // generated getters and setters
@@ -53,42 +60,6 @@ public class GraphParamsModel extends RealmObject implements ObjectWithUID, Seri
 
     public GraphParamsModel setUid(long uid) {
         this.uid = uid;
-        return this;
-    }
-
-    public String getXAxisTitle() {
-        return xAxisTitle;
-    }
-
-    public GraphParamsModel setXAxisTitle(String xAxisTitle) {
-        this.xAxisTitle = xAxisTitle;
-        return this;
-    }
-
-    public String getYAxisTitle() {
-        return yAxisTitle;
-    }
-
-    public GraphParamsModel setYAxisTitle(String yAxisTitle) {
-        this.yAxisTitle = yAxisTitle;
-        return this;
-    }
-
-    public int getColorGrid() {
-        return colorGrid;
-    }
-
-    public GraphParamsModel setColorGrid(int colorGrid) {
-        this.colorGrid = colorGrid;
-        return this;
-    }
-
-    public boolean isDrawAxis() {
-        return drawAxis;
-    }
-
-    public GraphParamsModel setDrawAxis(boolean drawAxis) {
-        this.drawAxis = drawAxis;
         return this;
     }
 
@@ -107,6 +78,34 @@ public class GraphParamsModel extends RealmObject implements ObjectWithUID, Seri
 
     public GraphParamsModel setFitScreen(boolean fitScreen) {
         this.fitScreen = fitScreen;
+        return this;
+    }
+
+    public AxisParamsModel getAxisXParams() {
+        return axisXParams;
+    }
+
+    public GraphParamsModel setAxisXParams(AxisParamsModel axisXParams) {
+        this.axisXParams = axisXParams;
+        return this;
+    }
+
+    public AxisParamsModel getAxisYParams() {
+        return axisYParams;
+    }
+
+    public GraphParamsModel setAxisYParams(AxisParamsModel axisYParams) {
+        this.axisYParams = axisYParams;
+        return this;
+    }
+
+    @ColorInt
+    public int getColorBackground() {
+        return colorBackground;
+    }
+
+    public GraphParamsModel setColorBackground(@ColorInt int colorBackground) {
+        this.colorBackground = colorBackground;
         return this;
     }
 }

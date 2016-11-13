@@ -40,7 +40,7 @@ public class ImportDialogFragment extends DialogFragment {
             try {
                 onReceivedImportResult = (OnReceivedImportResult) getParentFragment();
             } catch (Exception e) {
-                throw new ClassCastException("Calling Fragment must implement onColorChangedListener");
+                throw new ClassCastException("Calling Fragment must implement OnReceivedImportResult");
             }
         }
 
@@ -92,31 +92,6 @@ public class ImportDialogFragment extends DialogFragment {
         outState.putSerializable(KEY_SELECTED_HANDLER, selectedImportHandler);
     }
 
-    private void showFileChooser() {
-        try {
-            Intent intent;
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-                intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-                intent.putExtra(Intent.EXTRA_MIME_TYPES, selectedImportHandler.getMimeTypes());
-                intent.setType("*/*");
-            } else {
-                intent = new Intent(Intent.ACTION_GET_CONTENT);
-                intent.setType(selectedImportHandler.getMimeType());
-            }
-            intent.addCategory(Intent.CATEGORY_OPENABLE);
-            startActivityForResult(
-                    Intent.createChooser(intent, getString(R.string.action_select_file)),
-                    FILE_CHOOSER_CODE);
-        } catch (ActivityNotFoundException ex) {
-            Snackbar.make(
-                    getActivity().findViewById(android.R.id.content),
-                    getString(R.string.error_need_file_manager),
-                    Snackbar.LENGTH_SHORT)
-                    .show();
-            getDialog().cancel();
-        }
-    }
-
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -139,6 +114,27 @@ public class ImportDialogFragment extends DialogFragment {
                 }
                 getDialog().cancel();
                 break;
+        }
+    }
+
+    private void showFileChooser() {
+        Intent intent;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+            intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            intent.putExtra(Intent.EXTRA_MIME_TYPES, selectedImportHandler.getMimeTypes());
+            intent.setType("*/*");
+        } else {
+            intent = new Intent(Intent.ACTION_GET_CONTENT);
+            intent.setType(selectedImportHandler.getMimeType());
+        }
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        try {
+            startActivityForResult(
+                    Intent.createChooser(intent, getString(R.string.action_select_file)),
+                    FILE_CHOOSER_CODE);
+        } catch (ActivityNotFoundException ex) {
+            showError(getString(R.string.error_need_file_manager));
+            getDialog().cancel();
         }
     }
 

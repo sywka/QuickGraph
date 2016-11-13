@@ -3,11 +3,13 @@ package com.shlom.solutions.quickgraph.etc;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.DisplayMetrics;
+import android.view.View;
 
-import com.shlom.solutions.quickgraph.App;
 import com.shlom.solutions.quickgraph.activity.BaseActivity;
 import com.shlom.solutions.quickgraph.database.RealmHelper;
 import com.shlom.solutions.quickgraph.database.model.CoordinateModel;
@@ -19,6 +21,20 @@ import java.io.Serializable;
 import io.realm.RealmList;
 
 public abstract class Utils {
+
+    public static int calculateProgress(float currentValue, float minValue, float maxValue, int maxProgress) {
+        return (int) ((currentValue - minValue) * (float) maxProgress / (maxValue - minValue));
+    }
+
+    public static float calculateValue(int currentProgress, float minValue, float maxValue, int maxProgress) {
+        return minValue + (float) currentProgress * (maxValue - minValue) / (float) maxProgress;
+    }
+
+    public static void createPreview(Bitmap bitmap, View view) {
+        view.layout(0, 0, bitmap.getWidth(), bitmap.getHeight());
+        view.draw(new Canvas(bitmap));
+        view.requestLayout();
+    }
 
     public static int dpToPx(Context context, float dp) {
         Resources resources = context.getResources();

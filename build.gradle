@@ -2,10 +2,11 @@ buildscript {
     repositories {
         jcenter()
         mavenCentral()
+        maven { url "https://jitpack.io" }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:2.2.2'
-        classpath "io.realm:realm-gradle-plugin:2.1.1"
+        classpath "io.realm:realm-gradle-plugin:2.2.0"
     }
 }
 
@@ -19,8 +20,8 @@ android {
         applicationId "com.shlom.solutions.quckgraph"
         minSdkVersion 14
         targetSdkVersion 25
-        versionCode 6
-        versionName "0.2.3a"
+        versionCode 7
+        versionName "0.3.0a"
 
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
@@ -78,4 +79,5 @@ dependencies {
     compile 'com.larswerkman:HoloColorPicker:1.5'
     compile 'com.afollestad.material-dialogs:core:0.9.0.2'
     compile 'com.github.pluscubed:recycler-fast-scroll:0.3.2@aar'
+    compile 'com.github.PhilJay:MPAndroidChart:v3.0.0'
 }
