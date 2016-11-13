@@ -20,8 +20,8 @@ android {
         applicationId "com.shlom.solutions.quckgraph"
         minSdkVersion 14
         targetSdkVersion 25
-        versionCode 6
-        versionName "0.2.3a"
+        versionCode 7
+        versionName "0.3.0a"
 
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
