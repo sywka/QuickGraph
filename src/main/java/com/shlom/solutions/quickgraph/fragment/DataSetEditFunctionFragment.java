@@ -33,28 +33,25 @@ public class DataSetEditFunctionFragment extends BaseDataSetEditFragment {
             public void onBindViewHolder(RecyclerView.ViewHolder viewHolder, int position) {
                 final FunctionVH holder = (FunctionVH) viewHolder;
 
-                InputCallback callback = new InputCallback() {
-                    @Override
-                    public void onTextChanged(TextInputLayout input, String str) {
-                        if (holder.functionInput.getId() == input.getId()) {
-                            getStandaloneDataSet().setSecondary(str);
+                InputCallback callback = (input, str) -> {
+                    if (holder.functionInput.getId() == input.getId()) {
+                        getStandaloneDataSet().setSecondary(str);
 
-                        } else if (holder.functionFromInput.getId() == input.getId()) {
-                            getStandaloneDataSet().getFunctionRange().setFrom(parseFloat(str));
+                    } else if (holder.functionFromInput.getId() == input.getId()) {
+                        getStandaloneDataSet().getFunctionRange().setFrom(parseFloat(str));
 
-                        } else if (holder.functionToInput.getId() == input.getId()) {
-                            getStandaloneDataSet().getFunctionRange().setTo(parseFloat(str));
+                    } else if (holder.functionToInput.getId() == input.getId()) {
+                        getStandaloneDataSet().getFunctionRange().setTo(parseFloat(str));
 
-                        } else if (holder.functionDeltaInput.getId() == input.getId()) {
-                            getStandaloneDataSet().getFunctionRange().setDelta(parseFloat(str));
-                        }
-                        final boolean enabledFab =
-                                checkFunction(holder.functionInput) &&
-                                        checkFrom(holder.functionFromInput) &&
-                                        checkTo(holder.functionToInput) &&
-                                        checkDelta(holder.functionDeltaInput);
-                        setEnabledFab(enabledFab);
+                    } else if (holder.functionDeltaInput.getId() == input.getId()) {
+                        getStandaloneDataSet().getFunctionRange().setDelta(parseFloat(str));
                     }
+                    final boolean enabledFab =
+                            checkFunction(holder.functionInput) &&
+                                    checkFrom(holder.functionFromInput) &&
+                                    checkTo(holder.functionToInput) &&
+                                    checkDelta(holder.functionDeltaInput);
+                    setEnabledFab(enabledFab);
                 };
 
                 setFocusController(holder.functionInput.getEditText());

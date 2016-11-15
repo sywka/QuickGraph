@@ -30,17 +30,15 @@ import com.shlom.solutions.quickgraph.database.model.DataSetModel;
 import com.shlom.solutions.quickgraph.database.model.FunctionRangeModel;
 import com.shlom.solutions.quickgraph.database.model.ProjectModel;
 import com.shlom.solutions.quickgraph.etc.Utils;
+import com.shlom.solutions.quickgraph.etc.interfaces.OnSeekBarChangeListener;
+import com.shlom.solutions.quickgraph.etc.interfaces.TextWatcher;
 import com.shlom.solutions.quickgraph.fragment.dialog.ColorPickerDialogFragment;
 import com.shlom.solutions.quickgraph.ui.AutofitRecyclerView;
 import com.shlom.solutions.quickgraph.ui.BackEditText;
-import com.shlom.solutions.quickgraph.etc.interfaces.OnSeekBarChangeListener;
-import com.shlom.solutions.quickgraph.etc.interfaces.TextWatcher;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import io.realm.Realm;
 
 public abstract class BaseDataSetEditFragment extends BaseFragment implements ColorPickerDialogFragment.OnColorChangedListener {
 
@@ -155,23 +153,17 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
 
     private void setupFab(View rootView) {
         fab = (FloatingActionButton) rootView.findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onConfirmationSaving();
-                realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
-                    @Override
-                    public void execute(Realm realm) {
-                        dataSetModel = realmHelper.getRealm().copyToRealmOrUpdate(standaloneDataSet);
-                        if (projectModel != null) {
-                            projectModel
-                                    .setDate(new Date())
-                                    .getDataSets().add(0, dataSetModel);
-                        }
-                    }
-                });
-                getBaseActivity().finish();
-            }
+        fab.setOnClickListener(v -> {
+            onConfirmationSaving();
+            realmHelper.getRealm().executeTransaction(realm -> {
+                dataSetModel = realmHelper.getRealm().copyToRealmOrUpdate(standaloneDataSet);
+                if (projectModel != null) {
+                    projectModel
+                            .setDate(new Date())
+                            .getDataSets().add(0, dataSetModel);
+                }
+            });
+            getBaseActivity().finish();
         });
     }
 
@@ -190,13 +182,10 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
         }
         setFocusController(titleInput.getEditText());
         colorView = rootView.findViewById(R.id.edit_data_set_color);
-        colorView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        colorView.setOnClickListener(v ->
                 Utils.putLong(new ColorPickerDialogFragment(), getStandaloneDataSet().getColor())
-                        .show(getChildFragmentManager(), String.valueOf(getStandaloneDataSet().getUid()));
-            }
-        });
+                        .show(getChildFragmentManager(), String.valueOf(getStandaloneDataSet().getUid()))
+        );
         updateColor();
     }
 
@@ -213,22 +202,16 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
 
     protected void setFocusController(final EditText editText) {
         if (editText != null && editText instanceof BackEditText) {
-            editText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-                @Override
-                public void onFocusChange(View v, boolean hasFocus) {
-                    appBarLayout.setExpanded(!hasFocus);
-                    if (!hasFocus) {
-                        InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                        imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-                    }
+            editText.setOnFocusChangeListener((v, hasFocus) -> {
+                appBarLayout.setExpanded(!hasFocus);
+                if (!hasFocus) {
+                    InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
                 }
             });
-            ((BackEditText) editText).setOnBackPressedListener(new BackEditText.OnBackPressedListener() {
-                @Override
-                public boolean onBackPressed() {
-                    editText.clearFocus();
-                    return true;
-                }
+            ((BackEditText) editText).setOnBackPressedListener(() -> {
+                editText.clearFocus();
+                return true;
             });
         }
     }
@@ -245,27 +228,24 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
             public void onBindViewHolder(RecyclerView.ViewHolder viewHolder, int position) {
                 final GeneralSectionVH holder = (GeneralSectionVH) viewHolder;
 
-                CompoundButton.OnCheckedChangeListener onCheckedChangeListener = new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        if (holder.lineCheckBox.getId() == buttonView.getId()) {
-                            getStandaloneDataSet().setDrawLine(isChecked);
-                            holder.lineWidthTextView.setEnabled(getStandaloneDataSet().isDrawLine());
-                            holder.lineWidthSeekBar.setEnabled(getStandaloneDataSet().isDrawLine());
-                            holder.cubicCurveCheckBox.setEnabled(getStandaloneDataSet().isDrawLine());
+                CompoundButton.OnCheckedChangeListener onCheckedChangeListener = (buttonView, isChecked) -> {
+                    if (holder.lineCheckBox.getId() == buttonView.getId()) {
+                        getStandaloneDataSet().setDrawLine(isChecked);
+                        holder.lineWidthTextView.setEnabled(getStandaloneDataSet().isDrawLine());
+                        holder.lineWidthSeekBar.setEnabled(getStandaloneDataSet().isDrawLine());
+                        holder.cubicCurveCheckBox.setEnabled(getStandaloneDataSet().isDrawLine());
 
-                        } else if (holder.cubicCurveCheckBox.getId() == buttonView.getId()) {
-                            getStandaloneDataSet().setCubicCurve(isChecked);
+                    } else if (holder.cubicCurveCheckBox.getId() == buttonView.getId()) {
+                        getStandaloneDataSet().setCubicCurve(isChecked);
 
-                        } else if (holder.pointsCheckBox.getId() == buttonView.getId()) {
-                            getStandaloneDataSet().setDrawPoints(isChecked);
-                            holder.pointsLabelCheckBox.setEnabled(getStandaloneDataSet().isDrawPoints());
-                            holder.pointsRadiusTextView.setEnabled(getStandaloneDataSet().isDrawPoints());
-                            holder.pointsRadiusSeekBar.setEnabled(getStandaloneDataSet().isDrawPoints());
+                    } else if (holder.pointsCheckBox.getId() == buttonView.getId()) {
+                        getStandaloneDataSet().setDrawPoints(isChecked);
+                        holder.pointsLabelCheckBox.setEnabled(getStandaloneDataSet().isDrawPoints());
+                        holder.pointsRadiusTextView.setEnabled(getStandaloneDataSet().isDrawPoints());
+                        holder.pointsRadiusSeekBar.setEnabled(getStandaloneDataSet().isDrawPoints());
 
-                        } else if (holder.pointsLabelCheckBox.getId() == buttonView.getId()) {
-                            getStandaloneDataSet().setDrawPointsLabel(isChecked);
-                        }
+                    } else if (holder.pointsLabelCheckBox.getId() == buttonView.getId()) {
+                        getStandaloneDataSet().setDrawPointsLabel(isChecked);
                     }
                 };
 

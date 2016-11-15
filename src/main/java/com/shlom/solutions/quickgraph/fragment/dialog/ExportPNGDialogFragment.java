@@ -87,12 +87,7 @@ public class ExportPNGDialogFragment extends DialogFragment {
 
         AlertDialog alertDialog = (AlertDialog) getDialog();
         Button positiveButton = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
-        positiveButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showFileChooser();
-            }
-        });
+        positiveButton.setOnClickListener(view -> showFileChooser());
     }
 
     @Override

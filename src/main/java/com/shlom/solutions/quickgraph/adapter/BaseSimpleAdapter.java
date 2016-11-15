@@ -103,25 +103,17 @@ public abstract class BaseSimpleAdapter<ItemType, ViewHolder extends BaseSimpleA
         public ItemViewHolder(View itemView) {
             super(itemView);
 
-            itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    notifyClickListener(v);
-                }
-            });
-            itemView.setOnLongClickListener(new View.OnLongClickListener() {
-                @Override
-                public boolean onLongClick(View v) {
-                    return notifyLongClickListener(v);
-                }
-            });
+            itemView.setOnClickListener(this::notifyClickListener);
+            itemView.setOnLongClickListener(this::notifyLongClickListener);
         }
 
+        @SuppressWarnings("unchecked")
         public void notifyClickListener(View view) {
             if (onItemClickListener != null && !items.isEmpty())
                 onItemClickListener.onClick(view, items.get(getLayoutPosition()), (ViewHolder) this);
         }
 
+        @SuppressWarnings("unchecked")
         public boolean notifyLongClickListener(View view) {
             return onItemLongClickListener != null && !items.isEmpty() &&
                     onItemLongClickListener.onLongClick(view, items.get(getLayoutPosition()), (ViewHolder) this);

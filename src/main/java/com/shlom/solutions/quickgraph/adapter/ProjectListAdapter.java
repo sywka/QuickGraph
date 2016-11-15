@@ -3,7 +3,6 @@ package com.shlom.solutions.quickgraph.adapter;
 import android.content.Context;
 import android.net.Uri;
 import android.support.graphics.drawable.VectorDrawableCompat;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
@@ -24,7 +23,8 @@ import java.util.Locale;
 public class ProjectListAdapter extends BaseRealmSimpleAdapter<ProjectModel, ProjectListAdapter.ItemVH> {
 
     private SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss", Locale.getDefault());
-    private OnItemEditorListener onItemEditorListener;
+    private OnEditTextChangeListener onEditTextChangeListener;
+    private OnEditStateChangeListener onEditStateChangeListener;
 
     @Override
     public ItemVH onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -50,20 +50,28 @@ public class ProjectListAdapter extends BaseRealmSimpleAdapter<ProjectModel, Pro
                 .into(holder.previewImage);
     }
 
-    public OnItemEditorListener getOnItemEditorListener() {
-        return onItemEditorListener;
+    public OnEditTextChangeListener getOnEditTextChangeListener() {
+        return onEditTextChangeListener;
     }
 
-    public void setOnItemEditorListener(OnItemEditorListener onItemEditorListener) {
-        this.onItemEditorListener = onItemEditorListener;
+    public void setOnEditTextChangeListener(OnEditTextChangeListener onEditTextChangeListener) {
+        this.onEditTextChangeListener = onEditTextChangeListener;
     }
 
-    public interface OnItemEditorListener {
-        void onStartEdit(ItemVH viewHolder);
+    public OnEditStateChangeListener getOnEditStateChangeListener() {
+        return onEditStateChangeListener;
+    }
 
-        void onTextChanged(ProjectModel projectModel, String str, ItemVH viewHolder);
+    public void setOnEditStateChangeListener(OnEditStateChangeListener onEditStateChangeListener) {
+        this.onEditStateChangeListener = onEditStateChangeListener;
+    }
 
-        void onFinishEdit(ItemVH viewHolder);
+    public interface OnEditTextChangeListener {
+        void onEditTextChange(ProjectModel projectModel, String str, ItemVH viewHolder);
+    }
+
+    public interface OnEditStateChangeListener {
+        void onEditStateChange(ItemVH viewHolder, boolean isEdit);
     }
 
     public class ItemVH extends BaseSimpleAdapter.ItemViewHolder {
@@ -81,46 +89,37 @@ public class ProjectListAdapter extends BaseRealmSimpleAdapter<ProjectModel, Pro
             secondaryText = (TextView) itemView.findViewById(R.id.project_list_item_secondary_text);
             counterText = (TextView) itemView.findViewById(R.id.project_list_item_counter_text);
 
-            primaryText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-                @Override
-                public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                    if (actionId == EditorInfo.IME_ACTION_DONE) {
-                        if (onItemEditorListener != null) {
-                            onItemEditorListener.onTextChanged(
-                                    getItem(getLayoutPosition()), v.getText().toString(), ItemVH.this);
-                            primaryText.clearFocus();
-                        }
+            primaryText.setOnEditorActionListener((v, actionId, event) -> {
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    if (onEditTextChangeListener != null) {
+                        onEditTextChangeListener.onEditTextChange(
+                                getItem(getLayoutPosition()), v.getText().toString(), ItemVH.this);
+                        primaryText.clearFocus();
                     }
-                    return false;
                 }
+                return false;
             });
 
-            primaryText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-                @Override
-                public void onFocusChange(View v, boolean hasFocus) {
-                    if (!hasFocus) {
-                        if (isValid() && getLayoutPosition() < getItemCount()) {
-                            primaryText.setText(getItem(getLayoutPosition()).getName());
-                        }
-                        InputMethodManager imm = (InputMethodManager) primaryText.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                        imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-                        if (onItemEditorListener != null) {
-                            onItemEditorListener.onFinishEdit(ItemVH.this);
-                        }
-                    } else {
-                        if (onItemEditorListener != null) {
-                            onItemEditorListener.onStartEdit(ItemVH.this);
-                        }
+            primaryText.setOnFocusChangeListener((v, hasFocus) -> {
+                if (!hasFocus) {
+                    if (isValid() && getLayoutPosition() < getItemCount()) {
+                        primaryText.setText(getItem(getLayoutPosition()).getName());
+                    }
+                    InputMethodManager imm = (InputMethodManager) primaryText.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                    if (onEditStateChangeListener != null) {
+                        onEditStateChangeListener.onEditStateChange(ItemVH.this, false);
+                    }
+                } else {
+                    if (onEditStateChangeListener != null) {
+                        onEditStateChangeListener.onEditStateChange(ItemVH.this, true);
                     }
                 }
             });
 
-            primaryText.setOnBackPressedListener(new BackEditText.OnBackPressedListener() {
-                @Override
-                public boolean onBackPressed() {
-                    primaryText.clearFocus();
-                    return true;
-                }
+            primaryText.setOnBackPressedListener(() -> {
+                primaryText.clearFocus();
+                return true;
             });
         }
     }

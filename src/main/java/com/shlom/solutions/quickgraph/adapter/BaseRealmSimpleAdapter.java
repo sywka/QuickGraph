@@ -1,7 +1,6 @@
 package com.shlom.solutions.quickgraph.adapter;
 
 import com.shlom.solutions.quickgraph.database.ObjectWithUID;
-import com.shlom.solutions.quickgraph.etc.LogUtil;
 
 import io.realm.OrderedRealmCollection;
 import io.realm.RealmList;
@@ -12,7 +11,7 @@ public abstract class BaseRealmSimpleAdapter<ItemType extends RealmObject & Obje
         extends BaseSimpleAdapter<ItemType, ViewHolder> {
 
     public BaseRealmSimpleAdapter() {
-        setItems(new RealmList<ItemType>());
+        setItems(new RealmList<>());
         setHasStableIds(true);
     }
 

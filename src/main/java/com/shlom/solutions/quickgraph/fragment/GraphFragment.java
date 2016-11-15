@@ -7,7 +7,6 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.ColorInt;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.percent.PercentFrameLayout;
 import android.support.v4.app.LoaderManager;
@@ -117,13 +116,10 @@ public class GraphFragment extends BaseFragment implements
                 .initLoader(LOADER_ID_DATA_PREPARER, bundle, this);
         graphDataPreparer.setOnProgressChangeListener(this);
 
-        projectModel.addChangeListener(projectChangeListener = new RealmChangeListener<ProjectModel>() {
-            @Override
-            public void onChange(ProjectModel element) {
-                if (element.isValid()) {
-                    updateGraphLayout();
-                    graphDataPreparer.forceLoad();
-                }
+        projectModel.addChangeListener(projectChangeListener = element -> {
+            if (element.isValid()) {
+                updateGraphLayout();
+                graphDataPreparer.forceLoad();
             }
         });
         projectChangeListener.onChange(projectModel);
@@ -274,74 +270,39 @@ public class GraphFragment extends BaseFragment implements
                 new ExportPNGDialogFragment().show(getChildFragmentManager(), TAG_EXPORT_PNG_DIALOG);
                 return true;
             case R.id.action_draw_legend:
-                realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
-                    @Override
-                    public void execute(Realm realm) {
-                        projectModel
-                                .setDate(new Date())
-                                .getParams().setDrawLegend(item.isChecked());
-                    }
-                });
+                realmHelper.getRealm().executeTransaction(realm -> projectModel
+                        .setDate(new Date())
+                        .getParams().setDrawLegend(item.isChecked()));
                 return true;
             case R.id.action_draw_x_grid:
-                realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
-                    @Override
-                    public void execute(Realm realm) {
-                        projectModel
-                                .setDate(new Date())
-                                .getParams().getAxisXParams().getGridLineParams().setDraw(item.isChecked());
-                    }
-                });
+                realmHelper.getRealm().executeTransaction(realm -> projectModel
+                        .setDate(new Date())
+                        .getParams().getAxisXParams().getGridLineParams().setDraw(item.isChecked()));
                 return true;
             case R.id.action_draw_y_grid:
-                realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
-                    @Override
-                    public void execute(Realm realm) {
-                        projectModel
-                                .setDate(new Date())
-                                .getParams().getAxisYParams().getGridLineParams().setDraw(item.isChecked());
-                    }
-                });
+                realmHelper.getRealm().executeTransaction(realm -> projectModel
+                        .setDate(new Date())
+                        .getParams().getAxisYParams().getGridLineParams().setDraw(item.isChecked()));
                 return true;
             case R.id.action_draw_x_axis:
-                realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
-                    @Override
-                    public void execute(Realm realm) {
-                        projectModel
-                                .setDate(new Date())
-                                .getParams().getAxisXParams().getLineParams().setDraw(item.isChecked());
-                    }
-                });
+                realmHelper.getRealm().executeTransaction(realm -> projectModel
+                        .setDate(new Date())
+                        .getParams().getAxisXParams().getLineParams().setDraw(item.isChecked()));
                 return true;
             case R.id.action_draw_y_axis:
-                realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
-                    @Override
-                    public void execute(Realm realm) {
-                        projectModel
-                                .setDate(new Date())
-                                .getParams().getAxisYParams().getLineParams().setDraw(item.isChecked());
-                    }
-                });
+                realmHelper.getRealm().executeTransaction(realm -> projectModel
+                        .setDate(new Date())
+                        .getParams().getAxisYParams().getLineParams().setDraw(item.isChecked()));
                 return true;
             case R.id.action_draw_x_axis_labels:
-                realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
-                    @Override
-                    public void execute(Realm realm) {
-                        projectModel
-                                .setDate(new Date())
-                                .getParams().getAxisXParams().setDrawLabels(item.isChecked());
-                    }
-                });
+                realmHelper.getRealm().executeTransaction(realm -> projectModel
+                        .setDate(new Date())
+                        .getParams().getAxisXParams().setDrawLabels(item.isChecked()));
                 return true;
             case R.id.action_draw_y_axis_labels:
-                realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
-                    @Override
-                    public void execute(Realm realm) {
-                        projectModel
-                                .setDate(new Date())
-                                .getParams().getAxisYParams().setDrawLabels(item.isChecked());
-                    }
-                });
+                realmHelper.getRealm().executeTransaction(realm -> projectModel
+                        .setDate(new Date())
+                        .getParams().getAxisYParams().setDrawLabels(item.isChecked()));
                 return true;
             case R.id.action_color_x_grid:
                 Utils.putLong(new ColorPickerDialogFragment(),
@@ -372,49 +333,33 @@ public class GraphFragment extends BaseFragment implements
                 new MaterialDialog.Builder(getContext())
                         .title(R.string.action_title)
                         .negativeText(R.string.action_cancel)
-                        .input(getString(R.string.can_empty), projectModel.getParams().getAxisXParams().getTitle(), true, new MaterialDialog.InputCallback() {
-                            @Override
-                            public void onInput(@NonNull MaterialDialog dialog, final CharSequence input) {
-                                realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
-                                    @Override
-                                    public void execute(Realm realm) {
-                                        projectModel
+                        .input(getString(R.string.can_empty),
+                                projectModel.getParams().getAxisXParams().getTitle(),
+                                true,
+                                (dialog, input) ->
+                                        realmHelper.getRealm().executeTransaction(realm -> projectModel
                                                 .setDate(new Date())
-                                                .getParams().getAxisXParams().setTitle(input.toString());
-                                    }
-                                });
-                            }
-                        })
+                                                .getParams().getAxisXParams().setTitle(input.toString()))
+                        )
                         .show();
                 return true;
             case R.id.action_draw_y_axis_name:
                 new MaterialDialog.Builder(getContext())
                         .title(R.string.action_title)
                         .negativeText(R.string.action_cancel)
-                        .input(getString(R.string.can_empty), projectModel.getParams().getAxisYParams().getTitle(), true, new MaterialDialog.InputCallback() {
-                            @Override
-                            public void onInput(@NonNull MaterialDialog dialog, final CharSequence input) {
-                                realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
-                                    @Override
-                                    public void execute(Realm realm) {
-                                        projectModel
-                                                .setDate(new Date())
-                                                .getParams().getAxisYParams().setTitle(input.toString());
-                                    }
-                                });
-                            }
-                        })
+                        .input(getString(R.string.can_empty),
+                                projectModel.getParams().getAxisYParams().getTitle(),
+                                true,
+                                (dialog, input) -> realmHelper.getRealm().executeTransaction(realm -> projectModel
+                                        .setDate(new Date())
+                                        .getParams().getAxisYParams().setTitle(input.toString()))
+                        )
                         .show();
                 return true;
             case R.id.action_fit_screen:
-                realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
-                    @Override
-                    public void execute(Realm realm) {
-                        projectModel
-                                .setDate(new Date())
-                                .setFitScreen(item.isChecked());
-                    }
-                });
+                realmHelper.getRealm().executeTransaction(realm -> projectModel
+                        .setDate(new Date())
+                        .setFitScreen(item.isChecked()));
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -427,36 +372,33 @@ public class GraphFragment extends BaseFragment implements
 
     @Override
     public void onColorChanged(final String tag, @ColorInt final int color) {
-        realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                switch (tag) {
-                    case TAG_COLOR_X_AXIS:
-                        projectModel
-                                .setDate(new Date())
-                                .getParams().getAxisXParams().getLineParams().setColor(color);
-                        break;
-                    case TAG_COLOR_Y_AXIS:
-                        projectModel
-                                .setDate(new Date())
-                                .getParams().getAxisYParams().getLineParams().setColor(color);
-                        break;
-                    case TAG_COLOR_X_GRID:
-                        projectModel
-                                .setDate(new Date())
-                                .getParams().getAxisXParams().getGridLineParams().setColor(color);
-                        break;
-                    case TAG_COLOR_Y_GRID:
-                        projectModel
-                                .setDate(new Date())
-                                .getParams().getAxisYParams().getGridLineParams().setColor(color);
-                        break;
-                    case TAG_COLOR_BACKGROUND:
-                        projectModel
-                                .setDate(new Date())
-                                .getParams().setColorBackground(color);
-                        break;
-                }
+        realmHelper.getRealm().executeTransaction(realm -> {
+            switch (tag) {
+                case TAG_COLOR_X_AXIS:
+                    projectModel
+                            .setDate(new Date())
+                            .getParams().getAxisXParams().getLineParams().setColor(color);
+                    break;
+                case TAG_COLOR_Y_AXIS:
+                    projectModel
+                            .setDate(new Date())
+                            .getParams().getAxisYParams().getLineParams().setColor(color);
+                    break;
+                case TAG_COLOR_X_GRID:
+                    projectModel
+                            .setDate(new Date())
+                            .getParams().getAxisXParams().getGridLineParams().setColor(color);
+                    break;
+                case TAG_COLOR_Y_GRID:
+                    projectModel
+                            .setDate(new Date())
+                            .getParams().getAxisYParams().getGridLineParams().setColor(color);
+                    break;
+                case TAG_COLOR_BACKGROUND:
+                    projectModel
+                            .setDate(new Date())
+                            .getParams().setColorBackground(color);
+                    break;
             }
         });
     }
@@ -492,32 +434,26 @@ public class GraphFragment extends BaseFragment implements
         protected Void doInBackground(final Long... longs) {
             if (isCancelled()) return null;
 
-            RealmHelper.execute(new RealmHelper.Executor() {
-                @Override
-                public void execute(RealmHelper realmHelper) {
-                    final ProjectModel projectModel = realmHelper.findObject(ProjectModel.class, longs[0]);
-                    if (projectModel == null) return;
+            RealmHelper.execute(realmHelper -> {
+                final ProjectModel projectModel = realmHelper.findObject(ProjectModel.class, longs[0]);
+                if (projectModel == null) return;
 
-                    final String fileName;
-                    if (projectModel.getPreviewFileName() == null) {
-                        fileName = UUID.randomUUID().toString();
-                    } else {
-                        fileName = projectModel.getPreviewFileName();
-                    }
-
-                    Bitmap oldPreview = FileCacheHelper.getImageFromCache(context, fileName);
-                    if ((preview == null && oldPreview == null) ||
-                            (preview != null && preview.sameAs(oldPreview))) return;
-
-                    final boolean isCached = FileCacheHelper.putImageToCache(context, fileName, preview);
-                    realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
-                        @Override
-                        public void execute(Realm realm) {
-                            if (isCached) projectModel.setPreviewFileName(fileName);
-                            else projectModel.setPreviewFileName(null);
-                        }
-                    });
+                final String fileName;
+                if (projectModel.getPreviewFileName() == null) {
+                    fileName = UUID.randomUUID().toString();
+                } else {
+                    fileName = projectModel.getPreviewFileName();
                 }
+
+                Bitmap oldPreview = FileCacheHelper.getImageFromCache(context, fileName);
+                if ((preview == null && oldPreview == null) ||
+                        (preview != null && preview.sameAs(oldPreview))) return;
+
+                final boolean isCached = FileCacheHelper.putImageToCache(context, fileName, preview);
+                realmHelper.getRealm().executeTransaction(realm -> {
+                    if (isCached) projectModel.setPreviewFileName(fileName);
+                    else projectModel.setPreviewFileName(null);
+                });
             });
 
             return null;

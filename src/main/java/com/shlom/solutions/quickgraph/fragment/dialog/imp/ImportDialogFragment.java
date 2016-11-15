@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -15,6 +14,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
 
+import com.annimon.stream.Stream;
 import com.shlom.solutions.quickgraph.R;
 import com.shlom.solutions.quickgraph.database.model.CoordinateModel;
 
@@ -65,21 +65,18 @@ public class ImportDialogFragment extends DialogFragment {
             return super.onCreateDialog(savedInstanceState);
         }
 
-        List<String> importsHandlerNames = new ArrayList<>();
-        for (ImportHandler importHandler : importHandlers) {
-            importsHandlerNames.add(getString(importHandler.getNameResource()));
-        }
+        String[] importsHandlerNames = Stream.of(importHandlers)
+                .map(importHandler -> getString(importHandler.getNameResource()))
+                .toArray(String[]::new);
+
         return new AlertDialog.Builder(getContext())
                 .setTitle(getString(R.string.action_import))
                 .setSingleChoiceItems(
-                        importsHandlerNames.toArray(new String[importsHandlerNames.size()]),
+                        importsHandlerNames,
                         importHandlers.indexOf(selectedImportHandler),
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                selectedImportHandler = importHandlers.get(i);
-                                showFileChooser();
-                            }
+                        (dialogInterface, i) -> {
+                            selectedImportHandler = importHandlers.get(i);
+                            showFileChooser();
                         })
                 .setNegativeButton(getString(R.string.action_cancel), null)
                 .create();

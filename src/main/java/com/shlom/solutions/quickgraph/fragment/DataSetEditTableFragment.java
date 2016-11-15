@@ -150,13 +150,10 @@ public class DataSetEditTableFragment extends BaseDataSetEditFragment implements
             super(itemView);
 
             deleteButton = (ImageView) itemView.findViewById(R.id.edit_data_set_table_coordinate_delete);
-            deleteButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    if (getAdapterPosition() != -1) {
-                        getStandaloneDataSet().getCoordinates().remove(getAdapterPosition() - 1);
-                        getAdapter().notifyItemRemoved(getAdapterPosition());
-                    }
+            deleteButton.setOnClickListener(view -> {
+                if (getAdapterPosition() != -1) {
+                    getStandaloneDataSet().getCoordinates().remove(getAdapterPosition() - 1);
+                    getAdapter().notifyItemRemoved(getAdapterPosition());
                 }
             });
             xInput = (TextInputLayout) itemView.findViewById(R.id.edit_data_set_table_coordinate_x);
@@ -194,13 +191,10 @@ public class DataSetEditTableFragment extends BaseDataSetEditFragment implements
             super(itemView);
 
             addButton = (Button) itemView.findViewById(R.id.edit_data_set_table_coordinate_add);
-            addButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (getAdapterPosition() != -1) {
-                        getStandaloneDataSet().getCoordinates().add(new CoordinateModel());
-                        getAdapter().notifyItemInserted(getAdapterPosition());
-                    }
+            addButton.setOnClickListener(v -> {
+                if (getAdapterPosition() != -1) {
+                    getStandaloneDataSet().getCoordinates().add(new CoordinateModel());
+                    getAdapter().notifyItemInserted(getAdapterPosition());
                 }
             });
         }

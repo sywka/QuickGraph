@@ -26,12 +26,9 @@ public abstract class ProgressAsyncTaskLoader<Progress, Result> extends AsyncTas
     }
 
     protected void publishProgress(final Progress progress) {
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (!isLoadInBackgroundCanceled() && onProgressChangeListener != null) {
-                    onProgressChangeListener.onProgressChange(ProgressAsyncTaskLoader.this, progress);
-                }
+        handler.post(() -> {
+            if (!isLoadInBackgroundCanceled() && onProgressChangeListener != null) {
+                onProgressChangeListener.onProgressChange(ProgressAsyncTaskLoader.this, progress);
             }
         });
     }

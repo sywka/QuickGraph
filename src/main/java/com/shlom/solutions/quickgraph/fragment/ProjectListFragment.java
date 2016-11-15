@@ -1,10 +1,8 @@
 package com.shlom.solutions.quickgraph.fragment;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Rect;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -23,12 +21,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.bumptech.glide.Glide;
 import com.shlom.solutions.quickgraph.R;
 import com.shlom.solutions.quickgraph.activity.DataSetActivity;
-import com.shlom.solutions.quickgraph.adapter.BaseSimpleAdapter;
 import com.shlom.solutions.quickgraph.adapter.ProjectListAdapter;
 import com.shlom.solutions.quickgraph.asynctask.DemoGenerator;
 import com.shlom.solutions.quickgraph.asynctask.ProgressAsyncTaskLoader;
@@ -41,7 +37,6 @@ import com.shlom.solutions.quickgraph.ui.AutofitRecyclerView;
 
 import java.util.List;
 
-import io.realm.Realm;
 import io.realm.RealmChangeListener;
 import io.realm.RealmResults;
 import io.realm.Sort;
@@ -83,13 +78,10 @@ public class ProjectListFragment extends BaseFragment implements
 
         realmHelper = new RealmHelper();
         projectModels = realmHelper.findResults(ProjectModel.class, Sort.DESCENDING);
-        projectModels.addChangeListener(projectChangeListener = new RealmChangeListener<RealmResults<ProjectModel>>() {
-            @Override
-            public void onChange(RealmResults<ProjectModel> element) {
-                if (element.isValid()) {
-                    Glide.get(getContext()).clearMemory();
-                    adapter.setItems(element);
-                }
+        projectModels.addChangeListener(projectChangeListener = element -> {
+            if (element.isValid()) {
+                Glide.get(getContext()).clearMemory();
+                adapter.setItems(element);
             }
         });
         projectChangeListener.onChange(projectModels);
@@ -128,12 +120,7 @@ public class ProjectListFragment extends BaseFragment implements
                             .progress(false, 100)
                             .negativeText(R.string.action_cancel)
                             .build();
-                    progressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                        @Override
-                        public void onCancel(DialogInterface dialogInterface) {
-                            demoGenerator.cancelLoad();
-                        }
-                    });
+                    progressDialog.setOnCancelListener(dialogInterface -> demoGenerator.cancelLoad());
                 }
                 progressDialog.setProgress(progressParams.getProgress());
                 progressDialog.setMaxProgress(progressParams.getTotal());
@@ -191,72 +178,36 @@ public class ProjectListFragment extends BaseFragment implements
             }
         }).attachToRecyclerView(recyclerView);
 
-        adapter.setOnItemClickListener(new BaseSimpleAdapter.OnItemClickListener<ProjectModel, ProjectListAdapter.ItemVH>() {
-            @Override
-            public void onClick(View view, ProjectModel item, ProjectListAdapter.ItemVH itemVH) {
-                dismissSnackBar();
-                startActivity(Utils.putLong(new Intent(getContext(), DataSetActivity.class), item.getUid()));
-            }
+        adapter.setOnItemClickListener((view, item, itemVH) -> {
+            dismissSnackBar();
+            startActivity(Utils.putLong(new Intent(getContext(), DataSetActivity.class), item.getUid()));
         });
-
-        adapter.setOnItemEditorListener(new ProjectListAdapter.OnItemEditorListener() {
-            @Override
-            public void onStartEdit(ProjectListAdapter.ItemVH viewHolder) {
-                appBarLayout.setExpanded(false);
-            }
-
-            @Override
-            public void onTextChanged(final ProjectModel projectModel, final String str,
-                                      ProjectListAdapter.ItemVH viewHolder) {
-                realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
-                    @Override
-                    public void execute(Realm realm) {
-                        projectModel.setName(str);
-                    }
-                });
-            }
-
-            @Override
-            public void onFinishEdit(ProjectListAdapter.ItemVH viewHolder) {
-                appBarLayout.setExpanded(true);
-            }
-        });
+        adapter.setOnEditStateChangeListener((viewHolder, isEdit) -> appBarLayout.setExpanded(!isEdit));
+        adapter.setOnEditTextChangeListener((projectModel, str, viewHolder) ->
+                realmHelper.getRealm().executeTransaction(realm -> projectModel.setName(str))
+        );
     }
 
     private void setupFab(View rootView) {
         FloatingActionButton fab = (FloatingActionButton) rootView.findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                new MaterialDialog.Builder(getContext())
-                        .title(R.string.project_creation)
-                        .neutralText(R.string.action_demo_project)
-                        .negativeText(R.string.action_cancel)
-                        .inputType(InputType.TYPE_TEXT_FLAG_CAP_SENTENCES | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS)
-                        .onNeutral(new MaterialDialog.SingleButtonCallback() {
-                            @Override
-                            public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                                dismissSnackBar();
-                                demoGenerator.forceLoad();
-                            }
-                        })
-                        .input(getString(R.string.project_enter_name), null, false, new MaterialDialog.InputCallback() {
-                            @Override
-                            public void onInput(@NonNull MaterialDialog dialog, final CharSequence input) {
-                                dismissSnackBar();
-                                realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
-                                    @Override
-                                    public void execute(Realm realm) {
-                                        RealmModelFactory.newProject(realm, input.toString());
-                                    }
-                                });
-                                recyclerView.scrollToPosition(0);
-                            }
-                        })
-                        .build()
-                        .show();
-            }
-        });
+        fab.setOnClickListener(v -> new MaterialDialog.Builder(getContext())
+                .title(R.string.project_creation)
+                .neutralText(R.string.action_demo_project)
+                .negativeText(R.string.action_cancel)
+                .inputType(InputType.TYPE_TEXT_FLAG_CAP_SENTENCES | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS)
+                .onNeutral((dialog, which) -> {
+                    dismissSnackBar();
+                    demoGenerator.forceLoad();
+                })
+                .input(getString(R.string.project_enter_name), null, false, (dialog, input) -> {
+                    dismissSnackBar();
+                    realmHelper.getRealm().executeTransaction(realm ->
+                            RealmModelFactory.newProject(realm, input.toString())
+                    );
+                    recyclerView.scrollToPosition(0);
+                })
+                .build()
+                .show());
     }
 
     @Override
@@ -280,26 +231,17 @@ public class ProjectListFragment extends BaseFragment implements
         if (getView() == null || adapter.getItemCount() == 0) return;
 
         final ProjectModel projectModel = realmHelper.getRealm().copyFromRealm(adapter.getItem(position));
-        realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                adapter.getItem(position).deleteDependentsFromRealm(getContext());
-                adapter.removeItem(position);
-            }
+        realmHelper.getRealm().executeTransaction(realm -> {
+            adapter.getItem(position).deleteDependentsFromRealm(getContext());
+            adapter.removeItem(position);
         });
 
         snackbar = Snackbar.make(recyclerView, getString(R.string.project_remove, projectModel.getName()), Snackbar.LENGTH_LONG)
-                .setAction(R.string.action_undo, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (snackbar.isShown()) {
-                            realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
-                                @Override
-                                public void execute(Realm realm) {
-                                    realmHelper.getRealm().copyToRealmOrUpdate(projectModel);
-                                }
-                            });
-                        }
+                .setAction(R.string.action_undo, v -> {
+                    if (snackbar.isShown()) {
+                        realmHelper.getRealm().executeTransaction(realm ->
+                                realmHelper.getRealm().copyToRealmOrUpdate(projectModel)
+                        );
                     }
                 });
         snackbar.show();
@@ -309,28 +251,19 @@ public class ProjectListFragment extends BaseFragment implements
         if (getView() == null || adapter.getItemCount() == 0) return;
 
         final List<ProjectModel> projectModels = realmHelper.getRealm().copyFromRealm(adapter.getItems());
-        realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                for (ProjectModel projectModel : adapter.getItems()) {
-                    projectModel.deleteDependentsFromRealm(getContext());
-                }
-                adapter.removeAll();
+        realmHelper.getRealm().executeTransaction(realm -> {
+            for (ProjectModel projectModel : adapter.getItems()) {
+                projectModel.deleteDependentsFromRealm(getContext());
             }
+            adapter.removeAll();
         });
 
         snackbar = Snackbar.make(recyclerView, getString(R.string.project_remove_all, String.valueOf(projectModels.size())), Snackbar.LENGTH_LONG)
-                .setAction(R.string.action_undo, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (snackbar.isShown()) {
-                            realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
-                                @Override
-                                public void execute(Realm realm) {
-                                    realmHelper.getRealm().copyToRealmOrUpdate(projectModels);
-                                }
-                            });
-                        }
+                .setAction(R.string.action_undo, v -> {
+                    if (snackbar.isShown()) {
+                        realmHelper.getRealm().executeTransaction(realm ->
+                                realmHelper.getRealm().copyToRealmOrUpdate(projectModels)
+                        );
                     }
                 });
         snackbar.show();

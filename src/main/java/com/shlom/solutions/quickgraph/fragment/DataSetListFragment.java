@@ -28,9 +28,9 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.annimon.stream.Stream;
 import com.shlom.solutions.quickgraph.R;
 import com.shlom.solutions.quickgraph.activity.EditActivity;
-import com.shlom.solutions.quickgraph.adapter.BaseSimpleAdapter;
 import com.shlom.solutions.quickgraph.adapter.DataListAdapter;
 import com.shlom.solutions.quickgraph.database.RealmHelper;
 import com.shlom.solutions.quickgraph.database.model.DataSetModel;
@@ -97,13 +97,10 @@ public class DataSetListFragment extends BaseFragment
 
         realmHelper = new RealmHelper();
         projectModel = realmHelper.findObject(ProjectModel.class, Utils.getLong(this));
-        projectModel.addChangeListener(projectChangeListener = new RealmChangeListener<ProjectModel>() {
-            @Override
-            public void onChange(ProjectModel element) {
-                if (element.isValid()) {
-                    adapter.setItems(element.getDataSets());
-                    invalidateOptionsMenu();
-                }
+        projectModel.addChangeListener(projectChangeListener = element -> {
+            if (element.isValid()) {
+                adapter.setItems(element.getDataSets());
+                invalidateOptionsMenu();
             }
         });
         projectChangeListener.onChange(projectModel);
@@ -119,14 +116,11 @@ public class DataSetListFragment extends BaseFragment
 
     @Override
     public void onColorChanged(final String tag, @ColorInt final int color) {
-        realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                try {
-                    adapter.getItem(adapter.getItemPosition(Long.valueOf(tag))).setColor(color);
-                } catch (NumberFormatException e) {
-                    LogUtil.d(e);
-                }
+        realmHelper.getRealm().executeTransaction(realm -> {
+            try {
+                adapter.getItem(adapter.getItemPosition(Long.valueOf(tag))).setColor(color);
+            } catch (NumberFormatException e) {
+                LogUtil.d(e);
             }
         });
     }
@@ -163,46 +157,33 @@ public class DataSetListFragment extends BaseFragment
             }
         }).attachToRecyclerView(recyclerView);
 
-        adapter.setOnItemClickListener(new BaseSimpleAdapter.OnItemClickListener<DataSetModel, DataListAdapter.ItemVH>() {
-            @Override
-            public void onClick(View view, final DataSetModel item, final DataListAdapter.ItemVH itemVH) {
-                if (view.getId() == itemVH.checkBox.getId()) {
-                    realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
-                        @Override
-                        public void execute(Realm realm) {
-                            item.setChecked(!item.isChecked());
-                            updateLastEditDate();
-                        }
-                    });
+        adapter.setOnItemClickListener((view, item, itemVH) -> {
+            if (view.getId() == itemVH.checkBox.getId()) {
+                realmHelper.getRealm().executeTransaction(realm -> {
+                    item.setChecked(!item.isChecked());
+                    updateLastEditDate();
+                });
 
-                } else if (view.getId() == itemVH.colorView.getId()) {
-                    Utils.putLong(new ColorPickerDialogFragment(), item.getColor())
-                            .show(getChildFragmentManager(), String.valueOf(item.getUid()));
-                } else {
-                    openEditWindow(item, item.getType());
-                }
+            } else if (view.getId() == itemVH.colorView.getId()) {
+                Utils.putLong(new ColorPickerDialogFragment(), item.getColor())
+                        .show(getChildFragmentManager(), String.valueOf(item.getUid()));
+            } else {
+                openEditWindow(item, item.getType());
             }
         });
     }
 
     private void setupFab(View rootView) {
         fab = (FloatingActionButton) rootView.findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                new MaterialDialog.Builder(getContext())
-                        .title(getString(R.string.action_select_data_type))
-                        .items(getString(DataSetModel.getTypeNameResource(DataSetModel.Type.FROM_TABLE)),
-                                getString(DataSetModel.getTypeNameResource(DataSetModel.Type.FROM_FUNCTION)))
-                        .itemsCallback(new MaterialDialog.ListCallback() {
-                            @Override
-                            public void onSelection(MaterialDialog dialog, View itemView, int which, CharSequence text) {
-                                openEditWindow(null, which == 0 ? DataSetModel.Type.FROM_TABLE : DataSetModel.Type.FROM_FUNCTION);
-                            }
-                        })
-                        .show();
-            }
-        });
+        fab.setOnClickListener(v -> new MaterialDialog.Builder(getContext())
+                .title(getString(R.string.action_select_data_type))
+                .items(
+                        getString(DataSetModel.getTypeNameResource(DataSetModel.Type.FROM_TABLE)),
+                        getString(DataSetModel.getTypeNameResource(DataSetModel.Type.FROM_FUNCTION))
+                )
+                .itemsCallback((dialog, itemView, which, text) ->
+                        openEditWindow(null, which == 0 ? DataSetModel.Type.FROM_TABLE : DataSetModel.Type.FROM_FUNCTION))
+                .show());
     }
 
     private void openEditWindow(@Nullable DataSetModel dataSetModel, DataSetModel.Type type) {
@@ -232,14 +213,11 @@ public class DataSetListFragment extends BaseFragment
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
         fakeToolbar = (Toolbar) bottomSheet.findViewById(R.id.fake_toolbar);
         fakeToolbar.setTitle(R.string.activity_graph);
-        View.OnClickListener onClickListener = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_COLLAPSED)
-                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-                if (bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED)
-                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-            }
+        View.OnClickListener onClickListener = v -> {
+            if (bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_COLLAPSED)
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+            if (bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED)
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         };
         fakeToolbar.setOnClickListener(onClickListener);
         fakeToolbar.setNavigationOnClickListener(onClickListener);
@@ -317,25 +295,19 @@ public class DataSetListFragment extends BaseFragment
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_check_all:
-                realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
-                    @Override
-                    public void execute(Realm realm) {
-                        for (DataSetModel dataSetModel : adapter.getItems()) {
-                            dataSetModel.setChecked(true);
-                        }
-                        updateLastEditDate();
+                realmHelper.getRealm().executeTransaction(realm -> {
+                    for (DataSetModel dataSetModel : adapter.getItems()) {
+                        dataSetModel.setChecked(true);
                     }
+                    updateLastEditDate();
                 });
                 return true;
             case R.id.action_uncheck_all:
-                realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
-                    @Override
-                    public void execute(Realm realm) {
-                        for (DataSetModel dataSetModel : adapter.getItems()) {
-                            dataSetModel.setChecked(false);
-                        }
-                        updateLastEditDate();
+                realmHelper.getRealm().executeTransaction(realm -> {
+                    for (DataSetModel dataSetModel : adapter.getItems()) {
+                        dataSetModel.setChecked(false);
                     }
+                    updateLastEditDate();
                 });
                 return true;
             case R.id.action_clear_all:
@@ -349,28 +321,19 @@ public class DataSetListFragment extends BaseFragment
         if (getView() == null || adapter.getItemCount() == 0) return;
 
         final DataSetModel dataSetModel = realmHelper.getRealm().copyFromRealm(adapter.getItem(position));
-        realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                adapter.getItem(position).deleteDependentsFromRealm();
-                adapter.removeItem(position);
-                updateLastEditDate();
-            }
+        realmHelper.getRealm().executeTransaction(realm -> {
+            adapter.getItem(position).deleteDependentsFromRealm();
+            adapter.removeItem(position);
+            updateLastEditDate();
         });
 
         snackbar = Snackbar.make(recyclerView, getString(R.string.data_set_remove, dataSetModel.getPrimary()), Snackbar.LENGTH_LONG)
-                .setAction(R.string.action_undo, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (snackbar.isShown()) {
-                            realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
-                                @Override
-                                public void execute(Realm realm) {
-                                    projectModel.addDataSet(position, realmHelper.getRealm().copyToRealmOrUpdate(dataSetModel));
-                                    updateLastEditDate();
-                                }
-                            });
-                        }
+                .setAction(R.string.action_undo, v -> {
+                    if (snackbar.isShown()) {
+                        realmHelper.getRealm().executeTransaction(realm -> {
+                            projectModel.addDataSet(position, realmHelper.getRealm().copyToRealmOrUpdate(dataSetModel));
+                            updateLastEditDate();
+                        });
                     }
                 });
         snackbar.show();
@@ -380,32 +343,21 @@ public class DataSetListFragment extends BaseFragment
         if (getView() == null || adapter.getItemCount() == 0) return;
 
         final List<DataSetModel> dataSetModels = realmHelper.getRealm().copyFromRealm(adapter.getItems());
-        realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                for (DataSetModel dataSet : adapter.getItems()) {
-                    dataSet.deleteDependentsFromRealm();
-                }
-                adapter.removeAll();
-                updateLastEditDate();
-            }
+        realmHelper.getRealm().executeTransaction(realm -> {
+            Stream.of(adapter.getItems()).forEach(DataSetModel::deleteDependentsFromRealm);
+            adapter.removeAll();
+            updateLastEditDate();
         });
 
         snackbar = Snackbar.make(recyclerView, getString(R.string.data_set_remove_all, String.valueOf(dataSetModels.size())), Snackbar.LENGTH_LONG)
-                .setAction(R.string.action_undo, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (snackbar.isShown()) {
-                            realmHelper.getRealm().executeTransaction(new Realm.Transaction() {
-                                @Override
-                                public void execute(Realm realm) {
-                                    List<DataSetModel> dataSets = realmHelper.getRealm().copyToRealmOrUpdate(dataSetModels);
-                                    projectModel.setDataSets(new RealmList<>(dataSets.toArray(
-                                            new DataSetModel[dataSets.size()])));
-                                    updateLastEditDate();
-                                }
-                            });
-                        }
+                .setAction(R.string.action_undo, v -> {
+                    if (snackbar.isShown()) {
+                        realmHelper.getRealm().executeTransaction(realm -> {
+                            List<DataSetModel> dataSets = realmHelper.getRealm().copyToRealmOrUpdate(dataSetModels);
+                            projectModel.setDataSets(new RealmList<>(dataSets.toArray(
+                                    new DataSetModel[dataSets.size()])));
+                            updateLastEditDate();
+                        });
                     }
                 });
         snackbar.show();

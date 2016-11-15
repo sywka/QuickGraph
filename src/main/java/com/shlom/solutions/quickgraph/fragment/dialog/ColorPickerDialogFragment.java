@@ -1,7 +1,6 @@
 package com.shlom.solutions.quickgraph.fragment.dialog;
 
 import android.app.Dialog;
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
@@ -48,21 +47,14 @@ public class ColorPickerDialogFragment extends DialogFragment {
         colorPicker.setOldCenterColor(selectedColor);
         colorPicker.setNewCenterColor(selectedColor);
         colorPicker.setColor(selectedColor);
-        colorPicker.setOnColorChangedListener(new ColorPicker.OnColorChangedListener() {
-            @Override
-            public void onColorChanged(int color) {
-                selectedColor = color;
-            }
-        });
+        colorPicker.setOnColorChangedListener(color -> selectedColor = color);
 
         return new AlertDialog.Builder(getContext())
                 .setTitle(R.string.color_picker_title)
-                .setPositiveButton(R.string.action_ok, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        onColorChangedListener.onColorChanged(getTag(), selectedColor);
-                    }
-                })
+                .setPositiveButton(
+                        R.string.action_ok,
+                        (dialogInterface, i) -> onColorChangedListener.onColorChanged(getTag(), selectedColor)
+                )
                 .setNegativeButton(R.string.action_cancel, null)
                 .setView(customView)
                 .create();

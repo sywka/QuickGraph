@@ -52,18 +52,8 @@ public class DataListAdapter extends BaseRealmSimpleAdapter<DataSetModel, DataLi
             checkBox = (CheckBox) itemView.findViewById(R.id.data_set_list_item_check);
             colorView = itemView.findViewById(R.id.data_set_list_item_color);
 
-            colorView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    notifyClickListener(v);
-                }
-            });
-            checkBox.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    notifyClickListener(v);
-                }
-            });
+            colorView.setOnClickListener(this::notifyClickListener);
+            checkBox.setOnClickListener(this::notifyClickListener);
         }
     }
 }

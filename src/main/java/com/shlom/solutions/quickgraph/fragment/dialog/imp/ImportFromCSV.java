@@ -51,12 +51,7 @@ public class ImportFromCSV extends BaseImportHandler {
         };
 
         for (final CSVFormat csvFormat : csvFormats) {
-            List<CoordinateModel> list = readFromUri(context, uri, new InputStreamCallback() {
-                @Override
-                public List<CoordinateModel> readFromInputStream(InputStream inputStream) throws Exception {
-                    return read(inputStream, csvFormat);
-                }
-            });
+            List<CoordinateModel> list = readFromUri(context, uri, inputStream -> read(inputStream, csvFormat));
             if (list != null && !list.isEmpty()) {
                 return list;
             }

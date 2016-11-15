@@ -42,12 +42,7 @@ public class ImportFromExcel extends BaseImportHandler {
 
     @Override
     public List<CoordinateModel> readFromUri(Context context, Uri uri) throws Exception {
-        return readFromUri(context, uri, new InputStreamCallback() {
-            @Override
-            public List<CoordinateModel> readFromInputStream(InputStream inputStream) throws Exception {
-                return read(new HSSFWorkbook(inputStream));
-            }
-        });
+        return readFromUri(context, uri, inputStream -> read(new HSSFWorkbook(inputStream)));
     }
 
     private List<CoordinateModel> read(Workbook workbook) {

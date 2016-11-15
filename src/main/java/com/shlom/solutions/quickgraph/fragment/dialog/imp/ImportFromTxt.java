@@ -42,12 +42,7 @@ public class ImportFromTXT extends BaseImportHandler {
                 Locale.GERMANY
         };
         for (final Locale locale : locales) {
-            List<CoordinateModel> list = readFromUri(context, uri, new InputStreamCallback() {
-                @Override
-                public List<CoordinateModel> readFromInputStream(InputStream inputStream) throws Exception {
-                    return read(inputStream, locale);
-                }
-            });
+            List<CoordinateModel> list = readFromUri(context, uri, inputStream -> read(inputStream, locale));
             if (list != null && !list.isEmpty()) {
                 return list;
             }
