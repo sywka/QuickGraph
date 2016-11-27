@@ -1,7 +1,5 @@
 package com.shlom.solutions.quickgraph.adapter;
 
-import android.support.annotation.LayoutRes;
-import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public abstract class BaseSimpleAdapter<ItemType, ViewHolder extends BaseSimpleAdapter.ItemViewHolder>
+public abstract class BaseSimpleAdapter<ItemType, ViewHolder extends RecyclerView.ViewHolder>
         extends RecyclerView.Adapter<ViewHolder> {
 
     private List<ItemType> items;
@@ -22,13 +20,21 @@ public abstract class BaseSimpleAdapter<ItemType, ViewHolder extends BaseSimpleA
         this.items = new ArrayList<>();
     }
 
+    public abstract ViewHolder onCreateViewHolder(LayoutInflater inflater, ViewGroup parent,
+                                                  int viewType);
+
     @Override
     public int getItemCount() {
         return items.size();
     }
 
-    protected View inflateView(@LayoutRes int resource, @NonNull ViewGroup parent) {
-        return LayoutInflater.from(parent.getContext()).inflate(resource, parent, false);
+    @Override
+    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        ViewHolder viewHolder = onCreateViewHolder(LayoutInflater.from(parent.getContext()), parent,
+                viewType);
+        viewHolder.itemView.setOnClickListener(view -> notifyClickListener(view, viewHolder));
+        viewHolder.itemView.setOnLongClickListener(view -> notifyLongClickListener(view, viewHolder));
+        return viewHolder;
     }
 
     public ItemType getItem(int position) {
@@ -72,22 +78,35 @@ public abstract class BaseSimpleAdapter<ItemType, ViewHolder extends BaseSimpleA
         notifyItemMoved(fromPosition, toPosition);
     }
 
+    protected void notifyClickListener(View view, ViewHolder viewHolder) {
+        int adapterPosition = viewHolder.getAdapterPosition();
+        if (onItemClickListener != null && adapterPosition != RecyclerView.NO_POSITION) {
+            onItemClickListener.onClick(view, getItem(adapterPosition), viewHolder);
+        }
+    }
+
+    protected boolean notifyLongClickListener(View view, ViewHolder viewHolder) {
+        int adapterPosition = viewHolder.getAdapterPosition();
+        return onItemLongClickListener != null && adapterPosition != RecyclerView.NO_POSITION &&
+                onItemLongClickListener.onLongClick(view, items.get(adapterPosition), viewHolder);
+    }
+
     public OnItemClickListener<ItemType, ViewHolder> getOnItemClickListener() {
         return onItemClickListener;
     }
 
-    public BaseSimpleAdapter setOnItemClickListener(OnItemClickListener<ItemType, ViewHolder> onItemClickListener) {
+    public void setOnItemClickListener(
+            OnItemClickListener<ItemType, ViewHolder> onItemClickListener) {
         this.onItemClickListener = onItemClickListener;
-        return this;
     }
 
     public OnItemLongClickListener<ItemType, ViewHolder> getOnItemLongClickListener() {
         return onItemLongClickListener;
     }
 
-    public BaseSimpleAdapter setOnItemLongClickListener(OnItemLongClickListener<ItemType, ViewHolder> onItemLongClickListener) {
+    public void setOnItemLongClickListener(
+            OnItemLongClickListener<ItemType, ViewHolder> onItemLongClickListener) {
         this.onItemLongClickListener = onItemLongClickListener;
-        return this;
     }
 
     public interface OnItemClickListener<ItemType, ViewHolder> {
@@ -96,27 +115,5 @@ public abstract class BaseSimpleAdapter<ItemType, ViewHolder extends BaseSimpleA
 
     public interface OnItemLongClickListener<ItemType, ViewHolder> {
         boolean onLongClick(View view, ItemType item, ViewHolder viewHolder);
-    }
-
-    public class ItemViewHolder extends RecyclerView.ViewHolder {
-
-        public ItemViewHolder(View itemView) {
-            super(itemView);
-
-            itemView.setOnClickListener(this::notifyClickListener);
-            itemView.setOnLongClickListener(this::notifyLongClickListener);
-        }
-
-        @SuppressWarnings("unchecked")
-        public void notifyClickListener(View view) {
-            if (onItemClickListener != null && !items.isEmpty())
-                onItemClickListener.onClick(view, items.get(getLayoutPosition()), (ViewHolder) this);
-        }
-
-        @SuppressWarnings("unchecked")
-        public boolean notifyLongClickListener(View view) {
-            return onItemLongClickListener != null && !items.isEmpty() &&
-                    onItemLongClickListener.onLongClick(view, items.get(getLayoutPosition()), (ViewHolder) this);
-        }
     }
 }

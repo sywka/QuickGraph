@@ -7,6 +7,12 @@ import com.shlom.solutions.quickgraph.R;
 public abstract class ArrowAnimator {
 
     @DrawableRes
+    public static int getArrowByOffset(float offset) {
+        int[] drawables = getArrowDrawableResources();
+        return drawables[(int) ((drawables.length - 1) * offset)];
+    }
+
+    @DrawableRes
     public static int getLessArrow() {
         return R.drawable.arrow_85;
     }

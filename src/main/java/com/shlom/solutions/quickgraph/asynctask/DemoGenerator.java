@@ -18,11 +18,18 @@ public class DemoGenerator extends ProgressAsyncTaskLoader<ProgressParams, Void>
     }
 
     @Override
+    protected void onReset() {
+        super.onReset();
+
+        cancelLoad();
+    }
+
+    @Override
     public Void loadInBackground() {
-        final RealmHelper realmHelper = new RealmHelper();
+        RealmHelper realmHelper = new RealmHelper();
         realmHelper.getRealm().executeTransaction(realm -> {
             String description = getContext().getString(R.string.project_generate_demo);
-            ProgressParams progressParams = new ProgressParams(0, 100, description);
+            ProgressParams progressParams = new ProgressParams(0, 10, description);
 
             String name = getContext().getString(R.string.action_demo_project);
             ProjectModel projectModel = RealmModelFactory.newProject(realm, name);
@@ -55,7 +62,8 @@ public class DemoGenerator extends ProgressAsyncTaskLoader<ProgressParams, Void>
                                 functionRangeModel.getDelta()))
                         .copyToRealm(realm);
 
-                dataSetModel.setPrimary(dataSetModel.getPrimary() + " №" + (projectModel.getDataSets().size() + 1));
+                dataSetModel.setPrimary(dataSetModel.getPrimary() + " №" +
+                        (projectModel.getDataSets().size() + 1));
 
                 projectModel.addDataSet(0, dataSetModel);
 

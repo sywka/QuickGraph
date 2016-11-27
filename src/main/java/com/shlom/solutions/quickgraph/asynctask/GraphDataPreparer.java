@@ -27,25 +27,28 @@ public class GraphDataPreparer extends ProgressAsyncTaskLoader<ProgressParams, L
     }
 
     @Override
+    protected void onReset() {
+        super.onReset();
+
+        cancelLoad();
+    }
+
+    @Override
     public LineData loadInBackground() {
         RealmHelper realmHelper = new RealmHelper();
 
-        List<ILineDataSet> dataSets = new ArrayList<>();
+        List<ILineDataSet> sets = new ArrayList<>();
         try {
             ProjectModel project = realmHelper.findObject(ProjectModel.class, projectId);
             if (project == null) return null;
 
-            ProgressParams progressParams = new ProgressParams(
-                    0,
-                    (int) Stream.of(project.getDataSets())
-                            .filter(DataSetModel::isChecked)
-                            .count(),
-                    null);
+            long count = Stream.of(project.getDataSets()).filter(DataSetModel::isChecked).count();
+            ProgressParams progressParams = new ProgressParams(0, (int) count, null);
 
-            dataSets = Stream.of(project.getDataSets())
+            sets = Stream.of(project.getDataSets())
                     .filter(DataSetModel::isChecked)
-                    .map(dataSetModel -> {
-                        List<Entry> values = Stream.of(dataSetModel.getCoordinates())
+                    .map(model -> {
+                        List<Entry> values = Stream.of(model.getCoordinates())
                                 .map(coordinateModel -> {
                                     if (isLoadInBackgroundCanceled()) {
                                         throw new RuntimeException("Canceled");
@@ -55,17 +58,17 @@ public class GraphDataPreparer extends ProgressAsyncTaskLoader<ProgressParams, L
                                 })
                                 .collect(Collectors.toList());
 
-                        LineDataSet lineDataSet = new LineDataSet(values, dataSetModel.getPrimary());
-                        lineDataSet.setColor(dataSetModel.getColor());
-                        lineDataSet.setLineWidth(Utils.dpToPx(getContext(), dataSetModel.getLineWidth()));
-                        lineDataSet.setHighlightEnabled(dataSetModel.isDrawPoints());
-                        lineDataSet.setDrawCircles(dataSetModel.isDrawPoints());
-                        lineDataSet.setCircleColor(dataSetModel.getColor());
-                        lineDataSet.setCircleRadius(Utils.dpToPx(getContext(), dataSetModel.getPointsRadius()));
-                        lineDataSet.setMode(dataSetModel.isCubicCurve() ?
+                        LineDataSet set = new LineDataSet(values, model.getPrimary());
+                        set.setColor(model.getColor());
+                        set.setLineWidth(Utils.dpToPx(getContext(), model.getLineWidth()));
+                        set.setHighlightEnabled(model.isDrawPoints());
+                        set.setDrawCircles(model.isDrawPoints());
+                        set.setCircleColor(model.getColor());
+                        set.setCircleRadius(Utils.dpToPx(getContext(), model.getPointsRadius()));
+                        set.setMode(model.isCubicCurve() ?
                                 LineDataSet.Mode.CUBIC_BEZIER : LineDataSet.Mode.LINEAR);
-                        lineDataSet.setDrawValues(dataSetModel.isDrawPointsLabel());
-                        lineDataSet.setValueFormatter((value, entry, dataSetIndex, viewPortHandler) -> (
+                        set.setDrawValues(model.isDrawPointsLabel());
+                        set.setValueFormatter((value, entry, dataSetIndex, viewPortHandler) -> (
                                 "(" + entry.getX() + "; " + entry.getY() + ")"
                         ));
 
@@ -75,7 +78,7 @@ public class GraphDataPreparer extends ProgressAsyncTaskLoader<ProgressParams, L
                         progressParams.increment();
                         publishProgress(progressParams);
 
-                        return lineDataSet;
+                        return set;
                     })
                     .collect(Collectors.toList());
         } catch (Exception e) {
@@ -83,6 +86,6 @@ public class GraphDataPreparer extends ProgressAsyncTaskLoader<ProgressParams, L
         } finally {
             realmHelper.closeRealm();
         }
-        return new LineData(dataSets);
+        return new LineData(sets);
     }
 }

@@ -1,13 +1,15 @@
 package com.shlom.solutions.quickgraph.adapter;
 
+import android.support.v7.widget.RecyclerView;
+
 import com.shlom.solutions.quickgraph.database.ObjectWithUID;
 
 import io.realm.OrderedRealmCollection;
 import io.realm.RealmList;
-import io.realm.RealmObject;
+import io.realm.RealmModel;
 
-public abstract class BaseRealmSimpleAdapter<ItemType extends RealmObject & ObjectWithUID,
-        ViewHolder extends BaseSimpleAdapter.ItemViewHolder>
+public abstract class BaseRealmSimpleAdapter<ItemType extends RealmModel & ObjectWithUID,
+        ViewHolder extends RecyclerView.ViewHolder>
         extends BaseSimpleAdapter<ItemType, ViewHolder> {
 
     public BaseRealmSimpleAdapter() {

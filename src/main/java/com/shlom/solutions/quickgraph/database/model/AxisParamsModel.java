@@ -40,8 +40,8 @@ public class AxisParamsModel extends RealmObject implements ObjectWithUID, Seria
         if (lineParams != null) {
             lineParams.deleteFromRealm();
         }
-        if (lineParams != null) {
-            lineParams.deleteFromRealm();
+        if (gridLineParams != null) {
+            gridLineParams.deleteFromRealm();
         }
     }
 

@@ -7,10 +7,10 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.util.DisplayMetrics;
 import android.view.View;
 
-import com.shlom.solutions.quickgraph.activity.BaseActivity;
 import com.shlom.solutions.quickgraph.database.RealmHelper;
 import com.shlom.solutions.quickgraph.database.model.CoordinateModel;
 
@@ -50,7 +50,7 @@ public abstract class Utils {
         return dp;
     }
 
-    public static <T extends BaseActivity> Intent putLong(Intent intent, long uid) {
+    public static <T extends FragmentActivity> Intent putLong(Intent intent, long uid) {
         Bundle bundle = new Bundle();
         bundle.putLong(Config.TAG_LONG, uid);
         intent.putExtras(bundle);
@@ -71,15 +71,15 @@ public abstract class Utils {
         return intent;
     }
 
-    public static <T extends BaseActivity> long getLong(T activity) {
+    public static <T extends FragmentActivity> long getLong(T activity) {
         return activity.getIntent().getExtras().getLong(Config.TAG_LONG, -1);
     }
 
-    public static <T extends BaseActivity> boolean getBoolean(T activity) {
+    public static <T extends FragmentActivity> boolean getBoolean(T activity) {
         return activity.getIntent().getExtras().getBoolean(Config.TAG_BOOLEAN, false);
     }
 
-    public static <T extends BaseActivity> Serializable getSerializable(T activity) {
+    public static <T extends FragmentActivity> Serializable getSerializable(T activity) {
         return activity.getIntent().getExtras().getSerializable(Config.TAG_SERIALIZABLE);
     }
 

@@ -1,10 +1,8 @@
 package com.shlom.solutions.quickgraph.fragment;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.ColorInt;
 import android.support.annotation.Nullable;
@@ -28,22 +26,20 @@ import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.data.LineData;
 import com.shlom.solutions.quickgraph.R;
 import com.shlom.solutions.quickgraph.asynctask.GraphDataPreparer;
+import com.shlom.solutions.quickgraph.asynctask.PreviewCacheCreator;
 import com.shlom.solutions.quickgraph.asynctask.ProgressAsyncTaskLoader;
 import com.shlom.solutions.quickgraph.asynctask.ProgressParams;
 import com.shlom.solutions.quickgraph.database.RealmHelper;
 import com.shlom.solutions.quickgraph.database.model.AxisParamsModel;
 import com.shlom.solutions.quickgraph.database.model.ProjectModel;
 import com.shlom.solutions.quickgraph.etc.Config;
-import com.shlom.solutions.quickgraph.etc.FileCacheHelper;
 import com.shlom.solutions.quickgraph.etc.Utils;
 import com.shlom.solutions.quickgraph.fragment.dialog.ColorPickerDialogFragment;
 import com.shlom.solutions.quickgraph.fragment.dialog.ExportPNGDialogFragment;
 import com.shlom.solutions.quickgraph.ui.ValueMarker;
 
 import java.util.Date;
-import java.util.UUID;
 
-import io.realm.Realm;
 import io.realm.RealmChangeListener;
 
 public class GraphFragment extends BaseFragment implements
@@ -54,14 +50,14 @@ public class GraphFragment extends BaseFragment implements
 
     private static final String TAG_EXPORT_PNG_DIALOG = "export_png_dialog";
     private static final String TAG_PROJECT_ID = "project_id";
-    private static final String TAG_CAN_GO_BACK = "can_go_back";
     private static final String TAG_COLOR_X_AXIS = "color_x_axis";
     private static final String TAG_COLOR_Y_AXIS = "color_y_axis";
     private static final String TAG_COLOR_X_GRID = "color_x_grid";
     private static final String TAG_COLOR_Y_GRID = "color_y_grid";
     private static final String TAG_COLOR_BACKGROUND = "color_background";
 
-    private static final int LOADER_ID_DATA_PREPARER = 101;
+    private static final int LOADER_ID_DATA_PREPARER = 300;
+    private static final int LOADER_ID_CACHE_CREATOR = 301;
 
     private RealmHelper realmHelper;
 
@@ -73,17 +69,6 @@ public class GraphFragment extends BaseFragment implements
 
     private RealmChangeListener<ProjectModel> projectChangeListener;
 
-    private GraphDataPreparer graphDataPreparer;
-    private AsyncCacheCreator cacheCreator;
-
-    public static GraphFragment newInstance(boolean canGoBack) {
-        GraphFragment graphFragment = new GraphFragment();
-        Bundle bundle = new Bundle();
-        bundle.putBoolean(TAG_CAN_GO_BACK, canGoBack);
-        graphFragment.setArguments(bundle);
-        return graphFragment;
-    }
-
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -92,9 +77,9 @@ public class GraphFragment extends BaseFragment implements
         progressBar = (ProgressBar) rootView.findViewById(R.id.graph_progress_bar);
         Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.toolbar);
 
-        boolean canGoBack = setupActivityActionBar(toolbar, getArguments().getBoolean(TAG_CAN_GO_BACK, true));
+        imitateActionBar(toolbar, false);
         toolbar.setTitle(R.string.activity_graph);
-        if (!canGoBack && getArguments().getBoolean(TAG_CAN_GO_BACK, true)) {
+        if (getString(R.string.tag_main_fragment).equals(getParentFragment().getTag())) {
             toolbar.setNavigationIcon(new ColorDrawable(Color.TRANSPARENT));
         }
 
@@ -108,13 +93,14 @@ public class GraphFragment extends BaseFragment implements
         super.onStart();
 
         realmHelper = new RealmHelper();
-        projectModel = realmHelper.findObject(ProjectModel.class, Utils.getLong(this));
+        projectModel = realmHelper.findObject(ProjectModel.class,
+                Utils.getLong(getCompatActivity()));
 
         Bundle bundle = new Bundle();
         bundle.putLong(TAG_PROJECT_ID, projectModel.getUid());
-        graphDataPreparer = (GraphDataPreparer) getLoaderManager()
+        GraphDataPreparer graphDataPreparer = (GraphDataPreparer) getLoaderManager()
                 .initLoader(LOADER_ID_DATA_PREPARER, bundle, this);
-        graphDataPreparer.setOnProgressChangeListener(this);
+        GraphDataPreparer.registerOnProgressListener(LOADER_ID_DATA_PREPARER, this);
 
         projectModel.addChangeListener(projectChangeListener = element -> {
             if (element.isValid()) {
@@ -129,7 +115,7 @@ public class GraphFragment extends BaseFragment implements
     public void onStop() {
         super.onStop();
 
-        graphDataPreparer.removeOnProgressListener();
+        GraphDataPreparer.unregisterOnProgressListener(LOADER_ID_DATA_PREPARER);
         projectModel.removeChangeListener(projectChangeListener);
         realmHelper.closeRealm();
     }
@@ -139,6 +125,14 @@ public class GraphFragment extends BaseFragment implements
         switch (id) {
             case LOADER_ID_DATA_PREPARER:
                 return new GraphDataPreparer(getContext(), args.getLong(TAG_PROJECT_ID));
+            case LOADER_ID_CACHE_CREATOR:
+                Bitmap bitmap = null;
+                if (!graphView.isEmpty()) {
+                    bitmap = Bitmap.createBitmap(Config.PROJECT_PREVIEW_WIDTH,
+                            Config.PROJECT_PREVIEW_HEIGHT, Bitmap.Config.ARGB_8888);
+                    Utils.createPreview(bitmap, graphView);
+                }
+                return new PreviewCacheCreator(getContext(), args.getLong(TAG_PROJECT_ID), bitmap);
             default:
                 return null;
         }
@@ -167,9 +161,9 @@ public class GraphFragment extends BaseFragment implements
 
                 exportDialogProgress(false);
 
-                if (cacheCreator != null) cacheCreator.cancel(true);
-                cacheCreator = new AsyncCacheCreator(getContext());
-                cacheCreator.execute(projectModel.getUid());
+                Bundle bundle = new Bundle();
+                bundle.putLong(TAG_PROJECT_ID, projectModel.getUid());
+                getLoaderManager().restartLoader(LOADER_ID_CACHE_CREATOR, bundle, this).forceLoad();
                 break;
         }
     }
@@ -275,32 +269,32 @@ public class GraphFragment extends BaseFragment implements
                         .getParams().setDrawLegend(item.isChecked()));
                 return true;
             case R.id.action_draw_x_grid:
-                realmHelper.getRealm().executeTransaction(realm -> projectModel
+                realmHelper.executeTransaction(realm -> projectModel
                         .setDate(new Date())
                         .getParams().getAxisXParams().getGridLineParams().setDraw(item.isChecked()));
                 return true;
             case R.id.action_draw_y_grid:
-                realmHelper.getRealm().executeTransaction(realm -> projectModel
+                realmHelper.executeTransaction(realm -> projectModel
                         .setDate(new Date())
                         .getParams().getAxisYParams().getGridLineParams().setDraw(item.isChecked()));
                 return true;
             case R.id.action_draw_x_axis:
-                realmHelper.getRealm().executeTransaction(realm -> projectModel
+                realmHelper.executeTransaction(realm -> projectModel
                         .setDate(new Date())
                         .getParams().getAxisXParams().getLineParams().setDraw(item.isChecked()));
                 return true;
             case R.id.action_draw_y_axis:
-                realmHelper.getRealm().executeTransaction(realm -> projectModel
+                realmHelper.executeTransaction(realm -> projectModel
                         .setDate(new Date())
                         .getParams().getAxisYParams().getLineParams().setDraw(item.isChecked()));
                 return true;
             case R.id.action_draw_x_axis_labels:
-                realmHelper.getRealm().executeTransaction(realm -> projectModel
+                realmHelper.executeTransaction(realm -> projectModel
                         .setDate(new Date())
                         .getParams().getAxisXParams().setDrawLabels(item.isChecked()));
                 return true;
             case R.id.action_draw_y_axis_labels:
-                realmHelper.getRealm().executeTransaction(realm -> projectModel
+                realmHelper.executeTransaction(realm -> projectModel
                         .setDate(new Date())
                         .getParams().getAxisYParams().setDrawLabels(item.isChecked()));
                 return true;
@@ -337,7 +331,7 @@ public class GraphFragment extends BaseFragment implements
                                 projectModel.getParams().getAxisXParams().getTitle(),
                                 true,
                                 (dialog, input) ->
-                                        realmHelper.getRealm().executeTransaction(realm -> projectModel
+                                        realmHelper.executeTransaction(realm -> projectModel
                                                 .setDate(new Date())
                                                 .getParams().getAxisXParams().setTitle(input.toString()))
                         )
@@ -350,14 +344,14 @@ public class GraphFragment extends BaseFragment implements
                         .input(getString(R.string.can_empty),
                                 projectModel.getParams().getAxisYParams().getTitle(),
                                 true,
-                                (dialog, input) -> realmHelper.getRealm().executeTransaction(realm -> projectModel
+                                (dialog, input) -> realmHelper.executeTransaction(realm -> projectModel
                                         .setDate(new Date())
                                         .getParams().getAxisYParams().setTitle(input.toString()))
                         )
                         .show();
                 return true;
             case R.id.action_fit_screen:
-                realmHelper.getRealm().executeTransaction(realm -> projectModel
+                realmHelper.executeTransaction(realm -> projectModel
                         .setDate(new Date())
                         .setFitScreen(item.isChecked()));
                 return true;
@@ -408,55 +402,6 @@ public class GraphFragment extends BaseFragment implements
                 .findFragmentByTag(TAG_EXPORT_PNG_DIALOG);
         if (fragment != null) {
             fragment.progress(show);
-        }
-    }
-
-    private class AsyncCacheCreator extends AsyncTask<Long, Void, Void> {
-
-        private Context context;
-        private Bitmap preview = null;
-
-        public AsyncCacheCreator(Context context) {
-            this.context = context.getApplicationContext();
-        }
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-
-            if (!graphView.isEmpty()) {
-                preview = Bitmap.createBitmap(Config.PROJECT_PREVIEW_WIDTH, Config.PROJECT_PREVIEW_HEIGHT, Bitmap.Config.ARGB_8888);
-                Utils.createPreview(preview, graphView);
-            }
-        }
-
-        @Override
-        protected Void doInBackground(final Long... longs) {
-            if (isCancelled()) return null;
-
-            RealmHelper.execute(realmHelper -> {
-                final ProjectModel projectModel = realmHelper.findObject(ProjectModel.class, longs[0]);
-                if (projectModel == null) return;
-
-                final String fileName;
-                if (projectModel.getPreviewFileName() == null) {
-                    fileName = UUID.randomUUID().toString();
-                } else {
-                    fileName = projectModel.getPreviewFileName();
-                }
-
-                Bitmap oldPreview = FileCacheHelper.getImageFromCache(context, fileName);
-                if ((preview == null && oldPreview == null) ||
-                        (preview != null && preview.sameAs(oldPreview))) return;
-
-                final boolean isCached = FileCacheHelper.putImageToCache(context, fileName, preview);
-                realmHelper.getRealm().executeTransaction(realm -> {
-                    if (isCached) projectModel.setPreviewFileName(fileName);
-                    else projectModel.setPreviewFileName(null);
-                });
-            });
-
-            return null;
         }
     }
 }

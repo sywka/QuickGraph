@@ -2,73 +2,58 @@ package com.shlom.solutions.quickgraph.fragment;
 
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.SupportMenuInflater;
 import android.support.v7.view.menu.ActionMenuItem;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
-import android.view.View;
 
 import com.shlom.solutions.quickgraph.R;
-import com.shlom.solutions.quickgraph.activity.BaseActivity;
 
-public class BaseFragment extends Fragment {
+public abstract class BaseFragment extends Fragment {
 
     private Toolbar toolbar;
-    private boolean supportActionBar;
 
-    protected boolean setupActivityActionBar(@NonNull Toolbar toolbar, boolean withBackArrow) {
+    protected void imitateActionBar(@NonNull Toolbar toolbar, boolean withBackArrow) {
         this.toolbar = toolbar;
-        if (getBaseActivity().getSupportActionBar() == null) {
-            setHasOptionsMenu(true);
-            getBaseActivity().setSupportActionBar(toolbar);
-            if (getBaseActivity().getSupportActionBar() != null)
-                getBaseActivity().getSupportActionBar().setDisplayHomeAsUpEnabled(withBackArrow);
-            supportActionBar = true;
-
-        } else {
-            onCreateOptionsMenu(toolbar.getMenu(), new SupportMenuInflater(getContext()));
-            toolbar.setTitle(getActivity().getTitle());
-            if (withBackArrow) {
-                toolbar.setNavigationIcon(R.drawable.ic_arrow_back_white_24dp);
-                toolbar.setNavigationOnClickListener(v -> {
-                    ActionMenuItem menuItem = new ActionMenuItem(getContext(), 0, android.R.id.home,
-                            0, 0, null);
-                    onOptionsItemSelected(menuItem);
-                });
-            }
-            toolbar.setOnMenuItemClickListener(this::onOptionsItemSelected);
-            supportActionBar = false;
+        setHasOptionsMenu(false);
+        onCreateOptionsMenu(toolbar.getMenu(), new SupportMenuInflater(getContext()));
+        toolbar.setTitle(getActivity().getTitle());
+        if (withBackArrow) {
+            toolbar.setNavigationIcon(R.drawable.ic_arrow_back_white_24dp);
+            toolbar.setNavigationOnClickListener(v -> {
+                ActionMenuItem menuItem = new ActionMenuItem(getContext(), 0, android.R.id.home,
+                        0, 0, null);
+                onOptionsItemSelected(menuItem);
+            });
         }
-        return supportActionBar;
+        toolbar.setOnMenuItemClickListener(this::onOptionsItemSelected);
+    }
+
+    protected void setupActivityActionBar(@NonNull Toolbar toolbar, boolean withBackArrow) {
+        setHasOptionsMenu(true);
+        getCompatActivity().setSupportActionBar(toolbar);
+        if (getCompatActivity().getSupportActionBar() != null)
+            getCompatActivity().getSupportActionBar().setDisplayHomeAsUpEnabled(withBackArrow);
     }
 
     public void invalidateOptionsMenu() {
-        if (supportActionBar) {
+        if (toolbar == null) {
             getActivity().invalidateOptionsMenu();
         } else {
             onPrepareOptionsMenu(toolbar.getMenu());
         }
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        invalidateOptionsMenu();
-    }
-
-    protected BaseActivity getBaseActivity() {
-        return (BaseActivity) getActivity();
-    }
-
-    public Toolbar getToolbar() {
-        return toolbar;
+    protected AppCompatActivity getCompatActivity() {
+        return (AppCompatActivity) getActivity();
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                getBaseActivity().finish();
+                getCompatActivity().finish();
                 return true;
         }
         return super.onOptionsItemSelected(item);

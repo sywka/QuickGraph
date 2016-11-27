@@ -1,64 +1,87 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="horizontal"
-    android:weightSum="1">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <android.support.design.widget.CoordinatorLayout
-        android:id="@+id/coordinator_layout"
-        android:layout_width="0dp"
+    <data class="DataSetListBinding">
+
+        <variable
+            name="dataSets"
+            type="com.shlom.solutions.quickgraph.viewmodel.IDataSetListViewModel"/>
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="0.3">
+        android:orientation="horizontal"
+        android:weightSum="1">
 
-        <android.support.design.widget.AppBarLayout
-            android:id="@+id/app_bar_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:theme="@style/AppTheme.AppBarOverlay">
-
-            <android.support.v7.widget.Toolbar
-                android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                android:background="?attr/colorPrimary"
-                app:popupTheme="@style/AppTheme.PopupOverlay" />
-
-        </android.support.design.widget.AppBarLayout>
-
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/recyclerView"
-            android:layout_width="match_parent"
+        <android.support.design.widget.CoordinatorLayout
+            android:id="@+id/coordinator_layout"
+            android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:clipToPadding="false"
-            android:paddingBottom="8dp"
-            android:paddingTop="8dp"
-            android:scrollbars="vertical"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+            android:layout_weight="0.3">
 
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/fab"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="@dimen/fab_margin"
-            app:layout_anchor="@id/recyclerView"
-            app:layout_anchorGravity="bottom|right|end"
-            app:srcCompat="@drawable/ic_add_white_24dp" />
+            <android.support.design.widget.AppBarLayout
+                android:id="@+id/app_bar_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:theme="@style/AppTheme.AppBarOverlay">
 
-    </android.support.design.widget.CoordinatorLayout>
+                <android.support.v7.widget.Toolbar
+                    android:id="@+id/toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="?attr/actionBarSize"
+                    android:background="?attr/colorPrimary"
+                    app:popupTheme="@style/AppTheme.PopupOverlay"/>
 
-    <android.support.v7.widget.CardView
-        android:id="@+id/graph_content"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_marginBottom="@dimen/card_graph_margin"
-        android:layout_weight="0.7"
-        app:cardElevation="4dp" />
+            </android.support.design.widget.AppBarLayout>
 
-    <View
-        android:layout_width="@dimen/card_graph_margin"
-        android:layout_height="?attr/actionBarSize"
-        android:background="?colorPrimary" />
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/recyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingBottom="8dp"
+                android:paddingTop="8dp"
+                android:scrollbars="vertical"
+                app:config="@{dataSets.config}"
+                app:items="@{dataSets.list}"
+                app:layoutManager="@string/linear_layout_manager"
+                app:layout_behavior="@string/appbar_scrolling_view_behavior"
+                app:swipeToRemove="@{dataSets.removeHandler}"/>
 
-</LinearLayout>
+            <android.support.design.widget.FloatingActionButton
+                android:id="@+id/fab"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/fab_margin"
+                android:onClick="@{dataSets.newItemClickHandler}"
+                app:layout_anchor="@id/recyclerView"
+                app:layout_anchorGravity="bottom|right|end"
+                app:srcCompat="@drawable/ic_add_white_24dp"/>
+
+        </android.support.design.widget.CoordinatorLayout>
+
+        <android.support.v7.widget.CardView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="@dimen/card_graph_margin"
+            android:layout_weight="0.7"
+            app:cardElevation="4dp">
+
+            <fragment
+                android:id="@+id/graph_fragment"
+                android:name="com.shlom.solutions.quickgraph.fragment.GraphFragment"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+
+        </android.support.v7.widget.CardView>
+
+        <View
+            android:layout_width="@dimen/card_graph_margin"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?colorPrimary"/>
+
+    </LinearLayout>
+
+</layout>

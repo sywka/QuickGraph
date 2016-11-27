@@ -8,6 +8,10 @@
 
     <string name="fab_manual_hide_behavior" translatable="false">com.shlom.solutions.quickgraph.ui.FabManualHideBehavior</string>
     <string name="fab_scrolling_view_behavior" translatable="false">com.shlom.solutions.quickgraph.ui.ScrollingFABBehavior</string>
+    <string name="tag_main_fragment" translatable="false">main_fragment</string>
+    <string name="linear_layout_manager" translatable="false">android.support.v7.widget.LinearLayoutManager</string>
+    <string name="grid_layout_manager" translatable="false">android.support.v7.widget.GridLayoutManager</string>
+    <string name="staggered_layout_manager" translatable="false">android.support.v7.widget.StaggeredGridLayoutManager</string>
 
     <string name="action_settings">Settings</string>
     <string name="action_clear_all">Clear</string>
@@ -25,7 +29,7 @@
     <string name="action_draw_legend">Draw legend</string>
     <string name="action_fit_screen">Fit screen</string>
     <string name="action_color">Color</string>
-    <string name="action_color_background">Color background</string>
+    <string name="action_color_background">Background color</string>
     <string name="action_ok">OK</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_hide">Hide</string>
@@ -55,11 +59,11 @@
     <string name="project_enter_name">Enter the name</string>
     <string name="project_date">Last edit: %1$s</string>
     <string name="project_remove">Project \"%1$s\" removed</string>
-    <string name="project_remove_all">Projects removed: %1$s</string>
+    <string name="project_remove_count">Projects removed: %1$s</string>
     <string name="project_generate_demo">Generation demo data&#8230;</string>
     <string name="data_set">DataSet</string>
     <string name="data_set_remove">DataSet \"%1$s\" removed</string>
-    <string name="data_set_remove_all">DataSets removed: %1$s</string>
+    <string name="data_set_remove_count">DataSets removed: %1$s</string>
     <string name="color_picker_title">Choose color</string>
     <string name="data_set_type_from_table">From table</string>
     <string name="data_set_type_from_function">From function</string>

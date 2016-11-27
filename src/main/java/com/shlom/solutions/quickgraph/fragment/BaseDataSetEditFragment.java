@@ -163,7 +163,7 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
                             .getDataSets().add(0, dataSetModel);
                 }
             });
-            getBaseActivity().finish();
+            getCompatActivity().finish();
         });
     }
 
