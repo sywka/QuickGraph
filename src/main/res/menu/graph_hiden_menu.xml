@@ -7,11 +7,6 @@
         android:title="@string/action_draw_legend"
         app:showAsAction="never" />
     <item
-        android:id="@+id/action_fit_screen"
-        android:checkable="true"
-        android:title="@string/action_fit_screen"
-        app:showAsAction="never" />
-    <item
         android:id="@+id/action_color_background"
         android:title="@string/action_color_background"
         app:showAsAction="never" />

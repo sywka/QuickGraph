@@ -15,7 +15,7 @@
 
     <fragment xmlns:android="http://schemas.android.com/apk/res/android"
               android:id="@+id/data_set_list_fragment_without_actionbar"
-              android:name="com.shlom.solutions.quickgraph.fragment.DataSetListFragment"
+              android:name="com.shlom.solutions.quickgraph.view.fragment.DataSetListFragment"
               android:layout_width="match_parent"
               android:layout_height="match_parent"/>
 

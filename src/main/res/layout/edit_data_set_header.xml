@@ -29,7 +29,7 @@
         android:layout_toEndOf="@+id/edit_data_set_color_layout"
         android:layout_toRightOf="@+id/edit_data_set_color_layout">
 
-        <com.shlom.solutions.quickgraph.ui.BackEditText
+        <com.shlom.solutions.quickgraph.view.ui.BackEditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fontFamily="sansserif"

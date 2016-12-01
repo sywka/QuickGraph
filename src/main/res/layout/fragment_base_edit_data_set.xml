@@ -25,8 +25,8 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <com.shlom.solutions.quickgraph.ui.AutofitRecyclerView
-        android:id="@+id/recyclerView"
+    <com.shlom.solutions.quickgraph.view.ui.AutofitRecyclerView
+        android:id="@+id/recycler_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"

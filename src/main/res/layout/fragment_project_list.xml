@@ -6,7 +6,7 @@
 
         <variable
             name="projects"
-            type="com.shlom.solutions.quickgraph.viewmodel.IEditableListViewModel"/>
+            type="com.shlom.solutions.quickgraph.viewmodel.projects.ProjectListViewModel"/>
     </data>
 
     <android.support.design.widget.CoordinatorLayout
@@ -30,8 +30,8 @@
 
         </android.support.design.widget.AppBarLayout>
 
-        <com.shlom.solutions.quickgraph.ui.AutofitRecyclerView
-            android:id="@+id/recyclerView"
+        <com.shlom.solutions.quickgraph.view.ui.AutofitRecyclerView
+            android:id="@+id/recycler_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
@@ -42,7 +42,6 @@
             android:scrollbarStyle="outsideOverlay"
             android:scrollbars="vertical"
             app:columnWidth="@dimen/project_card_width"
-            app:config="@{projects.config}"
             app:items="@{projects.list}"
             app:layoutManager="@string/staggered_layout_manager"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"

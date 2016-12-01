@@ -1,53 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@android:color/white">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <LinearLayout
+    <data class="GraphBinding">
+
+        <variable
+            name="graph"
+            type="com.shlom.solutions.quickgraph.viewmodel.graph.GraphViewModel" />
+    </data>
+
+    <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:background="@android:color/white"
+        android:clickable="true">
 
         <android.support.v7.widget.Toolbar
             android:id="@+id/toolbar"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="?attr/actionBarSize"
             android:background="@color/colorPrimaryGraph"
-            android:fitsSystemWindows="true"
-            app:popupTheme="@style/AppTheme.PopupOverlay" />
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:popupTheme="@style/AppTheme.PopupOverlay"
+            app:title="@{graph.graphTitle}" />
 
-        <android.support.percent.PercentFrameLayout
-            android:id="@+id/graph_layout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
+        <com.github.mikephil.charting.charts.LineChart
+            android:id="@+id/graph"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:padding="7dp"
+            android:visibility="@{!graph.graphEmpty}"
+            app:config="@{graph.project}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/toolbar" />
 
-            <com.github.mikephil.charting.charts.LineChart
-                android:id="@+id/chart_view"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:layout_gravity="center"
-                android:padding="7dp" />
+        <ImageView
+            android:id="@+id/empty"
+            android:layout_width="256dp"
+            android:layout_height="256dp"
+            android:layout_gravity="center"
+            android:contentDescription="@string/unknown"
+            android:tint="@android:color/black"
+            android:visibility="@{graph.graphEmpty}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_empty_preview_white_24dp" />
 
-            <ImageView
-                android:id="@+id/graph_empty"
-                android:layout_width="256dp"
-                android:layout_height="256dp"
-                android:layout_gravity="center"
-                android:tint="@android:color/black"
-                android:visibility="gone"
-                app:srcCompat="@drawable/ic_empty_preview_white_24dp" />
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="@{graph.progress}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-        </android.support.percent.PercentFrameLayout>
+    </android.support.constraint.ConstraintLayout>
 
-    </LinearLayout>
-
-    <ProgressBar
-        android:id="@+id/graph_progress_bar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:visibility="gone" />
-
-</FrameLayout>
+</layout>

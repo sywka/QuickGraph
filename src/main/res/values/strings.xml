@@ -7,7 +7,7 @@
     <string name="activity_graph">Graphic</string>
 
     <string name="fab_manual_hide_behavior" translatable="false">com.shlom.solutions.quickgraph.ui.FabManualHideBehavior</string>
-    <string name="fab_scrolling_view_behavior" translatable="false">com.shlom.solutions.quickgraph.ui.ScrollingFABBehavior</string>
+    <string name="fab_scrolling_view_behavior" translatable="false">com.shlom.solutions.quickgraph.view.ui.ScrollingFABBehavior</string>
     <string name="tag_main_fragment" translatable="false">main_fragment</string>
     <string name="linear_layout_manager" translatable="false">android.support.v7.widget.LinearLayoutManager</string>
     <string name="grid_layout_manager" translatable="false">android.support.v7.widget.GridLayoutManager</string>
@@ -27,7 +27,6 @@
     <string name="action_draw">Draw</string>
     <string name="action_draw_axis_labels">Draw labels</string>
     <string name="action_draw_legend">Draw legend</string>
-    <string name="action_fit_screen">Fit screen</string>
     <string name="action_color">Color</string>
     <string name="action_color_background">Background color</string>
     <string name="action_ok">OK</string>

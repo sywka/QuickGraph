@@ -1,20 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <data>
 
         <variable
             name="card"
-            type="com.shlom.solutions.quickgraph.viewmodel.ICardPreviewEditableViewModel"/>
+            type="com.shlom.solutions.quickgraph.viewmodel.ICardPreviewEditableViewModel" />
     </data>
 
     <android.support.v7.widget.CardView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:clickable="true"
-        android:foreground="?selectableItemBackground">
+        android:foreground="?selectableItemBackground"
+        android:onClick="@{card.itemClickHandler}">
 
         <android.support.percent.PercentFrameLayout
             android:layout_width="match_parent"
@@ -42,9 +43,9 @@
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintRight_toRightOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:placeHolder="@{card.placeHolder}"/>
+                    app:placeHolder="@{card.placeHolder}" />
 
-                <com.shlom.solutions.quickgraph.ui.ConfirmEditText
+                <com.shlom.solutions.quickgraph.view.ui.ConfirmEditText
                     android:id="@+id/project_list_item_primary_text"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -63,7 +64,7 @@
                     app:layout_constraintBottom_toTopOf="@+id/project_list_item_secondary_text"
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintRight_toRightOf="parent"
-                    tools:text="Primary Text"/>
+                    tools:text="Primary Text" />
 
                 <TextView
                     android:id="@+id/project_list_item_secondary_text"
@@ -80,7 +81,7 @@
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintRight_toLeftOf="@+id/project_list_item_counter_text"
-                    tools:text="Secondary Text"/>
+                    tools:text="Secondary Text" />
 
                 <TextView
                     android:id="@+id/project_list_item_counter_text"
@@ -93,7 +94,7 @@
                     android:textSize="14sp"
                     app:layout_constraintBaseline_toBaselineOf="@+id/project_list_item_secondary_text"
                     app:layout_constraintRight_toRightOf="parent"
-                    tools:text="1"/>
+                    tools:text="1" />
 
             </android.support.constraint.ConstraintLayout>
 

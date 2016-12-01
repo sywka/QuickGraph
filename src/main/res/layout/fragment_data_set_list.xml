@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <data class="DataSetListBinding">
 
         <variable
             name="dataSets"
-            type="com.shlom.solutions.quickgraph.viewmodel.IDataSetListViewModel"/>
+            type="com.shlom.solutions.quickgraph.viewmodel.datasets.DataSetListViewModel" />
     </data>
 
     <android.support.design.widget.CoordinatorLayout
@@ -27,12 +27,12 @@
                 android:layout_height="?attr/actionBarSize"
                 android:background="?attr/colorPrimary"
                 app:layout_scrollFlags="scroll|enterAlways|snap"
-                app:popupTheme="@style/AppTheme.PopupOverlay"/>
+                app:popupTheme="@style/AppTheme.PopupOverlay" />
 
         </android.support.design.widget.AppBarLayout>
 
         <android.support.v7.widget.RecyclerView
-            android:id="@+id/recyclerView"
+            android:id="@+id/recycler_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginBottom="?attr/actionBarSize"
@@ -40,11 +40,10 @@
             android:paddingBottom="8dp"
             android:paddingTop="8dp"
             android:scrollbars="vertical"
-            app:config="@{dataSets.config}"
             app:items="@{dataSets.list}"
             app:layoutManager="@string/linear_layout_manager"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"
-            app:swipeToRemove="@{dataSets.removeHandler}"/>
+            app:swipeToRemove="@{dataSets.removeHandler}" />
 
         <FrameLayout
             android:id="@+id/bottom_sheet"
@@ -52,33 +51,28 @@
             android:layout_height="match_parent"
             android:elevation="5dp"
             app:behavior_peekHeight="?attr/actionBarSize"
-            app:bottomSheetCallback="@{dataSets.bottomSheetCallback}"
-            app:bottomSheetState="@{dataSets.bottomSheetState}"
             app:layout_behavior="android.support.design.widget.BottomSheetBehavior"
             tools:targetApi="lollipop">
 
             <FrameLayout
+                android:id="@+id/bottom_sheet_graph_layout"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:foreground="@{dataSets.foregroundContentDrawable}">
+                android:foreground="@color/bottomSheetGraphLayout">
 
                 <fragment
                     android:id="@+id/graph_fragment"
-                    android:name="com.shlom.solutions.quickgraph.fragment.GraphFragment"
+                    android:name="com.shlom.solutions.quickgraph.view.fragment.GraphFragment"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"/>
+                    android:layout_height="match_parent" />
 
             </FrameLayout>
 
-            <com.shlom.solutions.quickgraph.ui.FakeToolbar
+            <com.shlom.solutions.quickgraph.view.ui.FakeToolbar
                 android:id="@+id/fake_toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
-                android:clickable="@{dataSets.clickableFakeToolbar}"
-                android:onClick="@{dataSets.toggleBottomSheetHandler}"
-                app:navigationIcon="@{dataSets.icon}"
-                app:navigationOnClick="@{dataSets.toggleBottomSheetHandler}"
-                app:title="@string/activity_graph"/>
+                app:title="@{dataSets.graphTitle}" />
 
         </FrameLayout>
 
@@ -90,7 +84,7 @@
             android:onClick="@{dataSets.newItemClickHandler}"
             app:layout_anchor="@id/bottom_sheet"
             app:layout_anchorGravity="top|right|end"
-            app:srcCompat="@drawable/ic_add_white_24dp"/>
+            app:srcCompat="@drawable/ic_add_white_24dp" />
 
     </android.support.design.widget.CoordinatorLayout>
 

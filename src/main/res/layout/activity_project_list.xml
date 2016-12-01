@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <fragment xmlns:android="http://schemas.android.com/apk/res/android"
           android:id="@+id/project_list_fragment"
-          android:name="com.shlom.solutions.quickgraph.fragment.ProjectListFragment"
+          android:name="com.shlom.solutions.quickgraph.view.fragment.ProjectListFragment"
           android:layout_width="match_parent"
           android:layout_height="match_parent"
           android:orientation="vertical"/>

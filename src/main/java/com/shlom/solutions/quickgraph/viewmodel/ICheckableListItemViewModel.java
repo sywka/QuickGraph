@@ -1,7 +1,7 @@
 package com.shlom.solutions.quickgraph.viewmodel;
 
 import android.databinding.Bindable;
-import android.graphics.drawable.Drawable;
+import android.support.annotation.ColorInt;
 import android.view.View;
 
 public interface ICheckableListItemViewModel extends IListItemViewModel {
@@ -10,7 +10,8 @@ public interface ICheckableListItemViewModel extends IListItemViewModel {
     View.OnClickListener getIconClickHandler();
 
     @Bindable
-    Drawable getIcon();
+    @ColorInt
+    int getIconTint();
 
     @Bindable
     boolean isChecked();

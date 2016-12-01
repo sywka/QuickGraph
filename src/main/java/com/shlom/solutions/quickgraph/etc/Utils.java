@@ -11,8 +11,8 @@ import android.support.v4.app.FragmentActivity;
 import android.util.DisplayMetrics;
 import android.view.View;
 
-import com.shlom.solutions.quickgraph.database.RealmHelper;
-import com.shlom.solutions.quickgraph.database.model.CoordinateModel;
+import com.shlom.solutions.quickgraph.model.database.RealmHelper;
+import com.shlom.solutions.quickgraph.model.database.model.CoordinateModel;
 
 import org.mariuszgromada.math.mxparser.Expression;
 
