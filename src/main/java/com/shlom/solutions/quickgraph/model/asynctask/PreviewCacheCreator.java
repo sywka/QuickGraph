@@ -3,7 +3,7 @@ package com.shlom.solutions.quickgraph.model.asynctask;
 import android.content.Context;
 import android.graphics.Bitmap;
 
-import com.shlom.solutions.quickgraph.model.database.RealmHelper;
+import com.shlom.solutions.quickgraph.model.database.DataBaseManager;
 import com.shlom.solutions.quickgraph.model.database.model.ProjectModel;
 import com.shlom.solutions.quickgraph.etc.FileCacheHelper;
 
@@ -24,7 +24,7 @@ public class PreviewCacheCreator extends ProgressAsyncTaskLoader<ProgressParams,
     public Void loadInBackground() {
         if (isLoadInBackgroundCanceled()) throw new RuntimeException("Canceled");
 
-        RealmHelper.execute(realmHelper -> {
+        DataBaseManager.execute(realmHelper -> {
             ProjectModel project = realmHelper.findObject(ProjectModel.class, projectId);
             if (project == null) return;
 

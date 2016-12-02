@@ -7,57 +7,47 @@ import android.view.View;
 import com.annimon.stream.Stream;
 import com.shlom.solutions.quickgraph.BR;
 import com.shlom.solutions.quickgraph.R;
-import com.shlom.solutions.quickgraph.model.database.RealmHelper;
+import com.shlom.solutions.quickgraph.model.database.DataBaseManager;
 import com.shlom.solutions.quickgraph.model.database.RealmModelFactory;
 import com.shlom.solutions.quickgraph.model.database.model.ProjectModel;
 import com.shlom.solutions.quickgraph.view.Binding;
-import com.shlom.solutions.quickgraph.viewmodel.ContextViewModel;
+import com.shlom.solutions.quickgraph.viewmodel.ManagedViewModel;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-import io.realm.RealmChangeListener;
 import io.realm.RealmResults;
-import io.realm.Sort;
 
-public class ProjectListViewModel extends ContextViewModel
-        implements RealmChangeListener<RealmResults<ProjectModel>> {
+public class ProjectListViewModel extends ManagedViewModel {
 
-    private RealmHelper realmHelper;
     private RealmResults<ProjectModel> projectModels;
     private Callback callback;
+
+    private ProjectListMenuViewModel menuViewModel;
 
     public ProjectListViewModel(Context context, Callback callback) {
         super(context);
         this.callback = callback;
+        menuViewModel = new ProjectListMenuViewModel(context);
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-
-        realmHelper = new RealmHelper();
-        projectModels = realmHelper.findResults(ProjectModel.class, Sort.DESCENDING);
-        projectModels.addChangeListener(this);
-        onChange(projectModels);
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-
-        projectModels.removeChangeListener(this);
-        realmHelper.closeRealm();
-    }
-
-    @Override
-    public void onChange(RealmResults<ProjectModel> element) {
-        notifyPropertyChanged(BR.list);
-    }
-
-    public Binding.RV.RemoveHandler getRemoveHandler() {
-        return this::removeItems;
+    public Binding.RV.RemoveItemHandler getRemoveHandler() {
+        return (removeExecutor, uid) -> {
+            Map<Integer, ProjectModel> cached = new LinkedHashMap<>();
+            removeExecutor.execute(
+                    getContext().getString(R.string.project_remove, findById(uid).getName()),
+                    () -> DataBaseManager.executeTrans(realm -> {
+                        ProjectModel item = findById(uid);
+                        int position = projectModels.indexOf(item);
+                        cached.put(position, realm.copyFromRealm(item));
+                        item.deleteDependentsFromRealm(getContext());
+                        projectModels.deleteFromRealm(position);
+                    }),
+                    () -> DataBaseManager.executeTrans(realm ->
+                            Stream.of(cached).forEach(entry -> realm.copyToRealm(entry.getValue()))
+                    )
+            );
+        };
     }
 
     public View.OnClickListener getNewItemClickHandler() {
@@ -73,40 +63,23 @@ public class ProjectListViewModel extends ContextViewModel
     }
 
     public void createProject(String name) {
-        realmHelper.executeTransaction(realm -> RealmModelFactory.newProject(realm, name));
+        DataBaseManager.executeTrans(realm -> RealmModelFactory.newProject(realm, name));
     }
 
     @Bindable
-    public RealmResults<ProjectModel> getList() {
+    public RealmResults<ProjectModel> getProjects() {
         return projectModels;
     }
 
-    public void removeItems(Binding.RV.RemoveHandler.Callback callback, Long... uids) {
-        String message;
-        if (uids.length == 1) {
-            message = getContext().getString(R.string.project_remove, findById(uids[0]).getName());
-        } else {
-            message = getContext().getString(R.string.project_remove_count,
-                    String.valueOf(uids.length));
-        }
-        List<ProjectModel> cachedProjects = new ArrayList<>();
-        callback.execute(
-                message,
-                () -> RealmHelper.executeTrans(realm ->
-                        Stream.of(Arrays.asList(uids))
-                                .map(aLong -> projectModels.indexOf(findById(aLong)))
-                                .sorted((integer, t1) -> -integer.compareTo(t1))
-                                .forEach(integer -> {
-                                    ProjectModel project = projectModels.get(integer);
-                                    cachedProjects.add(realm.copyFromRealm(project));
-                                    project.deleteDependentsFromRealm(getContext());
-                                    projectModels.deleteFromRealm(integer);
-                                })
-                ),
-                () -> RealmHelper.executeTrans(realm ->
-                        Stream.of(cachedProjects).forEach(realm::copyToRealm)
-                )
-        );
+    public void setProjects(RealmResults<ProjectModel> projectModels) {
+        this.projectModels = projectModels;
+        menuViewModel.setProject(projectModels);
+        notifyPropertyChanged(BR.projects);
+    }
+
+    @Override
+    public ProjectListMenuViewModel getMenuViewModel() {
+        return menuViewModel;
     }
 
     private ProjectModel findById(long uid) {

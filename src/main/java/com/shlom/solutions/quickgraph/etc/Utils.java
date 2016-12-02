@@ -11,7 +11,7 @@ import android.support.v4.app.FragmentActivity;
 import android.util.DisplayMetrics;
 import android.view.View;
 
-import com.shlom.solutions.quickgraph.model.database.RealmHelper;
+import com.shlom.solutions.quickgraph.model.database.DataBaseManager;
 import com.shlom.solutions.quickgraph.model.database.model.CoordinateModel;
 
 import org.mariuszgromada.math.mxparser.Expression;
@@ -113,10 +113,10 @@ public abstract class Utils {
         return expression.checkSyntax();
     }
 
-    public static RealmList<CoordinateModel> generateCoordinates(RealmHelper realmHelper, String function, Float start, Float end, Float delta) {
+    public static RealmList<CoordinateModel> generateCoordinates(DataBaseManager dataBaseManager, String function, Float start, Float end, Float delta) {
         if (start == null || end == null || delta == null) return new RealmList<>();
 
-        long uid = realmHelper.generateUID(CoordinateModel.class);
+        long uid = dataBaseManager.generateUID(CoordinateModel.class);
 
         RealmList<CoordinateModel> coordinateModels = new RealmList<>();
         Expression expression = new Expression(function);

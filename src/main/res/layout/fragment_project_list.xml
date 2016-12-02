@@ -5,7 +5,7 @@
     <data class="ProjectListBinding">
 
         <variable
-            name="projects"
+            name="data"
             type="com.shlom.solutions.quickgraph.viewmodel.projects.ProjectListViewModel"/>
     </data>
 
@@ -42,10 +42,10 @@
             android:scrollbarStyle="outsideOverlay"
             android:scrollbars="vertical"
             app:columnWidth="@dimen/project_card_width"
-            app:items="@{projects.list}"
+            app:items="@{data.projects}"
             app:layoutManager="@string/staggered_layout_manager"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"
-            app:swipeToRemove="@{projects.removeHandler}"/>
+            app:swipeToRemove="@{data.removeHandler}"/>
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fab"
@@ -53,7 +53,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|end"
             android:layout_margin="@dimen/fab_margin"
-            android:onClick="@{projects.newItemClickHandler}"
+            android:onClick="@{data.newItemClickHandler}"
             app:layout_behavior="@string/fab_scrolling_view_behavior"
             app:srcCompat="@drawable/ic_add_white_24dp"/>
 

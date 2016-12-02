@@ -10,14 +10,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.shlom.solutions.quickgraph.viewmodel.ContextViewModel;
+import com.shlom.solutions.quickgraph.viewmodel.ManagedViewModel;
 
 import icepick.Icepick;
 
-public abstract class BindingBaseFragment<ViewModel extends ContextViewModel,
+public abstract class BindingBaseFragment<ViewModel extends ManagedViewModel,
         Binding extends ViewDataBinding>
         extends BaseFragment {
 
+    private Binding binding;
+    private ViewModel viewModel;
     protected Observable.OnPropertyChangedCallback onPropertyChangedCallback =
             new Observable.OnPropertyChangedCallback() {
                 @Override
@@ -25,8 +27,6 @@ public abstract class BindingBaseFragment<ViewModel extends ContextViewModel,
                     BindingBaseFragment.this.onPropertyChanged(observable, i);
                 }
             };
-    private Binding binding;
-    private ViewModel viewModel;
 
     @LayoutRes
     protected abstract int getLayoutResource();
@@ -34,22 +34,6 @@ public abstract class BindingBaseFragment<ViewModel extends ContextViewModel,
     protected abstract ViewModel createViewModel(@Nullable Bundle savedInstanceState);
 
     protected abstract void initBinding(Binding binding, ViewModel model);
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        viewModel = createViewModel(savedInstanceState);
-
-        viewModel.addOnPropertyChangedCallback(onPropertyChangedCallback);
-
-        if (savedInstanceState != null) {
-            Icepick.restoreInstanceState(this, savedInstanceState);
-            if (viewModel != null) {
-                Icepick.restoreInstanceState(viewModel, savedInstanceState);
-            }
-        }
-    }
 
     @Override
     public void onDestroy() {
@@ -62,6 +46,11 @@ public abstract class BindingBaseFragment<ViewModel extends ContextViewModel,
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
+        if (savedInstanceState != null) {
+            Icepick.restoreInstanceState(this, savedInstanceState);
+        }
+
+        viewModel = createViewModel(savedInstanceState);
         binding = DataBindingUtil.inflate(inflater, getLayoutResource(), container, false);
         initBinding(binding, viewModel);
         return binding.getRoot();
@@ -72,9 +61,6 @@ public abstract class BindingBaseFragment<ViewModel extends ContextViewModel,
         super.onSaveInstanceState(outState);
 
         Icepick.saveInstanceState(this, outState);
-        if (viewModel != null) {
-            Icepick.saveInstanceState(viewModel, outState);
-        }
     }
 
     @Override
@@ -82,6 +68,10 @@ public abstract class BindingBaseFragment<ViewModel extends ContextViewModel,
         super.onStart();
 
         if (viewModel != null) {
+            viewModel.addOnPropertyChangedCallback(onPropertyChangedCallback);
+            if (viewModel.getMenuViewModel() != null) {
+                viewModel.getMenuViewModel().addOnPropertyChangedCallback(onPropertyChangedCallback);
+            }
             viewModel.onStart();
         }
     }
@@ -92,10 +82,18 @@ public abstract class BindingBaseFragment<ViewModel extends ContextViewModel,
 
         if (viewModel != null) {
             viewModel.onStop();
+            viewModel.removeOnPropertyChangedCallback(onPropertyChangedCallback);
+            if (viewModel.getMenuViewModel() != null) {
+                viewModel.getMenuViewModel().removeOnPropertyChangedCallback(onPropertyChangedCallback);
+            }
         }
     }
 
     public void onPropertyChanged(Observable observable, int i) {
+        if (viewModel != null && viewModel.getMenuViewModel() != null &&
+                viewModel.getMenuViewModel() == observable) {
+            invalidateOptionsMenu();
+        }
     }
 
     public ViewModel getViewModel() {

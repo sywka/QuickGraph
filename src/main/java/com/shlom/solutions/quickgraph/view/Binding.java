@@ -65,6 +65,10 @@ public abstract class Binding {
         toolbar.setNavigationOnClickListener(listener);
     }
 
+    public interface RemoveExecutor {
+        void execute(String message, Runnable remove, Runnable rollback);
+    }
+
     public static class RV {
 
         @SuppressWarnings("unchecked")
@@ -77,7 +81,7 @@ public abstract class Binding {
         }
 
         @BindingAdapter({"swipeToRemove"})
-        public static void setSwipeToRemove(RecyclerView recyclerView, RemoveHandler callback) {
+        public static void setSwipeToRemove(RecyclerView recyclerView, RemoveItemHandler callback) {
             if (callback != null) {
                 new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0,
                         ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
@@ -99,13 +103,8 @@ public abstract class Binding {
             }
         }
 
-        public interface RemoveHandler {
-
-            void removeItem(Callback callback, long uid);
-
-            interface Callback {
-                void execute(String message, Runnable remove, Runnable rollback);
-            }
+        public interface RemoveItemHandler {
+            void removeItem(RemoveExecutor removeExecutor, long uid);
         }
     }
 }

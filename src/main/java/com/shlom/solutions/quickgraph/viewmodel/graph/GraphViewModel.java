@@ -7,30 +7,26 @@ import android.databinding.BindingAdapter;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.AxisBase;
 import com.shlom.solutions.quickgraph.BR;
-import com.shlom.solutions.quickgraph.model.database.RealmHelper;
 import com.shlom.solutions.quickgraph.model.database.model.AxisParamsModel;
 import com.shlom.solutions.quickgraph.model.database.model.ProjectModel;
-import com.shlom.solutions.quickgraph.viewmodel.ContextViewModel;
+import com.shlom.solutions.quickgraph.viewmodel.ManagedViewModel;
 
-import io.realm.RealmChangeListener;
+public class GraphViewModel extends ManagedViewModel {
 
-public class GraphViewModel extends ContextViewModel
-        implements RealmChangeListener<ProjectModel> {
-
-    private long projectId;
-
-    private RealmHelper realmHelper;
     private ProjectModel projectModel;
-
     private boolean isProgress;
 
-    public GraphViewModel(Context context, long projectId) {
+    private GraphMenuViewModel menuViewModel;
+
+    public GraphViewModel(Context context) {
         super(context);
-        this.projectId = projectId;
+        menuViewModel = new GraphMenuViewModel();
     }
 
     @BindingAdapter({"config"})
     public static void setGraphConfig(LineChart lineChart, ProjectModel projectModel) {
+        if (projectModel == null || !projectModel.isValid()) return;
+
         updateAxisParams(lineChart.getXAxis(), projectModel.getParams().getAxisXParams());
         updateAxisParams(lineChart.getAxisLeft(), projectModel.getParams().getAxisYParams());
 
@@ -50,33 +46,9 @@ public class GraphViewModel extends ContextViewModel
         axis.setGridLineWidth(axisLineParams.getGridLineParams().getWidth());
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-
-        realmHelper = new RealmHelper();
-        projectModel = realmHelper.findObject(ProjectModel.class, projectId);
-        projectModel.addChangeListener(this);
-        onChange(projectModel);
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-
-        projectModel.removeChangeListener(this);
-        realmHelper.closeRealm();
-    }
-
-    @Override
-    public void onChange(ProjectModel element) {
-        notifyPropertyChanged(BR.project);
-        notifyPropertyChanged(BR.graphTitle);
-        notifyPropertyChanged(BR.graphEmpty);
-    }
-
     @Bindable
     public boolean isGraphEmpty() {
+        if (projectModel == null || !projectModel.isValid()) return false;
         return projectModel.getDataSets().isEmpty();
     }
 
@@ -92,11 +64,25 @@ public class GraphViewModel extends ContextViewModel
 
     @Bindable
     public String getGraphTitle() {
+        if (projectModel == null || !projectModel.isValid()) return "";
         return projectModel.getName();
     }
 
     @Bindable
     public ProjectModel getProject() {
         return projectModel;
+    }
+
+    public void setProject(ProjectModel projectModel) {
+        this.projectModel = projectModel;
+        menuViewModel.setProject(projectModel);
+        notifyPropertyChanged(BR.project);
+        notifyPropertyChanged(BR.graphTitle);
+        notifyPropertyChanged(BR.graphEmpty);
+    }
+
+    @Override
+    public GraphMenuViewModel getMenuViewModel() {
+        return menuViewModel;
     }
 }

@@ -25,7 +25,7 @@ import android.widget.TextView;
 
 import com.pluscubed.recyclerfastscroll.RecyclerFastScroller;
 import com.shlom.solutions.quickgraph.R;
-import com.shlom.solutions.quickgraph.model.database.RealmHelper;
+import com.shlom.solutions.quickgraph.model.database.DataBaseManager;
 import com.shlom.solutions.quickgraph.model.database.model.DataSetModel;
 import com.shlom.solutions.quickgraph.model.database.model.FunctionRangeModel;
 import com.shlom.solutions.quickgraph.model.database.model.ProjectModel;
@@ -47,7 +47,7 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
     private static final int SEEKBAR_STEP_COUNT = 20;
     private static final int SEEKBAR_MAX = SEEKBAR_STEP_COUNT - 1;
 
-    private RealmHelper realmHelper;
+    private DataBaseManager dataBaseManager;
     private ProjectModel projectModel;
     private DataSetModel dataSetModel;
     private DataSetModel standaloneDataSet;
@@ -68,30 +68,30 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
     @Nullable
     @Override
     public final View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        realmHelper = new RealmHelper();
+        dataBaseManager = new DataBaseManager();
 
         boolean isNewDataSet = Utils.getBoolean(this);
 
         if (isNewDataSet) {
-            projectModel = realmHelper.findObject(ProjectModel.class, Utils.getLong(this));
+            projectModel = dataBaseManager.findObject(ProjectModel.class, Utils.getLong(this));
         } else {
-            dataSetModel = realmHelper.findObject(DataSetModel.class, Utils.getLong(this));
+            dataSetModel = dataBaseManager.findObject(DataSetModel.class, Utils.getLong(this));
         }
 
         if (savedInstanceState == null) {
             if (isNewDataSet) {
 
                 FunctionRangeModel functionRangeModel = new FunctionRangeModel()
-                        .setUid(realmHelper.generateUID(FunctionRangeModel.class));
+                        .setUid(dataBaseManager.generateUID(FunctionRangeModel.class));
 
                 standaloneDataSet = new DataSetModel()
-                        .setUid(realmHelper.generateUID(DataSetModel.class))
+                        .setUid(dataBaseManager.generateUID(DataSetModel.class))
                         .setPrimary(getString(R.string.data_set))
                         .setFunctionRange(functionRangeModel);
                 standaloneDataSet.setPrimary(standaloneDataSet.getPrimary() + " №" + (projectModel.getDataSets().size() + 1));
 
             } else {
-                standaloneDataSet = realmHelper.getRealm().copyFromRealm(dataSetModel);
+                standaloneDataSet = dataBaseManager.getRealm().copyFromRealm(dataSetModel);
             }
         } else {
             standaloneDataSet = (DataSetModel) savedInstanceState.getSerializable(TAG_DATA_SET);
@@ -117,7 +117,7 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
     public void onDestroyView() {
         super.onDestroyView();
 
-        realmHelper.closeRealm();
+        dataBaseManager.closeRealm();
     }
 
     @Override
@@ -155,8 +155,8 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
         fab = (FloatingActionButton) rootView.findViewById(R.id.fab);
         fab.setOnClickListener(v -> {
             onConfirmationSaving();
-            realmHelper.getRealm().executeTransaction(realm -> {
-                dataSetModel = realmHelper.getRealm().copyToRealmOrUpdate(standaloneDataSet);
+            dataBaseManager.getRealm().executeTransaction(realm -> {
+                dataSetModel = dataBaseManager.getRealm().copyToRealmOrUpdate(standaloneDataSet);
                 if (projectModel != null) {
                     projectModel
                             .setDate(new Date())
@@ -339,8 +339,8 @@ public abstract class BaseDataSetEditFragment extends BaseFragment implements Co
         return appBarLayout;
     }
 
-    public RealmHelper getRealmHelper() {
-        return realmHelper;
+    public DataBaseManager getDataBaseManager() {
+        return dataBaseManager;
     }
 
     public interface Delegate {

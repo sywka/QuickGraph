@@ -10,46 +10,46 @@ import io.realm.Realm;
 public abstract class RealmModelFactory {
 
     public static ProjectModel newProject(Realm realm, String name) {
-        RealmHelper realmHelper = new RealmHelper(realm);
+        DataBaseManager dataBaseManager = new DataBaseManager(realm);
 
         LineParamsModel gridXLineParamsModel = new LineParamsModel()
-                .setUid(realmHelper.generateUID(LineParamsModel.class))
+                .setUid(dataBaseManager.generateUID(LineParamsModel.class))
                 .copyToRealm(realm);
 
         LineParamsModel gridYLineParamsModel = new LineParamsModel()
-                .setUid(realmHelper.generateUID(LineParamsModel.class))
+                .setUid(dataBaseManager.generateUID(LineParamsModel.class))
                 .copyToRealm(realm);
 
         LineParamsModel axisXLineParamsModel = new LineParamsModel()
-                .setUid(realmHelper.generateUID(LineParamsModel.class))
+                .setUid(dataBaseManager.generateUID(LineParamsModel.class))
                 .copyToRealm(realm);
 
         LineParamsModel axisYLineParamsModel = new LineParamsModel()
-                .setUid(realmHelper.generateUID(LineParamsModel.class))
+                .setUid(dataBaseManager.generateUID(LineParamsModel.class))
                 .copyToRealm(realm);
 
         AxisParamsModel axisXParamsModel = new AxisParamsModel()
-                .setUid(realmHelper.generateUID(AxisParamsModel.class))
+                .setUid(dataBaseManager.generateUID(AxisParamsModel.class))
                 .setTitle("X")
                 .setLineParams(axisXLineParamsModel)
                 .setGridLineParams(gridXLineParamsModel)
                 .copyToRealm(realm);
 
         AxisParamsModel axisYParamsModel = new AxisParamsModel()
-                .setUid(realmHelper.generateUID(AxisParamsModel.class))
+                .setUid(dataBaseManager.generateUID(AxisParamsModel.class))
                 .setTitle("Y")
                 .setLineParams(axisYLineParamsModel)
                 .setGridLineParams(gridYLineParamsModel)
                 .copyToRealm(realm);
 
         GraphParamsModel graphParamsModel = new GraphParamsModel()
-                .setUid(realmHelper.generateUID(GraphParamsModel.class))
+                .setUid(dataBaseManager.generateUID(GraphParamsModel.class))
                 .setAxisXParams(axisXParamsModel)
                 .setAxisYParams(axisYParamsModel)
                 .copyToRealm(realm);
 
         return new ProjectModel()
-                .setUid(realmHelper.generateUID(ProjectModel.class))
+                .setUid(dataBaseManager.generateUID(ProjectModel.class))
                 .setName(name)
                 .setParams(graphParamsModel)
                 .copyToRealm(realm);

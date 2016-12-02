@@ -8,65 +8,58 @@ import android.view.View;
 import com.annimon.stream.Stream;
 import com.shlom.solutions.quickgraph.BR;
 import com.shlom.solutions.quickgraph.R;
-import com.shlom.solutions.quickgraph.model.database.RealmHelper;
+import com.shlom.solutions.quickgraph.model.database.DataBaseManager;
 import com.shlom.solutions.quickgraph.model.database.model.DataSetModel;
 import com.shlom.solutions.quickgraph.model.database.model.ProjectModel;
 import com.shlom.solutions.quickgraph.view.Binding;
-import com.shlom.solutions.quickgraph.viewmodel.ContextViewModel;
+import com.shlom.solutions.quickgraph.viewmodel.ManagedViewModel;
 
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import io.realm.OrderedRealmCollection;
 import io.realm.RealmChangeListener;
 
-public class DataSetListViewModel extends ContextViewModel
-        implements RealmChangeListener<ProjectModel> {
+public class DataSetListViewModel extends ManagedViewModel {
 
-    private long projectId;
-
-    private RealmHelper realmHelper;
     private ProjectModel projectModel;
     private Callback callback;
 
-    public DataSetListViewModel(Context context, long projectId, Callback callback) {
+    private DataSetListMenuViewModel menuViewModel;
+
+    public DataSetListViewModel(Context context, Callback callback) {
         super(context);
-        this.projectId = projectId;
         this.callback = callback;
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-
-        realmHelper = new RealmHelper();
-        projectModel = realmHelper.findObject(ProjectModel.class, projectId);
-        projectModel.addChangeListener(this);
-        onChange(projectModel);
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-
-        projectModel.removeChangeListener(this);
-        realmHelper.closeRealm();
-    }
-
-    @Override
-    public void onChange(ProjectModel element) {
-        notifyPropertyChanged(BR.list);
-        notifyPropertyChanged(BR.graphTitle);
+        menuViewModel = new DataSetListMenuViewModel(context);
     }
 
     @Bindable
     public String getGraphTitle() {
+        if (projectModel == null || !projectModel.isValid()) return "";
         return projectModel.getName();
     }
 
-    public Binding.RV.RemoveHandler getRemoveHandler() {
-        return this::removeItems;
+    public Binding.RV.RemoveItemHandler getRemoveHandler() {
+        return (executor, uid) -> {
+            Map<Integer, DataSetModel> cached = new LinkedHashMap<>();
+            executor.execute(
+                    getContext().getString(R.string.data_set_remove, findById(uid).getPrimary()),
+                    () -> DataBaseManager.executeTrans(realm -> {
+                        DataSetModel item = findById(uid);
+                        int position = projectModel.getDataSets().indexOf(item);
+                        cached.put(position, realm.copyFromRealm(item));
+                        item.deleteDependentsFromRealm();
+                        projectModel.getDataSets().deleteFromRealm(position);
+                    }),
+                    () -> DataBaseManager.executeTrans(realm ->
+                            Stream.of(cached)
+                                    .sorted((entry, t1) -> entry.getKey().compareTo(t1.getKey()))
+                                    .forEach(entry ->
+                                            projectModel.addDataSet(entry.getKey(), entry.getValue())
+                                    )
+                    )
+            );
+        };
     }
 
     public View.OnClickListener getNewItemClickHandler() {
@@ -90,7 +83,13 @@ public class DataSetListViewModel extends ContextViewModel
     }
 
     public void setColorDataSet(long uid, @ColorInt int color) {
-        realmHelper.executeTransaction(realm -> findById(uid).setColor(color));
+        DataBaseManager.executeTrans(realm ->
+                Stream.of(projectModel.getDataSets())
+                        .filter(value -> value.getUid() == uid)
+                        .findFirst()
+                        .get()
+                        .setColor(color)
+        );
     }
 
     public DataSetListItemViewModel getItemViewModel(int position) {
@@ -117,37 +116,16 @@ public class DataSetListViewModel extends ContextViewModel
         return projectModel.getDataSets();
     }
 
-    public void removeItems(Binding.RV.RemoveHandler.Callback callback, Long... uids) {
-        String message;
-        if (uids.length == 1) {
-            message = getContext().getString(R.string.data_set_remove,
-                    findById(uids[0]).getPrimary());
-        } else {
-            message = getContext().getString(R.string.data_set_remove_count,
-                    String.valueOf(uids.length));
-        }
-        Map<Integer, DataSetModel> cachedDataSets = new LinkedHashMap<>();
-        callback.execute(
-                message,
-                () -> RealmHelper.executeTrans(realm ->
-                        Stream.of(Arrays.asList(uids))
-                                .map(aLong -> projectModel.getDataSets().indexOf(findById(aLong)))
-                                .sorted((integer, t1) -> -integer.compareTo(t1))
-                                .forEach(integer -> {
-                                    DataSetModel dataSet = projectModel.getDataSets().get(integer);
-                                    cachedDataSets.put(integer, realm.copyFromRealm(dataSet));
-                                    dataSet.deleteDependentsFromRealm();
-                                    projectModel.getDataSets().deleteFromRealm(integer);
-                                })
-                ),
-                () -> RealmHelper.executeTrans(realm ->
-                        Stream.of(cachedDataSets)
-                                .sorted((entry, t1) -> entry.getKey().compareTo(t1.getKey()))
-                                .forEach(entry ->
-                                        projectModel.addDataSet(entry.getKey(), entry.getValue())
-                                )
-                )
-        );
+    public void setProject(ProjectModel projectModel) {
+        this.projectModel = projectModel;
+        menuViewModel.setProject(projectModel);
+        notifyPropertyChanged(BR.list);
+        notifyPropertyChanged(BR.graphTitle);
+    }
+
+    @Override
+    public DataSetListMenuViewModel getMenuViewModel() {
+        return menuViewModel;
     }
 
     private DataSetModel findById(long uid) {
@@ -155,10 +133,6 @@ public class DataSetListViewModel extends ContextViewModel
                 .filter(value -> value.getUid() == uid)
                 .findFirst()
                 .get();
-    }
-
-    public ProjectModel getProject() {
-        return projectModel;
     }
 
     public interface Callback {

@@ -8,7 +8,7 @@ import android.view.View;
 
 import com.shlom.solutions.quickgraph.BR;
 import com.shlom.solutions.quickgraph.R;
-import com.shlom.solutions.quickgraph.model.database.RealmHelper;
+import com.shlom.solutions.quickgraph.model.database.DataBaseManager;
 import com.shlom.solutions.quickgraph.model.database.model.ProjectModel;
 import com.shlom.solutions.quickgraph.etc.FileCacheHelper;
 import com.shlom.solutions.quickgraph.viewmodel.ContextViewModel;
@@ -34,12 +34,13 @@ public class ProjectListItemViewModel extends ContextViewModel
 
     @Override
     public String getPrimaryText() {
+        if (projectModel == null || !projectModel.isValid()) return "";
         return projectModel.getName();
     }
 
     @Override
     public void setPrimaryText(String primaryText) {
-        RealmHelper.executeTrans(realm -> {
+        DataBaseManager.executeTrans(realm -> {
             projectModel.setName(primaryText);
             notifyPropertyChanged(BR.primaryText);
         });
@@ -47,16 +48,19 @@ public class ProjectListItemViewModel extends ContextViewModel
 
     @Override
     public String getSecondaryText() {
+        if (projectModel == null || !projectModel.isValid()) return "";
         return projectModel.getDate().toString();
     }
 
     @Override
     public long getCount() {
+        if (projectModel == null || !projectModel.isValid()) return 0;
         return projectModel.getDataSets().size();
     }
 
     @Override
     public Uri getImageUri() {
+        if (projectModel == null || !projectModel.isValid()) return null;
         return Uri.fromFile(FileCacheHelper.getImageCache(getContext(),
                 projectModel.getPreviewFileName()));
     }

@@ -94,7 +94,7 @@ public class DataSetEditFunctionFragment extends BaseDataSetEditFragment {
                 !getStandaloneDataSet().getFunctionRange().equals(getDataSet().getFunctionRange())) {
 
             getStandaloneDataSet().setCoordinates(Utils.generateCoordinates(
-                    getRealmHelper(),
+                    getDataBaseManager(),
                     getStandaloneDataSet().getSecondary(),
                     getStandaloneDataSet().getFunctionRange().getFrom(),
                     getStandaloneDataSet().getFunctionRange().getTo(),

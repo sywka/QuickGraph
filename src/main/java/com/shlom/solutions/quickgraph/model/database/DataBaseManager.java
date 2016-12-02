@@ -4,6 +4,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.shlom.solutions.quickgraph.etc.LogUtil;
+import com.shlom.solutions.quickgraph.model.database.model.DataSetModel;
+import com.shlom.solutions.quickgraph.model.database.model.ProjectModel;
 
 import io.realm.OrderedRealmCollection;
 import io.realm.Realm;
@@ -13,26 +15,26 @@ import io.realm.RealmQuery;
 import io.realm.RealmResults;
 import io.realm.Sort;
 
-public class RealmHelper {
+public class DataBaseManager {
 
     private final Realm realm;
 
-    public RealmHelper() {
+    public DataBaseManager() {
         realm = Realm.getDefaultInstance();
     }
 
-    public RealmHelper(Realm realm) {
+    public DataBaseManager(Realm realm) {
         this.realm = realm;
     }
 
     public static void execute(@NonNull Executor executor) {
-        RealmHelper realmHelper = new RealmHelper();
+        DataBaseManager dataBaseManager = new DataBaseManager();
         try {
-            executor.execute(realmHelper);
+            executor.execute(dataBaseManager);
         } catch (Exception e) {
             LogUtil.d(e);
         }
-        realmHelper.closeRealm();
+        dataBaseManager.closeRealm();
     }
 
     public static void executeTrans(Realm.Transaction transaction) {
@@ -86,14 +88,6 @@ public class RealmHelper {
         return realm.where(cl).equalTo("uid", uid).findFirstAsync();
     }
 
-    public <T extends RealmObject> RealmResults<T> findResults(Class<T> cl, Sort sort) {
-        return realm.where(cl).findAllSorted("date", sort);
-    }
-
-    public <T extends RealmObject> RealmResults<T> findResultsAsync(Class<T> cl, Sort sort) {
-        return realm.where(cl).findAllSortedAsync("date", sort);
-    }
-
     public <T extends RealmObject & ObjectWithUID> long generateUID(Class<T> cl) {
         Number max = realm.where(cl).max("uid");
         if (max == null) return 0;
@@ -104,7 +98,11 @@ public class RealmHelper {
         realm.deleteAll();
     }
 
+    public RealmResults<ProjectModel> getProjects() {
+        return realm.where(ProjectModel.class).findAllSorted("date", Sort.DESCENDING);
+    }
+
     public interface Executor {
-        void execute(RealmHelper realmHelper);
+        void execute(DataBaseManager dataBaseManager);
     }
 }

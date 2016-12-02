@@ -4,7 +4,7 @@ import android.content.Context;
 import android.support.annotation.ColorInt;
 
 import com.shlom.solutions.quickgraph.R;
-import com.shlom.solutions.quickgraph.model.database.RealmHelper;
+import com.shlom.solutions.quickgraph.model.database.DataBaseManager;
 import com.shlom.solutions.quickgraph.model.database.RealmModelFactory;
 import com.shlom.solutions.quickgraph.model.database.model.DataSetModel;
 import com.shlom.solutions.quickgraph.model.database.model.FunctionRangeModel;
@@ -26,8 +26,8 @@ public class DemoGenerator extends ProgressAsyncTaskLoader<ProgressParams, Void>
 
     @Override
     public Void loadInBackground() {
-        RealmHelper realmHelper = new RealmHelper();
-        realmHelper.getRealm().executeTransaction(realm -> {
+        DataBaseManager dataBaseManager = new DataBaseManager();
+        dataBaseManager.getRealm().executeTransaction(realm -> {
             String description = getContext().getString(R.string.project_generate_demo);
             ProgressParams progressParams = new ProgressParams(0, 10, description);
 
@@ -41,7 +41,7 @@ public class DemoGenerator extends ProgressAsyncTaskLoader<ProgressParams, Void>
                 color -= 1000000;
 
                 FunctionRangeModel functionRangeModel = new FunctionRangeModel()
-                        .setUid(realmHelper.generateUID(FunctionRangeModel.class))
+                        .setUid(dataBaseManager.generateUID(FunctionRangeModel.class))
                         .setFrom(-10f)
                         .setTo(10f)
                         .setDelta(0.5f)
@@ -49,13 +49,13 @@ public class DemoGenerator extends ProgressAsyncTaskLoader<ProgressParams, Void>
 
                 String function = a + " + x^2";
                 DataSetModel dataSetModel = new DataSetModel()
-                        .setUid(realmHelper.generateUID(DataSetModel.class))
+                        .setUid(dataBaseManager.generateUID(DataSetModel.class))
                         .setPrimary(getContext().getString(R.string.data_set))
                         .setSecondary(function)
                         .setColor(color)
                         .setType(DataSetModel.Type.FROM_FUNCTION)
                         .setFunctionRange(functionRangeModel)
-                        .setCoordinates(Utils.generateCoordinates(realmHelper,
+                        .setCoordinates(Utils.generateCoordinates(dataBaseManager,
                                 function,
                                 functionRangeModel.getFrom(),
                                 functionRangeModel.getTo(),
@@ -72,7 +72,7 @@ public class DemoGenerator extends ProgressAsyncTaskLoader<ProgressParams, Void>
                 publishProgress(progressParams);
             }
         });
-        realmHelper.closeRealm();
+        dataBaseManager.closeRealm();
         return null;
     }
 }

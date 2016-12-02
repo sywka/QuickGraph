@@ -17,10 +17,4 @@ public class ContextViewModel extends BaseObservable {
     public Context getContext() {
         return context;
     }
-
-    public void onStart() {
-    }
-
-    public void onStop() {
-    }
 }

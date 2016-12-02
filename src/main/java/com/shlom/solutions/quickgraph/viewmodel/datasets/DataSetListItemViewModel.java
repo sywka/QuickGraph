@@ -3,7 +3,7 @@ package com.shlom.solutions.quickgraph.viewmodel.datasets;
 import android.content.Context;
 import android.view.View;
 
-import com.shlom.solutions.quickgraph.model.database.RealmHelper;
+import com.shlom.solutions.quickgraph.model.database.DataBaseManager;
 import com.shlom.solutions.quickgraph.model.database.model.DataSetModel;
 import com.shlom.solutions.quickgraph.model.database.model.ProjectModel;
 import com.shlom.solutions.quickgraph.viewmodel.ContextViewModel;
@@ -41,17 +41,19 @@ public class DataSetListItemViewModel extends ContextViewModel
 
     @Override
     public int getIconTint() {
+        if (dataSetModel == null || !dataSetModel.isValid()) return 0;
         return dataSetModel.getColor();
     }
 
     @Override
     public boolean isChecked() {
+        if (dataSetModel == null || !dataSetModel.isValid()) return false;
         return dataSetModel.isChecked();
     }
 
     @Override
     public void setChecked(boolean checked) {
-        RealmHelper.executeTrans(realm -> {
+        DataBaseManager.executeTrans(realm -> {
             dataSetModel.setChecked(checked);
             projectModel.setDate(new Date());
         });
@@ -59,11 +61,13 @@ public class DataSetListItemViewModel extends ContextViewModel
 
     @Override
     public String getPrimaryText() {
+        if (dataSetModel == null || !dataSetModel.isValid()) return "";
         return dataSetModel.getPrimary();
     }
 
     @Override
     public String getSecondaryText() {
+        if (dataSetModel == null || !dataSetModel.isValid()) return "";
         return dataSetModel.getSecondaryExtended(getContext());
     }
 

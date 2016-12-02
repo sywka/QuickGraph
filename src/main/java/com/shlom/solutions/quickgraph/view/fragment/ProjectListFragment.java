@@ -11,27 +11,34 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 
 import com.afollestad.materialdialogs.MaterialDialog;
-import com.annimon.stream.Stream;
 import com.shlom.solutions.quickgraph.R;
-import com.shlom.solutions.quickgraph.view.activity.DataSetListActivity;
-import com.shlom.solutions.quickgraph.view.adapter.BindingRealmSimpleAdapter;
-import com.shlom.solutions.quickgraph.model.asynctask.DemoGenerator;
-import com.shlom.solutions.quickgraph.model.asynctask.ProgressAsyncTaskLoader;
-import com.shlom.solutions.quickgraph.model.asynctask.ProgressParams;
-import com.shlom.solutions.quickgraph.model.database.model.ProjectModel;
 import com.shlom.solutions.quickgraph.databinding.CardPreviewEditableBinding;
 import com.shlom.solutions.quickgraph.databinding.ProjectListBinding;
 import com.shlom.solutions.quickgraph.etc.Utils;
+import com.shlom.solutions.quickgraph.model.asynctask.DemoGenerator;
+import com.shlom.solutions.quickgraph.model.asynctask.ProgressAsyncTaskLoader;
+import com.shlom.solutions.quickgraph.model.asynctask.ProgressParams;
+import com.shlom.solutions.quickgraph.model.database.DataBaseManager;
+import com.shlom.solutions.quickgraph.model.database.model.ProjectModel;
+import com.shlom.solutions.quickgraph.view.activity.DataSetListActivity;
+import com.shlom.solutions.quickgraph.view.adapter.BindingRealmSimpleAdapter;
 import com.shlom.solutions.quickgraph.view.ui.MarginItemDecorator;
 import com.shlom.solutions.quickgraph.view.ui.ViewUtils;
 import com.shlom.solutions.quickgraph.viewmodel.projects.ProjectListViewModel;
 
+import io.realm.RealmChangeListener;
+import io.realm.RealmResults;
+
 public class ProjectListFragment extends BindingBaseFragment<ProjectListViewModel, ProjectListBinding>
         implements ProjectListViewModel.Callback,
         LoaderManager.LoaderCallbacks,
-        ProgressAsyncTaskLoader.OnProgressChangeListener<ProgressParams> {
+        ProgressAsyncTaskLoader.OnProgressChangeListener<ProgressParams>,
+        RealmChangeListener<RealmResults<ProjectModel>> {
 
     private static final int LOADER_ID_GENERATE_DEMO = 100;
+
+    private DataBaseManager dataBaseManager;
+    private RealmResults<ProjectModel> projectModels;
 
     private MaterialDialog progressDialog;
 
@@ -47,7 +54,7 @@ public class ProjectListFragment extends BindingBaseFragment<ProjectListViewMode
 
     @Override
     protected void initBinding(ProjectListBinding binding, ProjectListViewModel model) {
-        binding.setProjects(model);
+        binding.setData(model);
 
         setupActivityActionBar(binding.toolbar, false);
         setupRecyclerView(binding);
@@ -66,17 +73,16 @@ public class ProjectListFragment extends BindingBaseFragment<ProjectListViewMode
     }
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        getLoaderManager().initLoader(LOADER_ID_GENERATE_DEMO, Bundle.EMPTY, this);
-    }
-
-    @Override
     public void onStart() {
         super.onStart();
 
+        getLoaderManager().initLoader(LOADER_ID_GENERATE_DEMO, Bundle.EMPTY, this);
         DemoGenerator.registerOnProgressListener(LOADER_ID_GENERATE_DEMO, this);
+
+        dataBaseManager = new DataBaseManager();
+        projectModels = dataBaseManager.getProjects();
+        projectModels.addChangeListener(this);
+        onChange(projectModels);
     }
 
     @Override
@@ -85,6 +91,14 @@ public class ProjectListFragment extends BindingBaseFragment<ProjectListViewMode
 
         dismissProgressDialog();
         DemoGenerator.unregisterOnProgressListener(LOADER_ID_GENERATE_DEMO);
+
+        projectModels.removeChangeListener(this);
+        dataBaseManager.closeRealm();
+    }
+
+    @Override
+    public void onChange(RealmResults<ProjectModel> element) {
+        getViewModel().setProjects(projectModels);
     }
 
     @Override
@@ -120,16 +134,21 @@ public class ProjectListFragment extends BindingBaseFragment<ProjectListViewMode
     }
 
     @Override
+    public void onPrepareOptionsMenu(Menu menu) {       // TODO: 02.12.2016
+        super.onPrepareOptionsMenu(menu);
+
+        menu.findItem(R.id.action_clear_all).setEnabled(getViewModel()
+                .getMenuViewModel().isCanRemoveAll());
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.action_clear_all:     //// TODO: 30.11.2016 to viewModel
-                Long[] uids = Stream.of(getViewModel().getList())
-                        .map(ProjectModel::getUid)
-                        .toArray(Long[]::new);
-                getViewModel().removeItems((message, remove, rollback) -> {
+            case R.id.action_clear_all:
+                getViewModel().getMenuViewModel().removeAll((message, remove, rollback) -> {
                     remove.run();
                     ViewUtils.getUndoSnackbar(getBinding().recyclerView, message, rollback).show();
-                }, uids);
+                });
                 return true;
         }
         return super.onOptionsItemSelected(item);

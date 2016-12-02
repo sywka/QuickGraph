@@ -26,17 +26,22 @@ import com.shlom.solutions.quickgraph.model.asynctask.GraphDataPreparer;
 import com.shlom.solutions.quickgraph.model.asynctask.PreviewCacheCreator;
 import com.shlom.solutions.quickgraph.model.asynctask.ProgressAsyncTaskLoader;
 import com.shlom.solutions.quickgraph.model.asynctask.ProgressParams;
+import com.shlom.solutions.quickgraph.model.database.DataBaseManager;
+import com.shlom.solutions.quickgraph.model.database.model.ProjectModel;
 import com.shlom.solutions.quickgraph.view.fragment.dialog.ColorPickerDialogFragment;
 import com.shlom.solutions.quickgraph.view.fragment.dialog.ExportPNGDialogFragment;
 import com.shlom.solutions.quickgraph.view.ui.ValueMarker;
 import com.shlom.solutions.quickgraph.viewmodel.graph.GraphMenuViewModel;
 import com.shlom.solutions.quickgraph.viewmodel.graph.GraphViewModel;
 
+import io.realm.RealmChangeListener;
+
 public class GraphFragment extends BindingBaseFragment<GraphViewModel, GraphBinding> implements
         ColorPickerDialogFragment.OnColorChangedListener,
         ExportPNGDialogFragment.OnRequestBitmap,
         LoaderManager.LoaderCallbacks,
-        ProgressAsyncTaskLoader.OnProgressChangeListener<ProgressParams> {
+        ProgressAsyncTaskLoader.OnProgressChangeListener<ProgressParams>,
+        RealmChangeListener<ProjectModel> {
 
     private static final String TAG_EXPORT_PNG_DIALOG = "export_png_dialog";
     private static final String TAG_COLOR_X_AXIS = "color_x_axis";
@@ -48,7 +53,8 @@ public class GraphFragment extends BindingBaseFragment<GraphViewModel, GraphBind
     private static final int LOADER_ID_DATA_PREPARER = 300;
     private static final int LOADER_ID_CACHE_CREATOR = 301;
 
-    private GraphMenuViewModel menuViewModel;
+    private DataBaseManager dataBaseManager;
+    private ProjectModel projectModel;
     private GraphDataPreparer graphDataPreparer;
 
     @Override
@@ -58,9 +64,7 @@ public class GraphFragment extends BindingBaseFragment<GraphViewModel, GraphBind
 
     @Override
     protected GraphViewModel createViewModel(@Nullable Bundle savedInstanceState) {
-        long projectId = Utils.getLong(getCompatActivity());
-        menuViewModel = new GraphMenuViewModel(getContext(), projectId);
-        return new GraphViewModel(getContext(), projectId);
+        return new GraphViewModel(getContext());
     }
 
     @Override
@@ -86,29 +90,33 @@ public class GraphFragment extends BindingBaseFragment<GraphViewModel, GraphBind
     }
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        graphDataPreparer = (GraphDataPreparer) getLoaderManager()
-                .initLoader(LOADER_ID_DATA_PREPARER, Bundle.EMPTY, this);
-    }
-
-    @Override
     public void onStart() {
         super.onStart();
 
-        menuViewModel.addOnPropertyChangedCallback(onPropertyChangedCallback);
-        menuViewModel.onStart();
+        graphDataPreparer = (GraphDataPreparer) getLoaderManager()
+                .initLoader(LOADER_ID_DATA_PREPARER, Bundle.EMPTY, this);
         GraphDataPreparer.registerOnProgressListener(LOADER_ID_DATA_PREPARER, this);
+
+        dataBaseManager = new DataBaseManager();
+        projectModel = dataBaseManager.findObject(ProjectModel.class,
+                Utils.getLong(getCompatActivity()));
+        projectModel.addChangeListener(this);
+        onChange(projectModel);
     }
 
     @Override
     public void onStop() {
         super.onStop();
 
-        menuViewModel.onStop();
-        menuViewModel.removeOnPropertyChangedCallback(onPropertyChangedCallback);
         GraphDataPreparer.unregisterOnProgressListener(LOADER_ID_DATA_PREPARER);
+
+        projectModel.removeChangeListener(this);
+        dataBaseManager.closeRealm();
+    }
+
+    @Override
+    public void onChange(ProjectModel element) {
+        getViewModel().setProject(projectModel);
     }
 
     @Override
@@ -118,10 +126,6 @@ public class GraphFragment extends BindingBaseFragment<GraphViewModel, GraphBind
         if (observable instanceof GraphViewModel) {
             if (i == BR.project) {
                 graphDataPreparer.forceLoad();
-            }
-        } else if (observable instanceof GraphMenuViewModel) {
-            if (i == BR._all) {
-                invalidateOptionsMenu();
             }
         }
     }
@@ -188,6 +192,7 @@ public class GraphFragment extends BindingBaseFragment<GraphViewModel, GraphBind
     public void onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
 
+        GraphMenuViewModel menuViewModel = getViewModel().getMenuViewModel();
         menu.findItem(R.id.action_draw_x_grid).setChecked(menuViewModel.isDrawXGrid());
         menu.findItem(R.id.action_x_grid).getSubMenu()
                 .setGroupEnabled(R.id.group_draw_x_grid, menuViewModel.isDrawXGrid());
@@ -216,6 +221,7 @@ public class GraphFragment extends BindingBaseFragment<GraphViewModel, GraphBind
     public boolean onOptionsItemSelected(final MenuItem item) {
         if (item.isCheckable()) item.setChecked(!item.isChecked());
 
+        GraphMenuViewModel menuViewModel = getViewModel().getMenuViewModel();
         switch (item.getItemId()) {
             case R.id.action_export_to_png:
                 new ExportPNGDialogFragment().show(getChildFragmentManager(), TAG_EXPORT_PNG_DIALOG);
@@ -295,6 +301,7 @@ public class GraphFragment extends BindingBaseFragment<GraphViewModel, GraphBind
 
     @Override
     public void onColorChanged(final String tag, @ColorInt final int color) {
+        GraphMenuViewModel menuViewModel = getViewModel().getMenuViewModel();
         switch (tag) {
             case TAG_COLOR_X_AXIS:
                 menuViewModel.setColorXAxis(color);

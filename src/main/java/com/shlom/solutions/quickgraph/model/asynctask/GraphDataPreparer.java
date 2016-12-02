@@ -8,7 +8,7 @@ import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
-import com.shlom.solutions.quickgraph.model.database.RealmHelper;
+import com.shlom.solutions.quickgraph.model.database.DataBaseManager;
 import com.shlom.solutions.quickgraph.model.database.model.DataSetModel;
 import com.shlom.solutions.quickgraph.model.database.model.ProjectModel;
 import com.shlom.solutions.quickgraph.etc.LogUtil;
@@ -35,11 +35,11 @@ public class GraphDataPreparer extends ProgressAsyncTaskLoader<ProgressParams, L
 
     @Override
     public LineData loadInBackground() {
-        RealmHelper realmHelper = new RealmHelper();
+        DataBaseManager dataBaseManager = new DataBaseManager();
 
         List<ILineDataSet> sets = new ArrayList<>();
         try {
-            ProjectModel project = realmHelper.findObject(ProjectModel.class, projectId);
+            ProjectModel project = dataBaseManager.findObject(ProjectModel.class, projectId);
             if (project == null) return null;
 
             long count = Stream.of(project.getDataSets()).filter(DataSetModel::isChecked).count();
@@ -84,7 +84,7 @@ public class GraphDataPreparer extends ProgressAsyncTaskLoader<ProgressParams, L
         } catch (Exception e) {
             LogUtil.d(e);
         } finally {
-            realmHelper.closeRealm();
+            dataBaseManager.closeRealm();
         }
         return new LineData(sets);
     }

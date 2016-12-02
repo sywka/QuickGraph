@@ -94,7 +94,7 @@ public class DataSetEditTableFragment extends BaseDataSetEditFragment implements
     protected void onConfirmationSaving() {
         super.onConfirmationSaving();
 
-        long uid = getRealmHelper().generateUID(CoordinateModel.class);
+        long uid = getDataBaseManager().generateUID(CoordinateModel.class);
         for (CoordinateModel coordinate : getStandaloneDataSet().getCoordinates()) {
             if (coordinate.getUid() == 0) {
                 coordinate.setUid(uid);

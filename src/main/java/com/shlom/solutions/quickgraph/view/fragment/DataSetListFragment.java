@@ -1,7 +1,6 @@
 package com.shlom.solutions.quickgraph.view.fragment;
 
 import android.content.Intent;
-import android.databinding.Observable;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
@@ -19,34 +18,35 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.afollestad.materialdialogs.MaterialDialog;
-import com.annimon.stream.Stream;
-import com.shlom.solutions.quickgraph.BR;
 import com.shlom.solutions.quickgraph.R;
-import com.shlom.solutions.quickgraph.view.activity.EditActivity;
-import com.shlom.solutions.quickgraph.view.adapter.BindingRealmSimpleAdapter;
-import com.shlom.solutions.quickgraph.model.database.model.DataSetModel;
 import com.shlom.solutions.quickgraph.databinding.CheckableListItemBinding;
 import com.shlom.solutions.quickgraph.databinding.DataSetListBinding;
 import com.shlom.solutions.quickgraph.etc.LogUtil;
 import com.shlom.solutions.quickgraph.etc.Utils;
+import com.shlom.solutions.quickgraph.model.database.DataBaseManager;
+import com.shlom.solutions.quickgraph.model.database.model.ProjectModel;
+import com.shlom.solutions.quickgraph.view.activity.EditActivity;
+import com.shlom.solutions.quickgraph.view.adapter.BindingRealmSimpleAdapter;
 import com.shlom.solutions.quickgraph.view.fragment.dialog.ColorPickerDialogFragment;
 import com.shlom.solutions.quickgraph.view.ui.ArrowAnimator;
 import com.shlom.solutions.quickgraph.view.ui.ViewUtils;
-import com.shlom.solutions.quickgraph.viewmodel.datasets.DataSetListMenuViewModel;
 import com.shlom.solutions.quickgraph.viewmodel.datasets.DataSetListViewModel;
 
 import icepick.State;
+import io.realm.RealmChangeListener;
 
 public class DataSetListFragment extends BindingBaseFragment<DataSetListViewModel, DataSetListBinding>
         implements ColorPickerDialogFragment.OnColorChangedListener,
         View.OnClickListener,
         View.OnKeyListener,
-        DataSetListViewModel.Callback {
+        DataSetListViewModel.Callback,
+        RealmChangeListener<ProjectModel> {
 
     @State
     int bottomSheetState = BottomSheetBehavior.STATE_COLLAPSED;
 
-    private DataSetListMenuViewModel menuViewModel;
+    private DataBaseManager dataBaseManager;
+    private ProjectModel projectModel;
 
     @Override
     protected int getLayoutResource() {
@@ -55,9 +55,7 @@ public class DataSetListFragment extends BindingBaseFragment<DataSetListViewMode
 
     @Override
     protected DataSetListViewModel createViewModel(@Nullable Bundle savedInstanceState) {
-        long projectId = Utils.getLong(getCompatActivity());
-        menuViewModel = new DataSetListMenuViewModel(getContext(), projectId);
-        return new DataSetListViewModel(getContext(), projectId, this);
+        return new DataSetListViewModel(getContext(), this);
     }
 
     @Override
@@ -125,32 +123,27 @@ public class DataSetListFragment extends BindingBaseFragment<DataSetListViewMode
         }
     }
 
-
     @Override
     public void onStart() {
         super.onStart();
 
-        menuViewModel.addOnPropertyChangedCallback(onPropertyChangedCallback);
-        menuViewModel.onStart();
+        dataBaseManager = new DataBaseManager();
+        projectModel = dataBaseManager.findObject(ProjectModel.class, Utils.getLong(getCompatActivity()));
+        projectModel.addChangeListener(this);
+        onChange(projectModel);
     }
 
     @Override
     public void onStop() {
         super.onStop();
 
-        menuViewModel.onStop();
-        menuViewModel.removeOnPropertyChangedCallback(onPropertyChangedCallback);
+        projectModel.removeChangeListener(this);
+        dataBaseManager.closeRealm();
     }
 
     @Override
-    public void onPropertyChanged(Observable observable, int i) {
-        super.onPropertyChanged(observable, i);
-
-        if (observable instanceof DataSetListMenuViewModel) {
-            if (i == BR._all) {
-                invalidateOptionsMenu();
-            }
-        }
+    public void onChange(ProjectModel element) {
+        getViewModel().setProject(projectModel);
     }
 
     @Override
@@ -230,28 +223,27 @@ public class DataSetListFragment extends BindingBaseFragment<DataSetListViewMode
     public void onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
 
-        boolean checkedAll = menuViewModel.isCheckedAll();
+        boolean checkedAll = getViewModel().getMenuViewModel().isCheckedAll();
         menu.findItem(R.id.action_check_all).setVisible(!checkedAll);
         menu.findItem(R.id.action_uncheck_all).setVisible(checkedAll);
+        menu.findItem(R.id.action_clear_all).setEnabled(getViewModel()
+                .getMenuViewModel().isCanRemoveAll());
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_check_all:
-                menuViewModel.checkedAll();
+                getViewModel().getMenuViewModel().checkedAll();
                 return true;
             case R.id.action_uncheck_all:
-                menuViewModel.uncheckedAll();
+                getViewModel().getMenuViewModel().uncheckedAll();
                 return true;
-            case R.id.action_clear_all:     //// TODO: 30.11.2016
-                Long[] uids = Stream.of(getViewModel().getList())
-                        .map(DataSetModel::getUid)
-                        .toArray(Long[]::new);
-                getViewModel().removeItems((message, remove, rollback) -> {
+            case R.id.action_clear_all:
+                getViewModel().getMenuViewModel().removeAll((message, remove, rollback) -> {
                     remove.run();
                     ViewUtils.getUndoSnackbar(getBinding().recyclerView, message, rollback).show();
-                }, uids);
+                });
                 return true;
         }
         return super.onOptionsItemSelected(item);
