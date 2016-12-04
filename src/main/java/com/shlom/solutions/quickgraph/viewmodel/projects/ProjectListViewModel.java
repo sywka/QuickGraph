@@ -7,18 +7,21 @@ import android.view.View;
 import com.annimon.stream.Stream;
 import com.shlom.solutions.quickgraph.BR;
 import com.shlom.solutions.quickgraph.R;
-import com.shlom.solutions.quickgraph.model.database.DataBaseManager;
-import com.shlom.solutions.quickgraph.model.database.RealmModelFactory;
-import com.shlom.solutions.quickgraph.model.database.model.ProjectModel;
+import com.shlom.solutions.quickgraph.etc.FileCacheHelper;
+import com.shlom.solutions.quickgraph.etc.LogUtil;
+import com.shlom.solutions.quickgraph.model.database.RealmHelper;
+import com.shlom.solutions.quickgraph.model.database.dbmodel.ProjectModel;
 import com.shlom.solutions.quickgraph.view.Binding;
-import com.shlom.solutions.quickgraph.viewmodel.ManagedViewModel;
+import com.shlom.solutions.quickgraph.viewmodel.ContextViewModel;
+import com.shlom.solutions.quickgraph.viewmodel.WithMenuViewModel;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import io.realm.RealmResults;
 
-public class ProjectListViewModel extends ManagedViewModel {
+public class ProjectListViewModel extends ContextViewModel
+        implements WithMenuViewModel<ProjectListMenuViewModel> {
 
     private RealmResults<ProjectModel> projectModels;
     private Callback callback;
@@ -36,15 +39,18 @@ public class ProjectListViewModel extends ManagedViewModel {
             Map<Integer, ProjectModel> cached = new LinkedHashMap<>();
             removeExecutor.execute(
                     getContext().getString(R.string.project_remove, findById(uid).getName()),
-                    () -> DataBaseManager.executeTrans(realm -> {
+                    () -> RealmHelper.executeTrans(realm -> {
                         ProjectModel item = findById(uid);
                         int position = projectModels.indexOf(item);
                         cached.put(position, realm.copyFromRealm(item));
-                        item.deleteDependentsFromRealm(getContext());
+                        LogUtil.d(FileCacheHelper.getImageCache(getContext(),
+                                item.getPreviewFileName()).delete());
+                        item.deleteDependents();
                         projectModels.deleteFromRealm(position);
                     }),
-                    () -> DataBaseManager.executeTrans(realm ->
-                            Stream.of(cached).forEach(entry -> realm.copyToRealm(entry.getValue()))
+                    () -> RealmHelper.executeTrans(realm ->
+                            Stream.of(cached)
+                                    .forEach(entry -> realm.copyToRealm(entry.getValue()))
                     )
             );
         };
@@ -63,7 +69,13 @@ public class ProjectListViewModel extends ManagedViewModel {
     }
 
     public void createProject(String name) {
-        DataBaseManager.executeTrans(realm -> RealmModelFactory.newProject(realm, name));
+        RealmHelper.executeTrans(realm ->
+                new ProjectModel()
+                        .initDefault()
+                        .setName(name)
+                        .updateUIDCascade()
+                        .insertToRealm(realm)
+        );
     }
 
     @Bindable

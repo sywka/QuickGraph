@@ -8,8 +8,8 @@ import android.view.View;
 
 import com.shlom.solutions.quickgraph.BR;
 import com.shlom.solutions.quickgraph.R;
-import com.shlom.solutions.quickgraph.model.database.DataBaseManager;
-import com.shlom.solutions.quickgraph.model.database.model.ProjectModel;
+import com.shlom.solutions.quickgraph.model.database.RealmHelper;
+import com.shlom.solutions.quickgraph.model.database.dbmodel.ProjectModel;
 import com.shlom.solutions.quickgraph.etc.FileCacheHelper;
 import com.shlom.solutions.quickgraph.viewmodel.ContextViewModel;
 import com.shlom.solutions.quickgraph.viewmodel.ICardPreviewEditableViewModel;
@@ -40,7 +40,7 @@ public class ProjectListItemViewModel extends ContextViewModel
 
     @Override
     public void setPrimaryText(String primaryText) {
-        DataBaseManager.executeTrans(realm -> {
+        RealmHelper.executeTrans(realm -> {
             projectModel.setName(primaryText);
             notifyPropertyChanged(BR.primaryText);
         });

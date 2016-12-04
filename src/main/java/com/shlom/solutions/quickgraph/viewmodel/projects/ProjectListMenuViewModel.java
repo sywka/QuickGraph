@@ -4,8 +4,10 @@ import android.content.Context;
 
 import com.annimon.stream.Stream;
 import com.shlom.solutions.quickgraph.R;
-import com.shlom.solutions.quickgraph.model.database.DataBaseManager;
-import com.shlom.solutions.quickgraph.model.database.model.ProjectModel;
+import com.shlom.solutions.quickgraph.etc.FileCacheHelper;
+import com.shlom.solutions.quickgraph.etc.LogUtil;
+import com.shlom.solutions.quickgraph.model.database.RealmHelper;
+import com.shlom.solutions.quickgraph.model.database.dbmodel.ProjectModel;
 import com.shlom.solutions.quickgraph.view.Binding;
 import com.shlom.solutions.quickgraph.viewmodel.ContextViewModel;
 
@@ -37,16 +39,17 @@ public class ProjectListMenuViewModel extends ContextViewModel {
         executor.execute(
                 getContext().getString(R.string.project_remove_count,
                         String.valueOf(projectModels.size())),
-                () -> DataBaseManager.executeTrans(realm -> {
+                () -> RealmHelper.executeTrans(realm -> {
                     cached.addAll(realm.copyFromRealm(projectModels));
-                    Stream.of(projectModels).forEach(projectModel ->
-                            projectModel.deleteDependentsFromRealm(getContext()));
+                    Stream.of(projectModels).forEach(projectModel -> {
+                        LogUtil.d(FileCacheHelper.getImageCache(getContext(),
+                                projectModel.getPreviewFileName()).delete());
+                        projectModel.deleteDependents();
+                    });
                     projectModels.deleteAllFromRealm();
                     notifyChange();
                 }),
-                () -> DataBaseManager.executeTrans(realm -> {
-                    realm.copyToRealm(cached);
-                })
+                () -> RealmHelper.executeTrans(realm -> realm.copyToRealm(cached))
         );
     }
 }

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="72dp"
-    android:paddingRight="72dp">
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="72dp"
+                android:paddingRight="72dp">
 
     <FrameLayout
         android:id="@+id/edit_data_set_color_layout"
@@ -17,7 +17,7 @@
             android:id="@+id/edit_data_set_color"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@drawable/oval" />
+            android:background="@drawable/oval"/>
 
     </FrameLayout>
 
@@ -32,13 +32,13 @@
         <com.shlom.solutions.quickgraph.view.ui.BackEditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:fontFamily="sansserif"
+            android:fontFamily="sans-serif"
             android:hint="@string/label"
             android:imeOptions="actionDone"
-            android:singleLine="true"
+            android:maxLines="1"
             android:textColor="?android:textColorPrimary"
             android:textSize="16sp"
-            tools:text="Title text" />
+            tools:text="Title text"/>
 
     </android.support.design.widget.TextInputLayout>
 

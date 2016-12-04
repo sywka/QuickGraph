@@ -8,11 +8,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.shlom.solutions.quickgraph.model.database.ObjectWithUID;
+import com.shlom.solutions.quickgraph.model.database.interfaces.UID;
 
 import io.realm.RealmModel;
 
-public final class BindingRealmSimpleAdapter<T extends RealmModel & ObjectWithUID,
+public final class BindingRealmSimpleAdapter<T extends RealmModel & UID,
         P extends ViewDataBinding>
         extends BaseRealmSimpleAdapter<T, BindingRealmSimpleAdapter.ViewHolder<P>> {
 

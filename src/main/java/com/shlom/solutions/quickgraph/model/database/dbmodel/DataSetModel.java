@@ -1,12 +1,14 @@
-package com.shlom.solutions.quickgraph.model.database.model;
+package com.shlom.solutions.quickgraph.model.database.dbmodel;
 
 import android.content.Context;
 import android.graphics.Color;
 import android.support.annotation.ColorInt;
 import android.support.annotation.StringRes;
 
+import com.annimon.stream.Stream;
 import com.shlom.solutions.quickgraph.R;
-import com.shlom.solutions.quickgraph.model.database.ObjectWithUID;
+import com.shlom.solutions.quickgraph.model.database.interfaces.DBModel;
+import com.shlom.solutions.quickgraph.model.database.PrimaryKeyFactory;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -19,98 +21,40 @@ import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 import io.realm.annotations.Required;
 
-public class DataSetModel extends RealmObject implements ObjectWithUID, Serializable {
+public class DataSetModel extends RealmObject
+        implements DBModel<DataSetModel>, Serializable {
 
     public static final float MIN_LINE_WIDTH = 0.1f;
     public static final float MAX_LINE_WIDTH = 5f;
     public static final float MIN_POINTS_RADIUS = 0.1f;
     public static final float MAX_POINTS_RADIUS = 5f;
 
-    public enum Type {UNKNOWN, FROM_FUNCTION, FROM_TABLE}
-
     @PrimaryKey
     private long uid;
 
     @Required
     private String primary;
-
     @Required
     private String secondary;
 
     private int color;
-
     private float lineWidth;
-
     private boolean drawLine;
-
     private boolean drawPoints;
-
     private boolean drawPointsLabel;
-
     private float pointsRadius;
-
     private boolean cubicCurve;
-
     private boolean checked;
-
     private int typeIndex;
 
     private FunctionRangeModel functionRange;
-
     private RealmList<CoordinateModel> coordinates;
 
     public DataSetModel() {
-        primary = "";
-        secondary = "";
-        color = Color.BLUE;
-        lineWidth = 0.5f;
-        drawLine = true;
-        drawPoints = false;
-        drawPointsLabel = false;
-        pointsRadius = 1f;
-        cubicCurve = false;
-        checked = true;
-        typeIndex = Type.UNKNOWN.ordinal();
-        coordinates = new RealmList<>();
     }
 
-    public DataSetModel copyToRealm(Realm realm) {
-        return realm.copyToRealm(this);
-    }
-
-    public DataSetModel copyToRealmOrUpdate(Realm realm) {
-        return realm.copyToRealmOrUpdate(this);
-    }
-
-    public Type getType() {
-        if (typeIndex < 0 || typeIndex >= Type.values().length) return Type.UNKNOWN;
-        return Type.values()[typeIndex];
-    }
-
-    public DataSetModel setType(Type type) {
-        typeIndex = type.ordinal();
-        return this;
-    }
-
-    public void deleteDependentsFromRealm() {
-        if (functionRange != null) functionRange.deleteFromRealm();
-        if (coordinates != null) coordinates.deleteAllFromRealm();
-    }
-
-    public String getSecondaryExtended(Context context) {
-        switch (getType()) {
-            case FROM_TABLE:
-                String secondaryExtended = context.getString(R.string.table_is, String.valueOf(coordinates.size()));
-                if (!secondary.isEmpty()) {
-                    secondaryExtended += ", " +context.getString(R.string.table_is_imported, secondary);
-                }
-                return secondaryExtended;
-            case FROM_FUNCTION:
-                return context.getString(R.string.function_is, secondary);
-            case UNKNOWN:
-            default:
-                return context.getString(R.string.unknown_is, secondary);
-        }
+    public static DataSetModel find(Realm realm, long uid) {
+        return realm.where(DataSetModel.class).equalTo("uid", uid).findFirst();
     }
 
     @StringRes
@@ -123,6 +67,81 @@ public class DataSetModel extends RealmObject implements ObjectWithUID, Serializ
             case UNKNOWN:
             default:
                 return R.string.unknown;
+        }
+    }
+
+    public DataSetModel copyToRealm(Realm realm) {
+        return realm.copyToRealm(this);
+    }
+
+    public DataSetModel copyToRealmOrUpdate(Realm realm) {
+        return realm.copyToRealmOrUpdate(this);
+    }
+
+    @Override
+    public void deleteCascade() {
+        deleteDependents();
+        deleteFromRealm();
+    }
+
+    @Override
+    public void deleteDependents() {
+        if (functionRange != null) functionRange.deleteCascade();
+        if (coordinates != null) {
+            Stream.of(coordinates).forEach(CoordinateModel::deleteDependents);
+            coordinates.deleteAllFromRealm();
+        }
+    }
+
+    @Override
+    public DataSetModel updateUIDCascade() {
+        uid = PrimaryKeyFactory.getInstance().nextKey(DataSetModel.class);
+        if (functionRange != null) functionRange.updateUIDCascade();
+        if (coordinates != null) Stream.of(coordinates)
+                .forEach(CoordinateModel::updateUIDCascade);
+        return this;
+    }
+
+    @Override
+    public DataSetModel initDefault() {
+        primary = "";
+        secondary = "";
+        color = Color.BLUE;
+        lineWidth = 0.5f;
+        drawLine = true;
+        drawPoints = false;
+        drawPointsLabel = false;
+        pointsRadius = 1f;
+        cubicCurve = false;
+        checked = true;
+        typeIndex = Type.UNKNOWN.ordinal();
+        coordinates = new RealmList<>();
+        return this;
+    }
+
+    public Type getType() {
+        if (typeIndex < 0 || typeIndex >= Type.values().length) return Type.UNKNOWN;
+        return Type.values()[typeIndex];
+    }
+
+    public DataSetModel setType(Type type) {
+        typeIndex = type.ordinal();
+        return this;
+    }
+
+    public String getSecondaryExtended(Context context) {
+        switch (getType()) {
+            case FROM_TABLE:
+                String secondaryExtended = context.getString(R.string.table_is, String.valueOf(coordinates.size()));
+                if (!secondary.isEmpty()) {
+                    secondaryExtended += ", " + context.getString(R.string.table_is_imported, secondary);
+                }
+                return secondaryExtended;
+            case FROM_FUNCTION:
+                return context.getString(R.string.function_is, secondary);
+            case UNKNOWN:
+            default:
+                return context.getString(R.string.unknown_is, secondary);
         }
     }
 
@@ -149,12 +168,12 @@ public class DataSetModel extends RealmObject implements ObjectWithUID, Serializ
         }
     }
 
-    // generated getters and setters
-
     @Override
     public long getUid() {
         return uid;
     }
+
+    // generated getters and setters
 
     public DataSetModel setUid(long uid) {
         this.uid = uid;
@@ -196,8 +215,10 @@ public class DataSetModel extends RealmObject implements ObjectWithUID, Serializ
     }
 
     public DataSetModel setLineWidth(float lineWidth) {
-        if (Float.compare(lineWidth, MAX_LINE_WIDTH) == 1) throw new IllegalArgumentException("Line width > MAX_LINE_WIDTH");
-        if (Float.compare(lineWidth, MIN_LINE_WIDTH) == -1) throw new IllegalArgumentException("Line width < MIN_LINE_WIDTH");
+        if (Float.compare(lineWidth, MAX_LINE_WIDTH) == 1)
+            throw new IllegalArgumentException("Line width > MAX_LINE_WIDTH");
+        if (Float.compare(lineWidth, MIN_LINE_WIDTH) == -1)
+            throw new IllegalArgumentException("Line width < MIN_LINE_WIDTH");
         this.lineWidth = lineWidth;
         return this;
     }
@@ -236,8 +257,10 @@ public class DataSetModel extends RealmObject implements ObjectWithUID, Serializ
     }
 
     public DataSetModel setPointsRadius(float pointsRadius) {
-        if (Float.compare(pointsRadius, MAX_POINTS_RADIUS) == 1) throw new IllegalArgumentException("Points radius > MAX_POINTS_RADIUS");
-        if (Float.compare(pointsRadius, MIN_POINTS_RADIUS) == -1) throw new IllegalArgumentException("Points radius < MIN_POINTS_RADIUS");
+        if (Float.compare(pointsRadius, MAX_POINTS_RADIUS) == 1)
+            throw new IllegalArgumentException("Points radius > MAX_POINTS_RADIUS");
+        if (Float.compare(pointsRadius, MIN_POINTS_RADIUS) == -1)
+            throw new IllegalArgumentException("Points radius < MIN_POINTS_RADIUS");
         this.pointsRadius = pointsRadius;
         return this;
     }
@@ -277,4 +300,6 @@ public class DataSetModel extends RealmObject implements ObjectWithUID, Serializ
         this.coordinates = coordinates;
         return this;
     }
+
+    public enum Type {UNKNOWN, FROM_FUNCTION, FROM_TABLE}
 }

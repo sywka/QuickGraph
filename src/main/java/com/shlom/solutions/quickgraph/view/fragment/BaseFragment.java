@@ -32,9 +32,11 @@ public abstract class BaseFragment extends Fragment {
 
     protected void setupActivityActionBar(@NonNull Toolbar toolbar, boolean withBackArrow) {
         setHasOptionsMenu(true);
-        getCompatActivity().setSupportActionBar(toolbar);
-        if (getCompatActivity().getSupportActionBar() != null)
-            getCompatActivity().getSupportActionBar().setDisplayHomeAsUpEnabled(withBackArrow);
+        AppCompatActivity activity = (AppCompatActivity) getActivity();
+        activity.setSupportActionBar(toolbar);
+        if (activity.getSupportActionBar() != null) {
+            activity.getSupportActionBar().setDisplayHomeAsUpEnabled(withBackArrow);
+        }
     }
 
     public void invalidateOptionsMenu() {
@@ -45,15 +47,11 @@ public abstract class BaseFragment extends Fragment {
         }
     }
 
-    protected AppCompatActivity getCompatActivity() {
-        return (AppCompatActivity) getActivity();
-    }
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                getCompatActivity().finish();
+                getActivity().finish();
                 return true;
         }
         return super.onOptionsItemSelected(item);

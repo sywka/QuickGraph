@@ -26,8 +26,6 @@ public class EditActivity extends AppCompatActivity {
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
-            Utils.putLong(fragment, Utils.getLong(this));
-            Utils.putBoolean(fragment, Utils.getBoolean(this));
             putFragment(fragment);
         }
     }

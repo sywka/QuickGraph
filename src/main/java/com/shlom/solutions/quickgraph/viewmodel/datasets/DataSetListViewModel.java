@@ -8,19 +8,20 @@ import android.view.View;
 import com.annimon.stream.Stream;
 import com.shlom.solutions.quickgraph.BR;
 import com.shlom.solutions.quickgraph.R;
-import com.shlom.solutions.quickgraph.model.database.DataBaseManager;
-import com.shlom.solutions.quickgraph.model.database.model.DataSetModel;
-import com.shlom.solutions.quickgraph.model.database.model.ProjectModel;
+import com.shlom.solutions.quickgraph.model.database.RealmHelper;
+import com.shlom.solutions.quickgraph.model.database.dbmodel.DataSetModel;
+import com.shlom.solutions.quickgraph.model.database.dbmodel.ProjectModel;
 import com.shlom.solutions.quickgraph.view.Binding;
-import com.shlom.solutions.quickgraph.viewmodel.ManagedViewModel;
+import com.shlom.solutions.quickgraph.viewmodel.ContextViewModel;
+import com.shlom.solutions.quickgraph.viewmodel.WithMenuViewModel;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import io.realm.OrderedRealmCollection;
-import io.realm.RealmChangeListener;
 
-public class DataSetListViewModel extends ManagedViewModel {
+public class DataSetListViewModel extends ContextViewModel
+        implements WithMenuViewModel<DataSetListMenuViewModel> {
 
     private ProjectModel projectModel;
     private Callback callback;
@@ -44,14 +45,14 @@ public class DataSetListViewModel extends ManagedViewModel {
             Map<Integer, DataSetModel> cached = new LinkedHashMap<>();
             executor.execute(
                     getContext().getString(R.string.data_set_remove, findById(uid).getPrimary()),
-                    () -> DataBaseManager.executeTrans(realm -> {
+                    () -> RealmHelper.executeTrans(realm -> {
                         DataSetModel item = findById(uid);
                         int position = projectModel.getDataSets().indexOf(item);
                         cached.put(position, realm.copyFromRealm(item));
-                        item.deleteDependentsFromRealm();
+                        item.deleteDependents();
                         projectModel.getDataSets().deleteFromRealm(position);
                     }),
-                    () -> DataBaseManager.executeTrans(realm ->
+                    () -> RealmHelper.executeTrans(realm ->
                             Stream.of(cached)
                                     .sorted((entry, t1) -> entry.getKey().compareTo(t1.getKey()))
                                     .forEach(entry ->
@@ -69,13 +70,27 @@ public class DataSetListViewModel extends ManagedViewModel {
         });
     }
 
-    public void choiceDataSetType(int typeIndex) {
+    public void createDataSet(int typeIndex) {
         switch (typeIndex) {
             case 0:
-                callback.onOpenTableDataSet(-1);
+                RealmHelper.executeTrans(realm -> {
+                    DataSetModel dataSetModel = new DataSetModel()
+                            .initDefault()
+                            .setType(DataSetModel.Type.FROM_TABLE)
+                            .updateUIDCascade();
+                    projectModel.addDataSet(0, dataSetModel);
+                    callback.onOpenTableDataSet(dataSetModel.getUid());
+                });
                 break;
             case 1:
-                callback.onOpenFunctionDataSet(-1);
+                RealmHelper.executeTrans(realm -> {
+                    DataSetModel dataSetModel = new DataSetModel()
+                            .initDefault()
+                            .setType(DataSetModel.Type.FROM_FUNCTION)
+                            .updateUIDCascade();
+                    projectModel.addDataSet(0, dataSetModel);
+                    callback.onOpenFunctionDataSet(dataSetModel.getUid());
+                });
                 break;
             default:
                 throw new RuntimeException("Can't create dataSet: unknown");
@@ -83,7 +98,7 @@ public class DataSetListViewModel extends ManagedViewModel {
     }
 
     public void setColorDataSet(long uid, @ColorInt int color) {
-        DataBaseManager.executeTrans(realm ->
+        RealmHelper.execute(realm ->
                 Stream.of(projectModel.getDataSets())
                         .filter(value -> value.getUid() == uid)
                         .findFirst()

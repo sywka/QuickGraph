@@ -1,5 +1,6 @@
 package com.shlom.solutions.quickgraph.view.fragment;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -23,8 +24,7 @@ import com.shlom.solutions.quickgraph.databinding.CheckableListItemBinding;
 import com.shlom.solutions.quickgraph.databinding.DataSetListBinding;
 import com.shlom.solutions.quickgraph.etc.LogUtil;
 import com.shlom.solutions.quickgraph.etc.Utils;
-import com.shlom.solutions.quickgraph.model.database.DataBaseManager;
-import com.shlom.solutions.quickgraph.model.database.model.ProjectModel;
+import com.shlom.solutions.quickgraph.model.database.dbmodel.ProjectModel;
 import com.shlom.solutions.quickgraph.view.activity.EditActivity;
 import com.shlom.solutions.quickgraph.view.adapter.BindingRealmSimpleAdapter;
 import com.shlom.solutions.quickgraph.view.fragment.dialog.ColorPickerDialogFragment;
@@ -33,6 +33,7 @@ import com.shlom.solutions.quickgraph.view.ui.ViewUtils;
 import com.shlom.solutions.quickgraph.viewmodel.datasets.DataSetListViewModel;
 
 import icepick.State;
+import io.realm.Realm;
 import io.realm.RealmChangeListener;
 
 public class DataSetListFragment extends BindingBaseFragment<DataSetListViewModel, DataSetListBinding>
@@ -42,10 +43,12 @@ public class DataSetListFragment extends BindingBaseFragment<DataSetListViewMode
         DataSetListViewModel.Callback,
         RealmChangeListener<ProjectModel> {
 
+    private static final int REQUEST_CODE_EDITOR = 99;
+
     @State
     int bottomSheetState = BottomSheetBehavior.STATE_COLLAPSED;
 
-    private DataBaseManager dataBaseManager;
+    private Realm realm;
     private ProjectModel projectModel;
 
     @Override
@@ -127,8 +130,8 @@ public class DataSetListFragment extends BindingBaseFragment<DataSetListViewMode
     public void onStart() {
         super.onStart();
 
-        dataBaseManager = new DataBaseManager();
-        projectModel = dataBaseManager.findObject(ProjectModel.class, Utils.getLong(getCompatActivity()));
+        realm = Realm.getDefaultInstance();
+        projectModel = ProjectModel.find(realm, Utils.getLong(getActivity()));
         projectModel.addChangeListener(this);
         onChange(projectModel);
     }
@@ -138,7 +141,7 @@ public class DataSetListFragment extends BindingBaseFragment<DataSetListViewMode
         super.onStop();
 
         projectModel.removeChangeListener(this);
-        dataBaseManager.closeRealm();
+        realm.close();
     }
 
     @Override
@@ -162,30 +165,24 @@ public class DataSetListFragment extends BindingBaseFragment<DataSetListViewMode
                 .title(getString(R.string.action_select_data_type))
                 .items(types)
                 .itemsCallback((dialog, itemView, which, text) ->
-                        getViewModel().choiceDataSetType(which))
+                        getViewModel().createDataSet(which))
                 .show();
     }
 
     @Override
     public void onOpenFunctionDataSet(long dataSetId) {
-        openEditWindow(dataSetId, DataSetEditFunctionFragment.class);
+        Intent intent = new Intent(getContext(), EditActivity.class);
+        Utils.putLong(intent, dataSetId);
+        Utils.putSerializable(intent, BaseDataSetEditorFragment.class);
+        startActivityForResult(intent, REQUEST_CODE_EDITOR);
     }
 
     @Override
     public void onOpenTableDataSet(long dataSetId) {
-        openEditWindow(dataSetId, DataSetEditTableFragment.class);
-    }
-
-    private void openEditWindow(long dataSetId, Class<? extends BaseDataSetEditFragment> clazz) {
         Intent intent = new Intent(getContext(), EditActivity.class);
-        if (dataSetId == -1) {
-            Utils.putBoolean(intent, true);
-            Utils.putLong(intent, Utils.getLong(getCompatActivity()));
-        } else {
-            Utils.putLong(intent, dataSetId);
-        }
-        Utils.putSerializable(intent, clazz);
-        startActivity(intent);
+        Utils.putLong(intent, dataSetId);
+        Utils.putSerializable(intent, BaseDataSetEditorFragment.class);
+        startActivityForResult(intent, REQUEST_CODE_EDITOR);
     }
 
     @Override
@@ -198,6 +195,17 @@ public class DataSetListFragment extends BindingBaseFragment<DataSetListViewMode
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(getContext(),
                     shown ? R.color.colorPrimaryDarkGraph : R.color.colorPrimaryDark));
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_CODE_EDITOR) {
+            if (resultCode == Activity.RESULT_OK) {
+
+            }
         }
     }
 

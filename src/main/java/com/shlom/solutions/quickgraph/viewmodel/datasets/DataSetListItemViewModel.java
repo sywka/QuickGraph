@@ -3,9 +3,9 @@ package com.shlom.solutions.quickgraph.viewmodel.datasets;
 import android.content.Context;
 import android.view.View;
 
-import com.shlom.solutions.quickgraph.model.database.DataBaseManager;
-import com.shlom.solutions.quickgraph.model.database.model.DataSetModel;
-import com.shlom.solutions.quickgraph.model.database.model.ProjectModel;
+import com.shlom.solutions.quickgraph.model.database.RealmHelper;
+import com.shlom.solutions.quickgraph.model.database.dbmodel.DataSetModel;
+import com.shlom.solutions.quickgraph.model.database.dbmodel.ProjectModel;
 import com.shlom.solutions.quickgraph.viewmodel.ContextViewModel;
 import com.shlom.solutions.quickgraph.viewmodel.ICheckableListItemViewModel;
 import com.shlom.solutions.quickgraph.viewmodel.OnClickListener;
@@ -53,7 +53,7 @@ public class DataSetListItemViewModel extends ContextViewModel
 
     @Override
     public void setChecked(boolean checked) {
-        DataBaseManager.executeTrans(realm -> {
+        RealmHelper.executeTrans(realm -> {
             dataSetModel.setChecked(checked);
             projectModel.setDate(new Date());
         });

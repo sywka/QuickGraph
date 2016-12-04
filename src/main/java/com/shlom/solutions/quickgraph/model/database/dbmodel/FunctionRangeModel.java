@@ -1,7 +1,8 @@
-package com.shlom.solutions.quickgraph.model.database.model;
+package com.shlom.solutions.quickgraph.model.database.dbmodel;
 
-import com.shlom.solutions.quickgraph.model.database.ObjectWithUID;
 import com.shlom.solutions.quickgraph.etc.LogUtil;
+import com.shlom.solutions.quickgraph.model.database.interfaces.DBModel;
+import com.shlom.solutions.quickgraph.model.database.PrimaryKeyFactory;
 
 import java.io.Serializable;
 
@@ -9,7 +10,8 @@ import io.realm.Realm;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 
-public class FunctionRangeModel extends RealmObject implements ObjectWithUID, Serializable, Cloneable {
+public class FunctionRangeModel extends RealmObject
+        implements DBModel<FunctionRangeModel>, Serializable, Cloneable {
 
     @PrimaryKey
     private long uid;
@@ -27,6 +29,26 @@ public class FunctionRangeModel extends RealmObject implements ObjectWithUID, Se
 
     public FunctionRangeModel copyToRealmOrUpdate(Realm realm) {
         return realm.copyToRealmOrUpdate(this);
+    }
+
+    @Override
+    public void deleteCascade() {
+        deleteFromRealm();
+    }
+
+    @Override
+    public void deleteDependents() {
+    }
+
+    @Override
+    public FunctionRangeModel updateUIDCascade() {
+        uid = PrimaryKeyFactory.getInstance().nextKey(FunctionRangeModel.class);
+        return this;
+    }
+
+    @Override
+    public FunctionRangeModel initDefault() {
+        return this;
     }
 
     @Override

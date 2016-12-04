@@ -5,6 +5,8 @@ import android.content.Context;
 import android.support.multidex.MultiDex;
 
 import com.shlom.solutions.quickgraph.etc.Config;
+import com.shlom.solutions.quickgraph.model.database.PrimaryKeyFactory;
+import com.shlom.solutions.quickgraph.model.database.RealmHelper;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
@@ -21,6 +23,8 @@ public class App extends Application {
                 .deleteRealmIfMigrationNeeded()
 //                .migration(new DataBaseMigration())
                 .build());
+
+        RealmHelper.execute(PrimaryKeyFactory.getInstance()::init);
     }
 
     @Override

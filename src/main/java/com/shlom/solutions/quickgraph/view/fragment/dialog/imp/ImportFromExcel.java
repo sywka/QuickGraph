@@ -5,7 +5,7 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 
 import com.shlom.solutions.quickgraph.R;
-import com.shlom.solutions.quickgraph.model.database.model.CoordinateModel;
+import com.shlom.solutions.quickgraph.model.database.dbmodel.CoordinateModel;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;

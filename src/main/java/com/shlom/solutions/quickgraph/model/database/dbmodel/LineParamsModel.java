@@ -1,9 +1,10 @@
-package com.shlom.solutions.quickgraph.model.database.model;
+package com.shlom.solutions.quickgraph.model.database.dbmodel;
 
 import android.graphics.Color;
 import android.support.annotation.ColorInt;
 
-import com.shlom.solutions.quickgraph.model.database.ObjectWithUID;
+import com.shlom.solutions.quickgraph.model.database.interfaces.DBModel;
+import com.shlom.solutions.quickgraph.model.database.PrimaryKeyFactory;
 
 import java.io.Serializable;
 
@@ -11,7 +12,8 @@ import io.realm.Realm;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 
-public class LineParamsModel extends RealmObject implements ObjectWithUID, Serializable {
+public class LineParamsModel extends RealmObject
+        implements DBModel<LineParamsModel>, Serializable {
 
     public static final float MIN_LINE_WIDTH = 0.1f;
     public static final float MAX_LINE_WIDTH = 5f;
@@ -26,9 +28,6 @@ public class LineParamsModel extends RealmObject implements ObjectWithUID, Seria
     private float width;
 
     public LineParamsModel() {
-        draw = true;
-        color = Color.GRAY;
-        width = 0.5f;
     }
 
     public LineParamsModel copyToRealm(Realm realm) {
@@ -37,6 +36,29 @@ public class LineParamsModel extends RealmObject implements ObjectWithUID, Seria
 
     public LineParamsModel copyToRealmOrUpdate(Realm realm) {
         return realm.copyToRealmOrUpdate(this);
+    }
+
+    @Override
+    public void deleteCascade() {
+        deleteFromRealm();
+    }
+
+    @Override
+    public void deleteDependents() {
+    }
+
+    @Override
+    public LineParamsModel updateUIDCascade() {
+        uid = PrimaryKeyFactory.getInstance().nextKey(LineParamsModel.class);
+        return this;
+    }
+
+    @Override
+    public LineParamsModel initDefault() {
+        draw = true;
+        color = Color.GRAY;
+        width = 0.5f;
+        return this;
     }
 
     // generated getters and setters

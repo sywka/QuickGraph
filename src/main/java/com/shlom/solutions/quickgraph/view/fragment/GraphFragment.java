@@ -26,14 +26,14 @@ import com.shlom.solutions.quickgraph.model.asynctask.GraphDataPreparer;
 import com.shlom.solutions.quickgraph.model.asynctask.PreviewCacheCreator;
 import com.shlom.solutions.quickgraph.model.asynctask.ProgressAsyncTaskLoader;
 import com.shlom.solutions.quickgraph.model.asynctask.ProgressParams;
-import com.shlom.solutions.quickgraph.model.database.DataBaseManager;
-import com.shlom.solutions.quickgraph.model.database.model.ProjectModel;
+import com.shlom.solutions.quickgraph.model.database.dbmodel.ProjectModel;
 import com.shlom.solutions.quickgraph.view.fragment.dialog.ColorPickerDialogFragment;
 import com.shlom.solutions.quickgraph.view.fragment.dialog.ExportPNGDialogFragment;
 import com.shlom.solutions.quickgraph.view.ui.ValueMarker;
 import com.shlom.solutions.quickgraph.viewmodel.graph.GraphMenuViewModel;
 import com.shlom.solutions.quickgraph.viewmodel.graph.GraphViewModel;
 
+import io.realm.Realm;
 import io.realm.RealmChangeListener;
 
 public class GraphFragment extends BindingBaseFragment<GraphViewModel, GraphBinding> implements
@@ -53,7 +53,7 @@ public class GraphFragment extends BindingBaseFragment<GraphViewModel, GraphBind
     private static final int LOADER_ID_DATA_PREPARER = 300;
     private static final int LOADER_ID_CACHE_CREATOR = 301;
 
-    private DataBaseManager dataBaseManager;
+    private Realm realm;
     private ProjectModel projectModel;
     private GraphDataPreparer graphDataPreparer;
 
@@ -97,9 +97,8 @@ public class GraphFragment extends BindingBaseFragment<GraphViewModel, GraphBind
                 .initLoader(LOADER_ID_DATA_PREPARER, Bundle.EMPTY, this);
         GraphDataPreparer.registerOnProgressListener(LOADER_ID_DATA_PREPARER, this);
 
-        dataBaseManager = new DataBaseManager();
-        projectModel = dataBaseManager.findObject(ProjectModel.class,
-                Utils.getLong(getCompatActivity()));
+        realm = Realm.getDefaultInstance();
+        projectModel = ProjectModel.find(realm, Utils.getLong(getActivity()));
         projectModel.addChangeListener(this);
         onChange(projectModel);
     }
@@ -111,7 +110,7 @@ public class GraphFragment extends BindingBaseFragment<GraphViewModel, GraphBind
         GraphDataPreparer.unregisterOnProgressListener(LOADER_ID_DATA_PREPARER);
 
         projectModel.removeChangeListener(this);
-        dataBaseManager.closeRealm();
+        realm.close();
     }
 
     @Override
@@ -132,7 +131,7 @@ public class GraphFragment extends BindingBaseFragment<GraphViewModel, GraphBind
 
     @Override
     public Loader onCreateLoader(int id, Bundle args) {
-        long projectId = Utils.getLong(getCompatActivity());
+        long projectId = Utils.getLong(getActivity());
         switch (id) {
             case LOADER_ID_DATA_PREPARER:
                 return new GraphDataPreparer(getContext(), projectId);
@@ -212,7 +211,7 @@ public class GraphFragment extends BindingBaseFragment<GraphViewModel, GraphBind
         menu.findItem(R.id.action_draw_y_axis_labels)
                 .setChecked(menuViewModel.isDrawYAxisLabels());
         menu.findItem(R.id.action_y_axis).getSubMenu()
-                .setGroupEnabled(R.id.group_draw_y_axis, menuViewModel.isDrawXAxis());
+                .setGroupEnabled(R.id.group_draw_y_axis, menuViewModel.isDrawYAxis());
 
         menu.findItem(R.id.action_draw_legend).setChecked(menuViewModel.isDrawLegend());
     }

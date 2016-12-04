@@ -4,12 +4,13 @@ import android.content.Context;
 import android.support.annotation.ColorInt;
 
 import com.shlom.solutions.quickgraph.R;
-import com.shlom.solutions.quickgraph.model.database.DataBaseManager;
-import com.shlom.solutions.quickgraph.model.database.RealmModelFactory;
-import com.shlom.solutions.quickgraph.model.database.model.DataSetModel;
-import com.shlom.solutions.quickgraph.model.database.model.FunctionRangeModel;
-import com.shlom.solutions.quickgraph.model.database.model.ProjectModel;
 import com.shlom.solutions.quickgraph.etc.Utils;
+import com.shlom.solutions.quickgraph.model.database.RealmHelper;
+import com.shlom.solutions.quickgraph.model.database.dbmodel.DataSetModel;
+import com.shlom.solutions.quickgraph.model.database.dbmodel.FunctionRangeModel;
+import com.shlom.solutions.quickgraph.model.database.dbmodel.ProjectModel;
+
+import io.realm.RealmList;
 
 public class DemoGenerator extends ProgressAsyncTaskLoader<ProgressParams, Void> {
 
@@ -26,14 +27,11 @@ public class DemoGenerator extends ProgressAsyncTaskLoader<ProgressParams, Void>
 
     @Override
     public Void loadInBackground() {
-        DataBaseManager dataBaseManager = new DataBaseManager();
-        dataBaseManager.getRealm().executeTransaction(realm -> {
+        RealmHelper.executeTrans(realm -> {
             String description = getContext().getString(R.string.project_generate_demo);
             ProgressParams progressParams = new ProgressParams(0, 10, description);
 
-            String name = getContext().getString(R.string.action_demo_project);
-            ProjectModel projectModel = RealmModelFactory.newProject(realm, name);
-
+            RealmList<DataSetModel> dataSetModels = new RealmList<>();
             int a = 1;
             @ColorInt int color = -20000;
             while (progressParams.getProgress() < progressParams.getTotal()) {
@@ -41,38 +39,43 @@ public class DemoGenerator extends ProgressAsyncTaskLoader<ProgressParams, Void>
                 color -= 1000000;
 
                 FunctionRangeModel functionRangeModel = new FunctionRangeModel()
-                        .setUid(dataBaseManager.generateUID(FunctionRangeModel.class))
+                        .initDefault()
                         .setFrom(-10f)
                         .setTo(10f)
-                        .setDelta(0.5f)
-                        .copyToRealm(realm);
+                        .setDelta(0.5f);
 
                 String function = a + " + x^2";
                 DataSetModel dataSetModel = new DataSetModel()
-                        .setUid(dataBaseManager.generateUID(DataSetModel.class))
+                        .initDefault()
                         .setPrimary(getContext().getString(R.string.data_set))
                         .setSecondary(function)
                         .setColor(color)
                         .setType(DataSetModel.Type.FROM_FUNCTION)
                         .setFunctionRange(functionRangeModel)
-                        .setCoordinates(Utils.generateCoordinates(dataBaseManager,
+                        .setCoordinates(Utils.generateCoordinates(
                                 function,
                                 functionRangeModel.getFrom(),
                                 functionRangeModel.getTo(),
-                                functionRangeModel.getDelta()))
-                        .copyToRealm(realm);
+                                functionRangeModel.getDelta()));
 
                 dataSetModel.setPrimary(dataSetModel.getPrimary() + " №" +
-                        (projectModel.getDataSets().size() + 1));
+                        (dataSetModels.size() + 1));
 
-                projectModel.addDataSet(0, dataSetModel);
+                dataSetModels.add(0, dataSetModel);
 
                 if (isLoadInBackgroundCanceled()) throw new RuntimeException("Canceled");
                 progressParams.increment();
                 publishProgress(progressParams);
             }
+
+            String name = getContext().getString(R.string.action_demo_project);
+            new ProjectModel()
+                    .initDefault()
+                    .setName(name)
+                    .setDataSets(dataSetModels)
+                    .updateUIDCascade()
+                    .insertToRealm(realm);
         });
-        dataBaseManager.closeRealm();
         return null;
     }
 }

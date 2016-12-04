@@ -16,7 +16,7 @@ import android.support.v7.app.AlertDialog;
 
 import com.annimon.stream.Stream;
 import com.shlom.solutions.quickgraph.R;
-import com.shlom.solutions.quickgraph.model.database.model.CoordinateModel;
+import com.shlom.solutions.quickgraph.model.database.dbmodel.CoordinateModel;
 
 import java.io.FileNotFoundException;
 import java.io.Serializable;

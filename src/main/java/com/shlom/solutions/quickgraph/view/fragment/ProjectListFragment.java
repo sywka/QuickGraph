@@ -18,14 +18,14 @@ import com.shlom.solutions.quickgraph.etc.Utils;
 import com.shlom.solutions.quickgraph.model.asynctask.DemoGenerator;
 import com.shlom.solutions.quickgraph.model.asynctask.ProgressAsyncTaskLoader;
 import com.shlom.solutions.quickgraph.model.asynctask.ProgressParams;
-import com.shlom.solutions.quickgraph.model.database.DataBaseManager;
-import com.shlom.solutions.quickgraph.model.database.model.ProjectModel;
+import com.shlom.solutions.quickgraph.model.database.dbmodel.ProjectModel;
 import com.shlom.solutions.quickgraph.view.activity.DataSetListActivity;
 import com.shlom.solutions.quickgraph.view.adapter.BindingRealmSimpleAdapter;
 import com.shlom.solutions.quickgraph.view.ui.MarginItemDecorator;
 import com.shlom.solutions.quickgraph.view.ui.ViewUtils;
 import com.shlom.solutions.quickgraph.viewmodel.projects.ProjectListViewModel;
 
+import io.realm.Realm;
 import io.realm.RealmChangeListener;
 import io.realm.RealmResults;
 
@@ -37,7 +37,7 @@ public class ProjectListFragment extends BindingBaseFragment<ProjectListViewMode
 
     private static final int LOADER_ID_GENERATE_DEMO = 100;
 
-    private DataBaseManager dataBaseManager;
+    private Realm realm;
     private RealmResults<ProjectModel> projectModels;
 
     private MaterialDialog progressDialog;
@@ -79,8 +79,8 @@ public class ProjectListFragment extends BindingBaseFragment<ProjectListViewMode
         getLoaderManager().initLoader(LOADER_ID_GENERATE_DEMO, Bundle.EMPTY, this);
         DemoGenerator.registerOnProgressListener(LOADER_ID_GENERATE_DEMO, this);
 
-        dataBaseManager = new DataBaseManager();
-        projectModels = dataBaseManager.getProjects();
+        realm = Realm.getDefaultInstance();
+        projectModels = ProjectModel.getAll(realm);
         projectModels.addChangeListener(this);
         onChange(projectModels);
     }
@@ -93,7 +93,7 @@ public class ProjectListFragment extends BindingBaseFragment<ProjectListViewMode
         DemoGenerator.unregisterOnProgressListener(LOADER_ID_GENERATE_DEMO);
 
         projectModels.removeChangeListener(this);
-        dataBaseManager.closeRealm();
+        realm.close();
     }
 
     @Override
@@ -134,7 +134,7 @@ public class ProjectListFragment extends BindingBaseFragment<ProjectListViewMode
     }
 
     @Override
-    public void onPrepareOptionsMenu(Menu menu) {       // TODO: 02.12.2016
+    public void onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
 
         menu.findItem(R.id.action_clear_all).setEnabled(getViewModel()

@@ -1,6 +1,7 @@
-package com.shlom.solutions.quickgraph.model.database.model;
+package com.shlom.solutions.quickgraph.model.database.dbmodel;
 
-import com.shlom.solutions.quickgraph.model.database.ObjectWithUID;
+import com.shlom.solutions.quickgraph.model.database.interfaces.DBModel;
+import com.shlom.solutions.quickgraph.model.database.PrimaryKeyFactory;
 
 import java.io.Serializable;
 
@@ -9,7 +10,8 @@ import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 import io.realm.annotations.Required;
 
-public class AxisParamsModel extends RealmObject implements ObjectWithUID, Serializable {
+public class AxisParamsModel extends RealmObject
+        implements DBModel<AxisParamsModel>, Serializable {
 
     @PrimaryKey
     private long uid;
@@ -24,8 +26,6 @@ public class AxisParamsModel extends RealmObject implements ObjectWithUID, Seria
     private LineParamsModel gridLineParams;
 
     public AxisParamsModel() {
-        title = "undefined";
-        drawLabels = true;
     }
 
     public AxisParamsModel copyToRealm(Realm realm) {
@@ -36,13 +36,37 @@ public class AxisParamsModel extends RealmObject implements ObjectWithUID, Seria
         return realm.copyToRealmOrUpdate(this);
     }
 
-    public void deleteDependentsFromRealm() {
+    @Override
+    public void deleteCascade() {
+        deleteDependents();
+        deleteFromRealm();
+    }
+
+    @Override
+    public void deleteDependents() {
         if (lineParams != null) {
-            lineParams.deleteFromRealm();
+            lineParams.deleteCascade();
         }
         if (gridLineParams != null) {
-            gridLineParams.deleteFromRealm();
+            gridLineParams.deleteCascade();
         }
+    }
+
+    @Override
+    public AxisParamsModel updateUIDCascade() {
+        uid = PrimaryKeyFactory.getInstance().nextKey(AxisParamsModel.class);
+        lineParams.updateUIDCascade();
+        gridLineParams.updateUIDCascade();
+        return this;
+    }
+
+    @Override
+    public AxisParamsModel initDefault() {
+        title = "undefined";
+        drawLabels = true;
+        lineParams = new LineParamsModel().initDefault();
+        gridLineParams = new LineParamsModel().initDefault();
+        return this;
     }
 
     // generated getters and setters

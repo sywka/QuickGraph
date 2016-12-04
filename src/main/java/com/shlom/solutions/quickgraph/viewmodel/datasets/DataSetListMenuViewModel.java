@@ -4,18 +4,15 @@ import android.content.Context;
 
 import com.annimon.stream.Stream;
 import com.shlom.solutions.quickgraph.R;
-import com.shlom.solutions.quickgraph.model.database.DataBaseManager;
-import com.shlom.solutions.quickgraph.model.database.model.DataSetModel;
-import com.shlom.solutions.quickgraph.model.database.model.ProjectModel;
+import com.shlom.solutions.quickgraph.model.database.RealmHelper;
+import com.shlom.solutions.quickgraph.model.database.dbmodel.DataSetModel;
+import com.shlom.solutions.quickgraph.model.database.dbmodel.ProjectModel;
 import com.shlom.solutions.quickgraph.view.Binding;
 import com.shlom.solutions.quickgraph.viewmodel.ContextViewModel;
-import com.shlom.solutions.quickgraph.viewmodel.ManagedViewModel;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import io.realm.RealmChangeListener;
 
 public class DataSetListMenuViewModel extends ContextViewModel {
 
@@ -38,7 +35,7 @@ public class DataSetListMenuViewModel extends ContextViewModel {
     }
 
     public void checkedAll() {
-        DataBaseManager.executeTrans(realm -> {
+        RealmHelper.executeTrans(realm -> {
             Stream.of(projectModel.getDataSets())
                     .forEach(dataSetModel -> dataSetModel.setChecked(true));
             projectModel.setDate(new Date());
@@ -46,7 +43,7 @@ public class DataSetListMenuViewModel extends ContextViewModel {
     }
 
     public void uncheckedAll() {
-        DataBaseManager.executeTrans(realm -> {
+        RealmHelper.executeTrans(realm -> {
             Stream.of(projectModel.getDataSets())
                     .forEach(dataSetModel -> dataSetModel.setChecked(false));
             projectModel.setDate(new Date());
@@ -63,13 +60,12 @@ public class DataSetListMenuViewModel extends ContextViewModel {
         executor.execute(
                 getContext().getString(R.string.data_set_remove_count,
                         String.valueOf(projectModel.getDataSets().size())),
-                () -> DataBaseManager.executeTrans(realm -> {
+                () -> RealmHelper.executeTrans(realm -> {
                     cached.addAll(realm.copyFromRealm(projectModel.getDataSets()));
-                    Stream.of(projectModel.getDataSets())
-                            .forEach(DataSetModel::deleteDependentsFromRealm);
+                    Stream.of(projectModel.getDataSets()).forEach(DataSetModel::deleteDependents);
                     projectModel.getDataSets().deleteAllFromRealm();
                 }),
-                () -> DataBaseManager.executeTrans(realm ->
+                () -> RealmHelper.executeTrans(realm ->
                         projectModel.getDataSets().addAll(cached))
         );
     }

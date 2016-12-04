@@ -1,9 +1,10 @@
-package com.shlom.solutions.quickgraph.model.database.model;
+package com.shlom.solutions.quickgraph.model.database.dbmodel;
 
 import android.graphics.Color;
 import android.support.annotation.ColorInt;
 
-import com.shlom.solutions.quickgraph.model.database.ObjectWithUID;
+import com.shlom.solutions.quickgraph.model.database.interfaces.DBModel;
+import com.shlom.solutions.quickgraph.model.database.PrimaryKeyFactory;
 
 import java.io.Serializable;
 
@@ -11,7 +12,8 @@ import io.realm.Realm;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 
-public class GraphParamsModel extends RealmObject implements ObjectWithUID, Serializable {
+public class GraphParamsModel extends RealmObject
+        implements DBModel<GraphParamsModel>, Serializable {
 
     @PrimaryKey
     private long uid;
@@ -25,8 +27,6 @@ public class GraphParamsModel extends RealmObject implements ObjectWithUID, Seri
     private AxisParamsModel axisYParams;
 
     public GraphParamsModel() {
-        drawLegend = true;
-        colorBackground = Color.WHITE;
     }
 
     public GraphParamsModel copyToRealm(Realm realm) {
@@ -37,15 +37,39 @@ public class GraphParamsModel extends RealmObject implements ObjectWithUID, Seri
         return realm.copyToRealmOrUpdate(this);
     }
 
-    public void deleteDependentsFromRealm() {
+    @Override
+    public void deleteCascade() {
+        deleteDependents();
+        deleteFromRealm();
+    }
+
+    @Override
+    public void deleteDependents() {
         if (axisXParams != null) {
-            axisXParams.deleteDependentsFromRealm();
-            axisXParams.deleteFromRealm();
+            axisXParams.deleteCascade();
         }
         if (axisYParams != null) {
-            axisYParams.deleteDependentsFromRealm();
-            axisYParams.deleteFromRealm();
+            axisYParams.deleteCascade();
         }
+    }
+
+    @Override
+    public GraphParamsModel updateUIDCascade() {
+        uid = PrimaryKeyFactory.getInstance().nextKey(GraphParamsModel.class);
+        axisXParams.updateUIDCascade();
+        axisYParams.updateUIDCascade();
+        return this;
+    }
+
+    @Override
+    public GraphParamsModel initDefault() {
+        drawLegend = true;
+        colorBackground = Color.WHITE;
+        axisXParams = new AxisParamsModel().initDefault();
+        axisXParams.setTitle("X");
+        axisYParams = new AxisParamsModel().initDefault();
+        axisYParams.setTitle("Y");
+        return this;
     }
 
     // generated getters and setters

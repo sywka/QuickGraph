@@ -1,10 +1,8 @@
-package com.shlom.solutions.quickgraph.model.database.model;
+package com.shlom.solutions.quickgraph.model.database.dbmodel;
 
-import android.content.Context;
-
-import com.shlom.solutions.quickgraph.model.database.ObjectWithUID;
-import com.shlom.solutions.quickgraph.etc.FileCacheHelper;
-import com.shlom.solutions.quickgraph.etc.LogUtil;
+import com.annimon.stream.Stream;
+import com.shlom.solutions.quickgraph.model.database.interfaces.DBModel;
+import com.shlom.solutions.quickgraph.model.database.PrimaryKeyFactory;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -12,29 +10,43 @@ import java.util.Date;
 import io.realm.Realm;
 import io.realm.RealmList;
 import io.realm.RealmObject;
+import io.realm.RealmResults;
+import io.realm.Sort;
 import io.realm.annotations.PrimaryKey;
 import io.realm.annotations.Required;
 
-public class ProjectModel extends RealmObject implements ObjectWithUID, Serializable {
+public class ProjectModel extends RealmObject
+        implements DBModel<ProjectModel>, Serializable {
 
     @PrimaryKey
     private long uid;
 
     @Required
-    private String name;
-    @Required
     private Date date;
-
+    @Required
+    private String name;
     private String previewFileName;
 
     private GraphParamsModel params;
-
     private RealmList<DataSetModel> dataSets;
 
     public ProjectModel() {
-        name = "Project";
-        date = new Date();
-        dataSets = new RealmList<>();
+    }
+
+    public static RealmResults<ProjectModel> getAll(Realm realm) {
+        return realm.where(ProjectModel.class).findAllSorted("date", Sort.DESCENDING);
+    }
+
+    public static ProjectModel find(Realm realm, long uid) {
+        return realm.where(ProjectModel.class).equalTo("uid", uid).findFirst();
+    }
+
+    public void insertToRealm(Realm realm) {
+        realm.insert(this);
+    }
+
+    public void insertToRealmOrUpdate(Realm realm) {
+        realm.insertOrUpdate(this);
     }
 
     public ProjectModel copyToRealm(Realm realm) {
@@ -45,20 +57,38 @@ public class ProjectModel extends RealmObject implements ObjectWithUID, Serializ
         return realm.copyToRealmOrUpdate(this);
     }
 
-    public void deleteDependentsFromRealm(Context context) {
+    @Override
+    public void deleteCascade() {
+        deleteDependents();
+        deleteFromRealm();
+    }
+
+    @Override
+    public void deleteDependents() {
         if (params != null) {
-            params.deleteDependentsFromRealm();
-            params.deleteFromRealm();
+            params.deleteCascade();
         }
         if (dataSets != null) {
-            for (DataSetModel dataSetModel : dataSets) {
-                dataSetModel.deleteDependentsFromRealm();
-            }
+            Stream.of(dataSets).forEach(DataSetModel::deleteDependents);
             dataSets.deleteAllFromRealm();
         }
-        if (previewFileName != null) {
-            LogUtil.d(FileCacheHelper.getImageCache(context, previewFileName).delete());
-        }
+    }
+
+    @Override
+    public ProjectModel updateUIDCascade() {
+        uid = PrimaryKeyFactory.getInstance().nextKey(ProjectModel.class);
+        params.updateUIDCascade();
+        Stream.of(dataSets).forEach(DataSetModel::updateUIDCascade);
+        return this;
+    }
+
+    @Override
+    public ProjectModel initDefault() {
+        name = "Project";
+        date = new Date();
+        dataSets = new RealmList<>();
+        params = new GraphParamsModel().initDefault();
+        return this;
     }
 
     public ProjectModel addDataSet(int position, DataSetModel dataSet) {

@@ -3,7 +3,7 @@ package com.shlom.solutions.quickgraph.view.fragment.dialog.imp;
 import android.content.Context;
 import android.net.Uri;
 
-import com.shlom.solutions.quickgraph.model.database.model.CoordinateModel;
+import com.shlom.solutions.quickgraph.model.database.dbmodel.CoordinateModel;
 import com.shlom.solutions.quickgraph.etc.LogUtil;
 
 import java.io.IOException;

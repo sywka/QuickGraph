@@ -1,5 +1,6 @@
 package com.shlom.solutions.quickgraph.view.fragment;
 
+import android.databinding.BaseObservable;
 import android.databinding.DataBindingUtil;
 import android.databinding.Observable;
 import android.databinding.ViewDataBinding;
@@ -10,11 +11,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.shlom.solutions.quickgraph.viewmodel.ManagedViewModel;
+import com.shlom.solutions.quickgraph.viewmodel.WithMenuViewModel;
 
 import icepick.Icepick;
 
-public abstract class BindingBaseFragment<ViewModel extends ManagedViewModel,
+public abstract class BindingBaseFragment<ViewModel extends BaseObservable & WithMenuViewModel,
         Binding extends ViewDataBinding>
         extends BaseFragment {
 
@@ -72,7 +73,6 @@ public abstract class BindingBaseFragment<ViewModel extends ManagedViewModel,
             if (viewModel.getMenuViewModel() != null) {
                 viewModel.getMenuViewModel().addOnPropertyChangedCallback(onPropertyChangedCallback);
             }
-            viewModel.onStart();
         }
     }
 
@@ -81,7 +81,6 @@ public abstract class BindingBaseFragment<ViewModel extends ManagedViewModel,
         super.onStop();
 
         if (viewModel != null) {
-            viewModel.onStop();
             viewModel.removeOnPropertyChangedCallback(onPropertyChangedCallback);
             if (viewModel.getMenuViewModel() != null) {
                 viewModel.getMenuViewModel().removeOnPropertyChangedCallback(onPropertyChangedCallback);

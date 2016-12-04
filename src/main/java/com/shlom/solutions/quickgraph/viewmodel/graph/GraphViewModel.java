@@ -7,11 +7,13 @@ import android.databinding.BindingAdapter;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.AxisBase;
 import com.shlom.solutions.quickgraph.BR;
-import com.shlom.solutions.quickgraph.model.database.model.AxisParamsModel;
-import com.shlom.solutions.quickgraph.model.database.model.ProjectModel;
-import com.shlom.solutions.quickgraph.viewmodel.ManagedViewModel;
+import com.shlom.solutions.quickgraph.model.database.dbmodel.AxisParamsModel;
+import com.shlom.solutions.quickgraph.model.database.dbmodel.ProjectModel;
+import com.shlom.solutions.quickgraph.viewmodel.ContextViewModel;
+import com.shlom.solutions.quickgraph.viewmodel.WithMenuViewModel;
 
-public class GraphViewModel extends ManagedViewModel {
+public class GraphViewModel extends ContextViewModel
+        implements WithMenuViewModel<GraphMenuViewModel> {
 
     private ProjectModel projectModel;
     private boolean isProgress;
