@@ -40,7 +40,7 @@ public class ProjectListItemViewModel extends ContextViewModel
 
     @Override
     public void setPrimaryText(String primaryText) {
-        RealmHelper.executeTrans(realm -> {
+        RealmHelper.executeTransaction(realm -> {
             projectModel.setName(primaryText);
             notifyPropertyChanged(BR.primaryText);
         });

@@ -2,6 +2,7 @@ package com.shlom.solutions.quickgraph.viewmodel.datasets;
 
 import android.content.Context;
 
+import com.annimon.stream.Collectors;
 import com.annimon.stream.Stream;
 import com.shlom.solutions.quickgraph.R;
 import com.shlom.solutions.quickgraph.model.database.RealmHelper;
@@ -35,7 +36,7 @@ public class DataSetListMenuViewModel extends ContextViewModel {
     }
 
     public void checkedAll() {
-        RealmHelper.executeTrans(realm -> {
+        RealmHelper.executeTransaction(realm -> {
             Stream.of(projectModel.getDataSets())
                     .forEach(dataSetModel -> dataSetModel.setChecked(true));
             projectModel.setDate(new Date());
@@ -43,7 +44,7 @@ public class DataSetListMenuViewModel extends ContextViewModel {
     }
 
     public void uncheckedAll() {
-        RealmHelper.executeTrans(realm -> {
+        RealmHelper.executeTransaction(realm -> {
             Stream.of(projectModel.getDataSets())
                     .forEach(dataSetModel -> dataSetModel.setChecked(false));
             projectModel.setDate(new Date());
@@ -56,17 +57,28 @@ public class DataSetListMenuViewModel extends ContextViewModel {
     }
 
     public void removeAll(Binding.RemoveExecutor executor) {
-        List<DataSetModel> cached = new ArrayList<>();
+        List<Long> listUID = new ArrayList<>();
         executor.execute(
                 getContext().getString(R.string.data_set_remove_count,
                         String.valueOf(projectModel.getDataSets().size())),
-                () -> RealmHelper.executeTrans(realm -> {
-                    cached.addAll(realm.copyFromRealm(projectModel.getDataSets()));
-                    Stream.of(projectModel.getDataSets()).forEach(DataSetModel::deleteDependents);
-                    projectModel.getDataSets().deleteAllFromRealm();
+                () -> RealmHelper.executeTransaction(realm -> {
+                    listUID.addAll(
+                            Stream.of(projectModel.getDataSets())
+                                    .map(DataSetModel::getUid)
+                                    .collect(Collectors.toList())
+                    );
+                    projectModel.getDataSets().clear();
                 }),
-                () -> RealmHelper.executeTrans(realm ->
-                        projectModel.getDataSets().addAll(cached))
+                () -> RealmHelper.executeTransaction(realm ->
+                        Stream.of(listUID)
+                                .forEach(aLong -> DataSetModel.find(realm, aLong).deleteCascade())
+                ),
+                () -> RealmHelper.executeTransaction(realm ->
+                        Stream.of(listUID)
+                                .forEach(aLong ->
+                                        projectModel.addDataSet(DataSetModel.find(realm, aLong))
+                                )
+                )
         );
     }
 }

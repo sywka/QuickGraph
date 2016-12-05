@@ -204,7 +204,7 @@ public class DataSetListFragment extends BindingBaseFragment<DataSetListViewMode
 
         if (requestCode == REQUEST_CODE_EDITOR) {
             if (resultCode == Activity.RESULT_OK) {
-
+                LogUtil.d();
             }
         }
     }
@@ -248,9 +248,10 @@ public class DataSetListFragment extends BindingBaseFragment<DataSetListViewMode
                 getViewModel().getMenuViewModel().uncheckedAll();
                 return true;
             case R.id.action_clear_all:
-                getViewModel().getMenuViewModel().removeAll((message, remove, rollback) -> {
+                getViewModel().getMenuViewModel().removeAll((message, remove, commit, rollback) -> {
                     remove.run();
-                    ViewUtils.getUndoSnackbar(getBinding().recyclerView, message, rollback).show();
+                    ViewUtils.getUndoSnackbar(getBinding().recyclerView, message, rollback, commit)
+                            .show();
                 });
                 return true;
         }

@@ -2,6 +2,7 @@ package com.shlom.solutions.quickgraph.viewmodel.projects;
 
 import android.content.Context;
 import android.databinding.Bindable;
+import android.databinding.ObservableInt;
 import android.view.View;
 
 import com.annimon.stream.Stream;
@@ -11,19 +12,18 @@ import com.shlom.solutions.quickgraph.etc.FileCacheHelper;
 import com.shlom.solutions.quickgraph.etc.LogUtil;
 import com.shlom.solutions.quickgraph.model.database.RealmHelper;
 import com.shlom.solutions.quickgraph.model.database.dbmodel.ProjectModel;
+import com.shlom.solutions.quickgraph.model.database.dbmodel.UserModel;
 import com.shlom.solutions.quickgraph.view.Binding;
 import com.shlom.solutions.quickgraph.viewmodel.ContextViewModel;
 import com.shlom.solutions.quickgraph.viewmodel.WithMenuViewModel;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 import io.realm.RealmResults;
 
 public class ProjectListViewModel extends ContextViewModel
         implements WithMenuViewModel<ProjectListMenuViewModel> {
 
-    private RealmResults<ProjectModel> projectModels;
+    private UserModel userModel;
+    private RealmResults<ProjectModel> orderedProjects;
     private Callback callback;
 
     private ProjectListMenuViewModel menuViewModel;
@@ -36,21 +36,22 @@ public class ProjectListViewModel extends ContextViewModel
 
     public Binding.RV.RemoveItemHandler getRemoveHandler() {
         return (removeExecutor, uid) -> {
-            Map<Integer, ProjectModel> cached = new LinkedHashMap<>();
+            ObservableInt position = new ObservableInt();
             removeExecutor.execute(
                     getContext().getString(R.string.project_remove, findById(uid).getName()),
-                    () -> RealmHelper.executeTrans(realm -> {
+                    () -> RealmHelper.executeTransaction(realm -> {
                         ProjectModel item = findById(uid);
-                        int position = projectModels.indexOf(item);
-                        cached.put(position, realm.copyFromRealm(item));
+                        position.set(userModel.getProjects().indexOf(item));
+                        userModel.getProjects().remove(item);
+                    }),
+                    () -> RealmHelper.executeTransaction(realm -> {
+                        ProjectModel item = ProjectModel.find(realm, uid);
                         LogUtil.d(FileCacheHelper.getImageCache(getContext(),
                                 item.getPreviewFileName()).delete());
-                        item.deleteDependents();
-                        projectModels.deleteFromRealm(position);
+                        item.deleteCascade();
                     }),
-                    () -> RealmHelper.executeTrans(realm ->
-                            Stream.of(cached)
-                                    .forEach(entry -> realm.copyToRealm(entry.getValue()))
+                    () -> RealmHelper.executeTransaction(realm ->
+                            userModel.addProject(position.get(), ProjectModel.find(realm, uid))
                     )
             );
         };
@@ -62,30 +63,32 @@ public class ProjectListViewModel extends ContextViewModel
 
     public ProjectListItemViewModel getItemViewModel(int position) {
         ProjectListItemViewModel itemViewModel =
-                new ProjectListItemViewModel(getContext(), projectModels.get(position));
+                new ProjectListItemViewModel(getContext(), orderedProjects.get(position));
 
         itemViewModel.setOnItemClickListener(obj -> callback.onOpenProject(obj.getUid()));
         return itemViewModel;
     }
 
     public void createProject(String name) {
-        RealmHelper.executeTrans(realm ->
-                new ProjectModel()
-                        .initDefault()
-                        .setName(name)
-                        .updateUIDCascade()
-                        .insertToRealm(realm)
+        RealmHelper.executeTransaction(realm ->
+                userModel.addProject(
+                        new ProjectModel()
+                                .initDefault()
+                                .setName(name)
+                                .updateUIDCascade()
+                )
         );
     }
 
     @Bindable
     public RealmResults<ProjectModel> getProjects() {
-        return projectModels;
+        return orderedProjects;
     }
 
-    public void setProjects(RealmResults<ProjectModel> projectModels) {
-        this.projectModels = projectModels;
-        menuViewModel.setProject(projectModels);
+    public void setUser(UserModel userModel) {
+        this.userModel = userModel;
+        this.orderedProjects = userModel.getOrderedProjects();
+        menuViewModel.setUser(userModel);
         notifyPropertyChanged(BR.projects);
     }
 
@@ -95,7 +98,7 @@ public class ProjectListViewModel extends ContextViewModel
     }
 
     private ProjectModel findById(long uid) {
-        return Stream.of(projectModels)
+        return Stream.of(userModel.getProjects())
                 .filter(value -> value.getUid() == uid)
                 .findFirst()
                 .get();

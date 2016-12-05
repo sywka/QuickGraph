@@ -66,7 +66,7 @@ public abstract class Binding {
     }
 
     public interface RemoveExecutor {
-        void execute(String message, Runnable remove, Runnable rollback);
+        void execute(String message, Runnable remove, Runnable commit, Runnable rollback);
     }
 
     public static class RV {
@@ -94,9 +94,10 @@ public abstract class Binding {
                     @Override
                     public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
                         int position = viewHolder.getAdapterPosition();
-                        callback.removeItem((message, remove, rollback) -> {
+                        callback.removeItem((message, remove, commit, rollback) -> {
                             remove.run();
-                            ViewUtils.getUndoSnackbar(recyclerView, message, rollback).show();
+                            ViewUtils.getUndoSnackbar(recyclerView, message, rollback, commit)
+                                    .show();
                         }, recyclerView.getAdapter().getItemId(position));
                     }
                 }).attachToRecyclerView(recyclerView);

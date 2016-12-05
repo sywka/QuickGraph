@@ -2,6 +2,7 @@ package com.shlom.solutions.quickgraph.viewmodel.datasets;
 
 import android.content.Context;
 import android.databinding.Bindable;
+import android.databinding.ObservableInt;
 import android.support.annotation.ColorInt;
 import android.view.View;
 
@@ -14,9 +15,6 @@ import com.shlom.solutions.quickgraph.model.database.dbmodel.ProjectModel;
 import com.shlom.solutions.quickgraph.view.Binding;
 import com.shlom.solutions.quickgraph.viewmodel.ContextViewModel;
 import com.shlom.solutions.quickgraph.viewmodel.WithMenuViewModel;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 import io.realm.OrderedRealmCollection;
 
@@ -42,22 +40,19 @@ public class DataSetListViewModel extends ContextViewModel
 
     public Binding.RV.RemoveItemHandler getRemoveHandler() {
         return (executor, uid) -> {
-            Map<Integer, DataSetModel> cached = new LinkedHashMap<>();
+            ObservableInt position = new ObservableInt();
             executor.execute(
                     getContext().getString(R.string.data_set_remove, findById(uid).getPrimary()),
-                    () -> RealmHelper.executeTrans(realm -> {
+                    () -> RealmHelper.executeTransaction(realm -> {
                         DataSetModel item = findById(uid);
-                        int position = projectModel.getDataSets().indexOf(item);
-                        cached.put(position, realm.copyFromRealm(item));
-                        item.deleteDependents();
-                        projectModel.getDataSets().deleteFromRealm(position);
+                        position.set(projectModel.getDataSets().indexOf(item));
+                        projectModel.getDataSets().remove(item);
                     }),
-                    () -> RealmHelper.executeTrans(realm ->
-                            Stream.of(cached)
-                                    .sorted((entry, t1) -> entry.getKey().compareTo(t1.getKey()))
-                                    .forEach(entry ->
-                                            projectModel.addDataSet(entry.getKey(), entry.getValue())
-                                    )
+                    () -> RealmHelper.executeTransaction(realm ->
+                            DataSetModel.find(realm, uid).deleteCascade()
+                    ),
+                    () -> RealmHelper.executeTransaction(realm ->
+                            projectModel.addDataSet(position.get(), DataSetModel.find(realm, uid))
                     )
             );
         };
@@ -73,7 +68,7 @@ public class DataSetListViewModel extends ContextViewModel
     public void createDataSet(int typeIndex) {
         switch (typeIndex) {
             case 0:
-                RealmHelper.executeTrans(realm -> {
+                RealmHelper.executeTransaction(realm -> {
                     DataSetModel dataSetModel = new DataSetModel()
                             .initDefault()
                             .setType(DataSetModel.Type.FROM_TABLE)
@@ -83,7 +78,7 @@ public class DataSetListViewModel extends ContextViewModel
                 });
                 break;
             case 1:
-                RealmHelper.executeTrans(realm -> {
+                RealmHelper.executeTransaction(realm -> {
                     DataSetModel dataSetModel = new DataSetModel()
                             .initDefault()
                             .setType(DataSetModel.Type.FROM_FUNCTION)

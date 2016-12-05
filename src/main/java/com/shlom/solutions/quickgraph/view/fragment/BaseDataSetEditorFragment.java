@@ -1,10 +1,12 @@
 package com.shlom.solutions.quickgraph.view.fragment;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 
 import com.shlom.solutions.quickgraph.R;
 import com.shlom.solutions.quickgraph.databinding.DataSetEditorBinding;
+import com.shlom.solutions.quickgraph.etc.LogUtil;
 import com.shlom.solutions.quickgraph.etc.Utils;
 import com.shlom.solutions.quickgraph.model.database.dbmodel.DataSetModel;
 import com.shlom.solutions.quickgraph.viewmodel.dataset.editor.DataSetEditorViewModel;
@@ -34,6 +36,11 @@ public class BaseDataSetEditorFragment extends BindingBaseFragment<DataSetEditor
         binding.setData(dataSetEditorViewModel);
 
         setupActivityActionBar(binding.toolbar, true);
+
+        binding.fab.setOnClickListener(view -> {
+            getActivity().setResult(Activity.RESULT_OK);
+            getActivity().finish();
+        });
     }
 
     @Override

@@ -18,7 +18,7 @@ import com.shlom.solutions.quickgraph.etc.Utils;
 import com.shlom.solutions.quickgraph.model.asynctask.DemoGenerator;
 import com.shlom.solutions.quickgraph.model.asynctask.ProgressAsyncTaskLoader;
 import com.shlom.solutions.quickgraph.model.asynctask.ProgressParams;
-import com.shlom.solutions.quickgraph.model.database.dbmodel.ProjectModel;
+import com.shlom.solutions.quickgraph.model.database.dbmodel.UserModel;
 import com.shlom.solutions.quickgraph.view.activity.DataSetListActivity;
 import com.shlom.solutions.quickgraph.view.adapter.BindingRealmSimpleAdapter;
 import com.shlom.solutions.quickgraph.view.ui.MarginItemDecorator;
@@ -27,18 +27,17 @@ import com.shlom.solutions.quickgraph.viewmodel.projects.ProjectListViewModel;
 
 import io.realm.Realm;
 import io.realm.RealmChangeListener;
-import io.realm.RealmResults;
 
 public class ProjectListFragment extends BindingBaseFragment<ProjectListViewModel, ProjectListBinding>
         implements ProjectListViewModel.Callback,
         LoaderManager.LoaderCallbacks,
         ProgressAsyncTaskLoader.OnProgressChangeListener<ProgressParams>,
-        RealmChangeListener<RealmResults<ProjectModel>> {
+        RealmChangeListener<UserModel> {
 
     private static final int LOADER_ID_GENERATE_DEMO = 100;
 
     private Realm realm;
-    private RealmResults<ProjectModel> projectModels;
+    private UserModel userModel;
 
     private MaterialDialog progressDialog;
 
@@ -54,7 +53,7 @@ public class ProjectListFragment extends BindingBaseFragment<ProjectListViewMode
 
     @Override
     protected void initBinding(ProjectListBinding binding, ProjectListViewModel model) {
-        binding.setData(model);
+        binding.setUser(model);
 
         setupActivityActionBar(binding.toolbar, false);
         setupRecyclerView(binding);
@@ -80,9 +79,9 @@ public class ProjectListFragment extends BindingBaseFragment<ProjectListViewMode
         DemoGenerator.registerOnProgressListener(LOADER_ID_GENERATE_DEMO, this);
 
         realm = Realm.getDefaultInstance();
-        projectModels = ProjectModel.getAll(realm);
-        projectModels.addChangeListener(this);
-        onChange(projectModels);
+        userModel = UserModel.createOrGetFirst(realm);
+        userModel.addChangeListener(this);
+        onChange(userModel);
     }
 
     @Override
@@ -92,13 +91,13 @@ public class ProjectListFragment extends BindingBaseFragment<ProjectListViewMode
         dismissProgressDialog();
         DemoGenerator.unregisterOnProgressListener(LOADER_ID_GENERATE_DEMO);
 
-        projectModels.removeChangeListener(this);
+        userModel.removeChangeListener(this);
         realm.close();
     }
 
     @Override
-    public void onChange(RealmResults<ProjectModel> element) {
-        getViewModel().setProjects(projectModels);
+    public void onChange(UserModel element) {
+        getViewModel().setUser(userModel);
     }
 
     @Override
@@ -145,9 +144,10 @@ public class ProjectListFragment extends BindingBaseFragment<ProjectListViewMode
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_clear_all:
-                getViewModel().getMenuViewModel().removeAll((message, remove, rollback) -> {
+                getViewModel().getMenuViewModel().removeAll((message, remove, commit, rollback) -> {
                     remove.run();
-                    ViewUtils.getUndoSnackbar(getBinding().recyclerView, message, rollback).show();
+                    ViewUtils.getUndoSnackbar(getBinding().recyclerView, message, rollback, commit)
+                            .show();
                 });
                 return true;
         }

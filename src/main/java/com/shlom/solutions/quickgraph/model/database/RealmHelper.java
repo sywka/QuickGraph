@@ -6,7 +6,7 @@ import io.realm.Realm;
 
 public class RealmHelper {
 
-    public static void executeTrans(Realm.Transaction transaction) {
+    public static void executeTransaction(Realm.Transaction transaction) {
         Realm realm = Realm.getDefaultInstance();
         try {
             realm.executeTransaction(transaction);

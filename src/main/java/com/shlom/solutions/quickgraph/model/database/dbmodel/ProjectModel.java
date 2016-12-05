@@ -33,20 +33,8 @@ public class ProjectModel extends RealmObject
     public ProjectModel() {
     }
 
-    public static RealmResults<ProjectModel> getAll(Realm realm) {
-        return realm.where(ProjectModel.class).findAllSorted("date", Sort.DESCENDING);
-    }
-
     public static ProjectModel find(Realm realm, long uid) {
         return realm.where(ProjectModel.class).equalTo("uid", uid).findFirst();
-    }
-
-    public void insertToRealm(Realm realm) {
-        realm.insert(this);
-    }
-
-    public void insertToRealmOrUpdate(Realm realm) {
-        realm.insertOrUpdate(this);
     }
 
     public ProjectModel copyToRealm(Realm realm) {

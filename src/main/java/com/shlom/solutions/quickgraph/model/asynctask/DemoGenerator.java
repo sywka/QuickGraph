@@ -9,6 +9,7 @@ import com.shlom.solutions.quickgraph.model.database.RealmHelper;
 import com.shlom.solutions.quickgraph.model.database.dbmodel.DataSetModel;
 import com.shlom.solutions.quickgraph.model.database.dbmodel.FunctionRangeModel;
 import com.shlom.solutions.quickgraph.model.database.dbmodel.ProjectModel;
+import com.shlom.solutions.quickgraph.model.database.dbmodel.UserModel;
 
 import io.realm.RealmList;
 
@@ -27,7 +28,7 @@ public class DemoGenerator extends ProgressAsyncTaskLoader<ProgressParams, Void>
 
     @Override
     public Void loadInBackground() {
-        RealmHelper.executeTrans(realm -> {
+        RealmHelper.executeTransaction(realm -> {
             String description = getContext().getString(R.string.project_generate_demo);
             ProgressParams progressParams = new ProgressParams(0, 10, description);
 
@@ -69,12 +70,13 @@ public class DemoGenerator extends ProgressAsyncTaskLoader<ProgressParams, Void>
             }
 
             String name = getContext().getString(R.string.action_demo_project);
-            new ProjectModel()
-                    .initDefault()
-                    .setName(name)
-                    .setDataSets(dataSetModels)
-                    .updateUIDCascade()
-                    .insertToRealm(realm);
+            UserModel.createOrGetFirst(realm)
+                    .addProject(new ProjectModel()
+                            .initDefault()
+                            .setName(name)
+                            .setDataSets(dataSetModels)
+                            .updateUIDCascade()
+                    );
         });
         return null;
     }

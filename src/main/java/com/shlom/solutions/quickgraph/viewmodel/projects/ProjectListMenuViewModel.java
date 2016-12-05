@@ -2,12 +2,14 @@ package com.shlom.solutions.quickgraph.viewmodel.projects;
 
 import android.content.Context;
 
+import com.annimon.stream.Collectors;
 import com.annimon.stream.Stream;
 import com.shlom.solutions.quickgraph.R;
 import com.shlom.solutions.quickgraph.etc.FileCacheHelper;
 import com.shlom.solutions.quickgraph.etc.LogUtil;
 import com.shlom.solutions.quickgraph.model.database.RealmHelper;
 import com.shlom.solutions.quickgraph.model.database.dbmodel.ProjectModel;
+import com.shlom.solutions.quickgraph.model.database.dbmodel.UserModel;
 import com.shlom.solutions.quickgraph.view.Binding;
 import com.shlom.solutions.quickgraph.viewmodel.ContextViewModel;
 
@@ -18,14 +20,16 @@ import io.realm.RealmResults;
 
 public class ProjectListMenuViewModel extends ContextViewModel {
 
+    private UserModel userModel;
     private RealmResults<ProjectModel> projectModels;
 
     public ProjectListMenuViewModel(Context context) {
         super(context);
     }
 
-    public void setProject(RealmResults<ProjectModel> projectModels) {
-        this.projectModels = projectModels;
+    public void setUser(UserModel userModel) {
+        this.userModel = userModel;
+        projectModels = userModel.getOrderedProjects();
         notifyChange();
     }
 
@@ -35,21 +39,33 @@ public class ProjectListMenuViewModel extends ContextViewModel {
     }
 
     public void removeAll(Binding.RemoveExecutor executor) {
-        List<ProjectModel> cached = new ArrayList<>();
+        List<Long> listUID = new ArrayList<>();
         executor.execute(
                 getContext().getString(R.string.project_remove_count,
                         String.valueOf(projectModels.size())),
-                () -> RealmHelper.executeTrans(realm -> {
-                    cached.addAll(realm.copyFromRealm(projectModels));
-                    Stream.of(projectModels).forEach(projectModel -> {
-                        LogUtil.d(FileCacheHelper.getImageCache(getContext(),
-                                projectModel.getPreviewFileName()).delete());
-                        projectModel.deleteDependents();
-                    });
-                    projectModels.deleteAllFromRealm();
-                    notifyChange();
+                () -> RealmHelper.executeTransaction(realm -> {
+                    listUID.addAll(
+                            Stream.of(userModel.getProjects())
+                                    .map(ProjectModel::getUid)
+                                    .collect(Collectors.toList())
+                    );
+                    userModel.getProjects().clear();
                 }),
-                () -> RealmHelper.executeTrans(realm -> realm.copyToRealm(cached))
+                () -> RealmHelper.executeTransaction(realm ->
+                        Stream.of(listUID)
+                                .forEach(aLong -> {
+                                    ProjectModel projectModel = ProjectModel.find(realm, aLong);
+                                    LogUtil.d(FileCacheHelper.getImageCache(getContext(),
+                                            projectModel.getPreviewFileName()).delete());
+                                    projectModel.deleteCascade();
+                                })
+                ),
+                () -> RealmHelper.executeTransaction(realm ->
+                        Stream.of(listUID)
+                                .forEach(aLong ->
+                                        userModel.addProject(ProjectModel.find(realm, aLong))
+                                )
+                )
         );
     }
 }

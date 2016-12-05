@@ -53,7 +53,7 @@ public class DataSetListItemViewModel extends ContextViewModel
 
     @Override
     public void setChecked(boolean checked) {
-        RealmHelper.executeTrans(realm -> {
+        RealmHelper.executeTransaction(realm -> {
             dataSetModel.setChecked(checked);
             projectModel.setDate(new Date());
         });

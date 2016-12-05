@@ -23,7 +23,7 @@ public class GraphMenuViewModel extends BaseObservable {
     }
 
     public void setDrawLegend(boolean draw) {
-        RealmHelper.executeTrans(realm -> projectModel
+        RealmHelper.executeTransaction(realm -> projectModel
                 .setDate(new Date())
                 .getParams().setDrawLegend(draw));
     }
@@ -34,7 +34,7 @@ public class GraphMenuViewModel extends BaseObservable {
     }
 
     public void setDrawXGrid(boolean draw) {
-        RealmHelper.executeTrans(realm -> projectModel
+        RealmHelper.executeTransaction(realm -> projectModel
                 .setDate(new Date())
                 .getParams().getAxisXParams().getGridLineParams().setDraw(draw));
     }
@@ -45,7 +45,7 @@ public class GraphMenuViewModel extends BaseObservable {
     }
 
     public void setDrawYGrid(boolean draw) {
-        RealmHelper.executeTrans(realm -> projectModel
+        RealmHelper.executeTransaction(realm -> projectModel
                 .setDate(new Date())
                 .getParams().getAxisYParams().getGridLineParams().setDraw(draw));
     }
@@ -57,7 +57,7 @@ public class GraphMenuViewModel extends BaseObservable {
     }
 
     public void setColorXGrid(@ColorInt int color) {
-        RealmHelper.executeTrans(realm -> projectModel
+        RealmHelper.executeTransaction(realm -> projectModel
                 .setDate(new Date())
                 .getParams().getAxisXParams().getGridLineParams().setColor(color));
     }
@@ -69,7 +69,7 @@ public class GraphMenuViewModel extends BaseObservable {
     }
 
     public void setColorYGrid(@ColorInt int color) {
-        RealmHelper.executeTrans(realm -> projectModel
+        RealmHelper.executeTransaction(realm -> projectModel
                 .setDate(new Date())
                 .getParams().getAxisYParams().getGridLineParams().setColor(color));
     }
@@ -80,7 +80,7 @@ public class GraphMenuViewModel extends BaseObservable {
     }
 
     public void setDrawXAxis(boolean draw) {
-        RealmHelper.executeTrans(realm -> projectModel
+        RealmHelper.executeTransaction(realm -> projectModel
                 .setDate(new Date())
                 .getParams().getAxisXParams().getLineParams().setDraw(draw));
     }
@@ -91,7 +91,7 @@ public class GraphMenuViewModel extends BaseObservable {
     }
 
     public void setDrawYAxis(boolean draw) {
-        RealmHelper.executeTrans(realm -> projectModel
+        RealmHelper.executeTransaction(realm -> projectModel
                 .setDate(new Date())
                 .getParams().getAxisYParams().getLineParams().setDraw(draw));
     }
@@ -102,7 +102,7 @@ public class GraphMenuViewModel extends BaseObservable {
     }
 
     public void setDrawXAxisLabels(boolean draw) {
-        RealmHelper.executeTrans(realm -> projectModel
+        RealmHelper.executeTransaction(realm -> projectModel
                 .setDate(new Date())
                 .getParams().getAxisXParams().setDrawLabels(draw));
     }
@@ -113,7 +113,7 @@ public class GraphMenuViewModel extends BaseObservable {
     }
 
     public void setDrawYAxisLabels(boolean draw) {
-        RealmHelper.executeTrans(realm -> projectModel
+        RealmHelper.executeTransaction(realm -> projectModel
                 .setDate(new Date())
                 .getParams().getAxisYParams().setDrawLabels(draw));
     }
@@ -125,7 +125,7 @@ public class GraphMenuViewModel extends BaseObservable {
     }
 
     public void setColorXAxis(@ColorInt int color) {
-        RealmHelper.executeTrans(realm -> projectModel
+        RealmHelper.executeTransaction(realm -> projectModel
                 .setDate(new Date())
                 .getParams().getAxisXParams().getLineParams().setColor(color));
     }
@@ -137,7 +137,7 @@ public class GraphMenuViewModel extends BaseObservable {
     }
 
     public void setColorYAxis(@ColorInt int color) {
-        RealmHelper.executeTrans(realm -> projectModel
+        RealmHelper.executeTransaction(realm -> projectModel
                 .setDate(new Date())
                 .getParams().getAxisYParams().getLineParams().setColor(color));
     }
@@ -149,7 +149,7 @@ public class GraphMenuViewModel extends BaseObservable {
     }
 
     public void setColorBackground(@ColorInt int color) {
-        RealmHelper.executeTrans(realm -> projectModel
+        RealmHelper.executeTransaction(realm -> projectModel
                 .setDate(new Date())
                 .getParams().setColorBackground(color));
     }
@@ -160,7 +160,7 @@ public class GraphMenuViewModel extends BaseObservable {
     }
 
     public void setTitleXAxis(String title) {
-        RealmHelper.executeTrans(realm -> projectModel
+        RealmHelper.executeTransaction(realm -> projectModel
                 .setDate(new Date())
                 .getParams().getAxisXParams().setTitle(title));
     }
@@ -171,7 +171,7 @@ public class GraphMenuViewModel extends BaseObservable {
     }
 
     public void setTitleYAxis(String title) {
-        RealmHelper.executeTrans(realm -> projectModel
+        RealmHelper.executeTransaction(realm -> projectModel
                 .setDate(new Date())
                 .getParams().getAxisYParams().setTitle(title));
     }
