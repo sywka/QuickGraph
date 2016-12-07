@@ -20,7 +20,7 @@ public class DataSetEditFunctionFragment extends BaseDataSetEditFragment {
 //
 //                InputCallback callback = (input, str) -> {
 //                    if (holder.functionInput.getId() == input.getId()) {
-//                        getStandaloneDataSet().setSecondary(str);
+//                        getStandaloneDataSet().setDescription(str);
 //
 //                    } else if (holder.functionFromInput.getId() == input.getId()) {
 //                        getStandaloneDataSet().getFunctionRange().setFrom(parseFloat(str));
@@ -44,7 +44,7 @@ public class DataSetEditFunctionFragment extends BaseDataSetEditFragment {
 //                setFocusController(holder.functionToInput.getEditText());
 //                setFocusController(holder.functionDeltaInput.getEditText());
 //
-//                setupInput(holder.functionInput, getStandaloneDataSet().getSecondary(), callback);
+//                setupInput(holder.functionInput, getStandaloneDataSet().getDescription(), callback);
 //                setupInput(holder.functionFromInput, getStandaloneDataSet().getFunctionRange().getFrom(), callback);
 //                setupInput(holder.functionToInput, getStandaloneDataSet().getFunctionRange().getTo(), callback);
 //                setupInput(holder.functionDeltaInput, getStandaloneDataSet().getFunctionRange().getDelta(), callback);
@@ -75,12 +75,12 @@ public class DataSetEditFunctionFragment extends BaseDataSetEditFragment {
 //        if (!getStandaloneDataSet().getFunctionRange().isFilled()) return;
 //
 //        if (getDataSet() == null ||
-//                !getStandaloneDataSet().getSecondary().equals(getDataSet().getSecondary()) ||
+//                !getStandaloneDataSet().getDescription().equals(getDataSet().getDescription()) ||
 //                !getStandaloneDataSet().getFunctionRange().equals(getDataSet().getFunctionRange())) {
 //
 //            getStandaloneDataSet().setCoordinates(Utils.generateCoordinates(
 //                    getDataBaseManager(),
-//                    getStandaloneDataSet().getSecondary(),
+//                    getStandaloneDataSet().getDescription(),
 //                    getStandaloneDataSet().getFunctionRange().getFrom(),
 //                    getStandaloneDataSet().getFunctionRange().getTo(),
 //                    getStandaloneDataSet().getFunctionRange().getDelta()));

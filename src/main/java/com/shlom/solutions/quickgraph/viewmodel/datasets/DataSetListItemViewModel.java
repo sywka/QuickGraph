@@ -62,13 +62,13 @@ public class DataSetListItemViewModel extends ContextViewModel
     @Override
     public String getPrimaryText() {
         if (dataSetModel == null || !dataSetModel.isValid()) return "";
-        return dataSetModel.getPrimary();
+        return dataSetModel.getName();
     }
 
     @Override
     public String getSecondaryText() {
         if (dataSetModel == null || !dataSetModel.isValid()) return "";
-        return dataSetModel.getSecondaryExtended(getContext());
+        return dataSetModel.getDescriptionExtended(getContext());
     }
 
     public OnClickListener<DataSetModel> getOnIconClickListener() {

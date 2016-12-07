@@ -44,7 +44,6 @@ public class PreviewCacheCreator extends ProgressAsyncTaskLoader<ProgressParams,
             realm.executeTransaction(realm1 -> {
                 if (isCached) project.setPreviewFileName(fileName);
                 else project.setPreviewFileName(null);
-                LogUtil.d(fileName);
             });
         });
 

@@ -90,12 +90,12 @@ public class DataSetEditTableFragment extends BaseDataSetEditFragment
 //        Cursor cursor = getContext().getContentResolver().query(uri, null, null, null, null);
 //        if (cursor != null && cursor.moveToNext()) {
 //            try {
-//                getStandaloneDataSet().setSecondary(cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)));
+//                getStandaloneDataSet().setDescription(cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)));
 //            } finally {
 //                cursor.close();
 //            }
 //        } else {
-//            getStandaloneDataSet().setSecondary(new File(uri.getPath()).getName());
+//            getStandaloneDataSet().setDescription(new File(uri.getPath()).getName());
 //        }
 //        getAdapter().notifyDataSetChanged();
     }

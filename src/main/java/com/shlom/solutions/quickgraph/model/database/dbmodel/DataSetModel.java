@@ -33,9 +33,9 @@ public class DataSetModel extends RealmObject
     private long uid;
 
     @Required
-    private String primary;
+    private String name;
     @Required
-    private String secondary;
+    private String description;
 
     private int color;
     private float lineWidth;
@@ -104,8 +104,8 @@ public class DataSetModel extends RealmObject
 
     @Override
     public DataSetModel initDefault() {
-        primary = "";
-        secondary = "";
+        name = "";
+        description = "";
         color = Color.BLUE;
         lineWidth = 0.5f;
         drawLine = true;
@@ -129,19 +129,19 @@ public class DataSetModel extends RealmObject
         return this;
     }
 
-    public String getSecondaryExtended(Context context) {
+    public String getDescriptionExtended(Context context) {
         switch (getType()) {
             case FROM_TABLE:
                 String secondaryExtended = context.getString(R.string.table_is, String.valueOf(coordinates.size()));
-                if (!secondary.isEmpty()) {
-                    secondaryExtended += ", " + context.getString(R.string.table_is_imported, secondary);
+                if (!description.isEmpty()) {
+                    secondaryExtended += ", " + context.getString(R.string.table_is_imported, description);
                 }
                 return secondaryExtended;
             case FROM_FUNCTION:
-                return context.getString(R.string.function_is, secondary);
+                return context.getString(R.string.function_is, description);
             case UNKNOWN:
             default:
-                return context.getString(R.string.unknown_is, secondary);
+                return context.getString(R.string.unknown_is, description);
         }
     }
 
@@ -180,21 +180,21 @@ public class DataSetModel extends RealmObject
         return this;
     }
 
-    public String getPrimary() {
-        return primary;
+    public String getName() {
+        return name;
     }
 
-    public DataSetModel setPrimary(String primary) {
-        this.primary = primary;
+    public DataSetModel setName(String name) {
+        this.name = name;
         return this;
     }
 
-    public String getSecondary() {
-        return secondary;
+    public String getDescription() {
+        return description;
     }
 
-    public DataSetModel setSecondary(String secondary) {
-        this.secondary = secondary;
+    public DataSetModel setDescription(String description) {
+        this.description = description;
         return this;
     }
 

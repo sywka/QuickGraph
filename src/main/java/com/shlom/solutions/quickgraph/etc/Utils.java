@@ -49,16 +49,9 @@ public abstract class Utils {
         return dp;
     }
 
-    public static <T extends FragmentActivity> Intent putLong(Intent intent, long uid) {
+    public static Intent putLong(Intent intent, long uid) {
         Bundle bundle = new Bundle();
         bundle.putLong(Config.TAG_LONG, uid);
-        intent.putExtras(bundle);
-        return intent;
-    }
-
-    public static Intent putBoolean(Intent intent, boolean bool) {
-        Bundle bundle = new Bundle();
-        bundle.putBoolean(Config.TAG_BOOLEAN, bool);
         intent.putExtras(bundle);
         return intent;
     }
@@ -70,12 +63,12 @@ public abstract class Utils {
         return intent;
     }
 
-    public static <T extends FragmentActivity> long getLong(T activity) {
-        return activity.getIntent().getExtras().getLong(Config.TAG_LONG, -1);
+    public static long getLong(Intent intent) {
+        return intent.getExtras().getLong(Config.TAG_LONG, -1);
     }
 
-    public static <T extends FragmentActivity> boolean getBoolean(T activity) {
-        return activity.getIntent().getExtras().getBoolean(Config.TAG_BOOLEAN, false);
+    public static <T extends FragmentActivity> long getLong(T activity) {
+        return getLong(activity.getIntent());
     }
 
     public static <T extends FragmentActivity> Serializable getSerializable(T activity) {
@@ -90,20 +83,8 @@ public abstract class Utils {
         return fragment;
     }
 
-    public static <T extends Fragment> T putBoolean(T fragment, boolean bool) {
-        Bundle bundle = new Bundle();
-        if (fragment.getArguments() != null) bundle = fragment.getArguments();
-        bundle.putBoolean(Config.TAG_BOOLEAN, bool);
-        fragment.setArguments(bundle);
-        return fragment;
-    }
-
     public static long getLong(Fragment fragment) {
         return fragment.getArguments().getLong(Config.TAG_LONG, -1);
-    }
-
-    public static boolean getBoolean(Fragment fragment) {
-        return fragment.getArguments().getBoolean(Config.TAG_BOOLEAN, false);
     }
 
     public static boolean checkSyntaxExpression(String exp) {

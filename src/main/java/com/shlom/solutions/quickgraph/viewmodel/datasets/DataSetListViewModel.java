@@ -16,10 +16,17 @@ import com.shlom.solutions.quickgraph.view.Binding;
 import com.shlom.solutions.quickgraph.viewmodel.ContextViewModel;
 import com.shlom.solutions.quickgraph.viewmodel.WithMenuViewModel;
 
+import java.util.NoSuchElementException;
+
 import io.realm.OrderedRealmCollection;
 
 public class DataSetListViewModel extends ContextViewModel
         implements WithMenuViewModel<DataSetListMenuViewModel> {
+
+    private DataSetModel.Type[] types = new DataSetModel.Type[]{
+            DataSetModel.Type.FROM_FUNCTION,
+            DataSetModel.Type.FROM_TABLE
+    };
 
     private ProjectModel projectModel;
     private Callback callback;
@@ -42,7 +49,7 @@ public class DataSetListViewModel extends ContextViewModel
         return (executor, uid) -> {
             ObservableInt position = new ObservableInt();
             executor.execute(
-                    getContext().getString(R.string.data_set_remove, findById(uid).getPrimary()),
+                    getContext().getString(R.string.data_set_remove, findById(uid).getName()),
                     () -> RealmHelper.executeTransaction(realm -> {
                         DataSetModel item = findById(uid);
                         position.set(projectModel.getDataSets().indexOf(item));
@@ -59,36 +66,42 @@ public class DataSetListViewModel extends ContextViewModel
     }
 
     public View.OnClickListener getNewItemClickHandler() {
-        return view -> callback.onChoiceDataSetType(new String[]{
-                getContext().getString(DataSetModel.getTypeNameRes(DataSetModel.Type.FROM_TABLE)),
-                getContext().getString(DataSetModel.getTypeNameRes(DataSetModel.Type.FROM_FUNCTION))
-        });
+        return view -> callback.onChoiceDataSetType(
+                Stream.of(types)
+                        .map(type -> getContext().getString(DataSetModel.getTypeNameRes(type)))
+                        .toArray(String[]::new)
+        );
     }
 
     public void createDataSet(int typeIndex) {
-        switch (typeIndex) {
-            case 0:
-                RealmHelper.executeTransaction(realm -> {
-                    DataSetModel dataSetModel = new DataSetModel()
-                            .initDefault()
-                            .setType(DataSetModel.Type.FROM_TABLE)
-                            .updateUIDCascade();
-                    projectModel.addDataSet(0, dataSetModel);
-                    callback.onOpenTableDataSet(dataSetModel.getUid());
-                });
-                break;
-            case 1:
-                RealmHelper.executeTransaction(realm -> {
-                    DataSetModel dataSetModel = new DataSetModel()
-                            .initDefault()
-                            .setType(DataSetModel.Type.FROM_FUNCTION)
-                            .updateUIDCascade();
-                    projectModel.addDataSet(0, dataSetModel);
+        RealmHelper.executeTransaction(realm -> {
+            DataSetModel dataSetModel = new DataSetModel()
+                    .initDefault()
+                    .setType(types[typeIndex])
+                    .updateUIDCascade()
+                    .copyToRealm(realm);
+            switch (types[typeIndex]) {
+                case FROM_FUNCTION:
                     callback.onOpenFunctionDataSet(dataSetModel.getUid());
-                });
-                break;
-            default:
-                throw new RuntimeException("Can't create dataSet: unknown");
+                    break;
+                case FROM_TABLE:
+                    callback.onOpenTableDataSet(dataSetModel.getUid());
+                    break;
+            }
+        });
+    }
+
+    public void confirmEditDataSet(long uid) {
+        if (findById(uid) == null) {
+            RealmHelper.executeTransaction(realm ->
+                    projectModel.addDataSet(0, DataSetModel.find(realm, uid))
+            );
+        }
+    }
+
+    public void cancelEditDataSet(long uid) {
+        if (findById(uid) == null) {
+            RealmHelper.executeTransaction(realm -> DataSetModel.find(realm, uid).deleteCascade());
         }
     }
 
@@ -139,10 +152,14 @@ public class DataSetListViewModel extends ContextViewModel
     }
 
     private DataSetModel findById(long uid) {
-        return Stream.of(projectModel.getDataSets())
-                .filter(value -> value.getUid() == uid)
-                .findFirst()
-                .get();
+        try {
+            return Stream.of(projectModel.getDataSets())
+                    .filter(value -> value.getUid() == uid)
+                    .findFirst()
+                    .get();
+        } catch (NoSuchElementException e) {
+            return null;
+        }
     }
 
     public interface Callback {

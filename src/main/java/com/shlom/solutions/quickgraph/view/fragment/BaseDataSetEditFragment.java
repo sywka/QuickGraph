@@ -51,9 +51,9 @@ public abstract class BaseDataSetEditFragment extends BaseFragment
 //
 //                standaloneDataSet = new DataSetModel()
 //                        .setUid(dataBaseManager.generateUID(DataSetModel.class))
-//                        .setPrimary(getString(R.string.data_set))
+//                        .setName(getString(R.string.data_set))
 //                        .setFunctionRange(functionRangeModel);
-//                standaloneDataSet.setPrimary(standaloneDataSet.getPrimary() + " №" + (projectModel.getDataSets().size() + 1));
+//                standaloneDataSet.setName(standaloneDataSet.getName() + " №" + (projectModel.getDataSets().size() + 1));
 //
 //            } else {
 //                standaloneDataSet = dataBaseManager.getRealm().copyFromRealm(dataSetModel);
@@ -128,20 +128,20 @@ public abstract class BaseDataSetEditFragment extends BaseFragment
 //                            .getDataSets().add(0, dataSetModel);
 //                }
 //            });
-//            getActivity().finish();
+//            getActivity().cancel();
 //        });
 //    }
 //
 //    private void setupHeader(View rootView) {
 //        TextInputLayout titleInput = (TextInputLayout) rootView.findViewById(R.id.edit_data_set_primary_input);
 //        if (titleInput.getEditText() != null) {
-//            titleInput.getEditText().setText(getStandaloneDataSet().getPrimary());
-//            titleInput.getEditText().setSelection(getStandaloneDataSet().getPrimary().length());
+//            titleInput.getEditText().setText(getStandaloneDataSet().getName());
+//            titleInput.getEditText().setSelection(getStandaloneDataSet().getName().length());
 //            titleInput.getEditText().addTextChangedListener(new TextWatcher() {
 //                @Override
 //                public void onTextChanged(CharSequence s, int start, int before, int count) {
 //                    super.onTextChanged(s, start, before, count);
-//                    getStandaloneDataSet().setPrimary(s.toString());
+//                    getStandaloneDataSet().setName(s.toString());
 //                }
 //            });
 //        }

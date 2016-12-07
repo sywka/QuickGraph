@@ -59,7 +59,7 @@ public class GraphDataPreparer extends ProgressAsyncTaskLoader<ProgressParams, L
                                 })
                                 .collect(Collectors.toList());
 
-                        LineDataSet set = new LineDataSet(values, model.getPrimary());
+                        LineDataSet set = new LineDataSet(values, model.getName());
                         set.setColor(model.getColor());
                         set.setLineWidth(Utils.dpToPx(getContext(), model.getLineWidth()));
                         set.setHighlightEnabled(model.isDrawPoints());

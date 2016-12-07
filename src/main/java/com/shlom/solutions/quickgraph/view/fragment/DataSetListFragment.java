@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -202,11 +203,19 @@ public class DataSetListFragment extends BindingBaseFragment<DataSetListViewMode
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == REQUEST_CODE_EDITOR) {
-            if (resultCode == Activity.RESULT_OK) {
-                LogUtil.d();
+        // onActivityResult() can called before onStart()
+        new Handler().post(() -> {
+            if (requestCode == REQUEST_CODE_EDITOR) {
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        getViewModel().confirmEditDataSet(Utils.getLong(data));
+                        break;
+                    case Activity.RESULT_CANCELED:
+                        getViewModel().cancelEditDataSet(Utils.getLong(data));
+                        break;
+                }
             }
-        }
+        });
     }
 
     @Override
@@ -259,8 +268,8 @@ public class DataSetListFragment extends BindingBaseFragment<DataSetListViewMode
     }
 
     @Override
-    public boolean onKey(View v, int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
+    public boolean onKey(View v, int i, KeyEvent event) {
+        if (i == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN) {
             BottomSheetBehavior behavior = BottomSheetBehavior.from(getBinding().bottomSheet);
             if (behavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
                 behavior.setState(BottomSheetBehavior.STATE_COLLAPSED);

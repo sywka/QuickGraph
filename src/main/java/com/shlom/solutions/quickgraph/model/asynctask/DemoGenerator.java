@@ -48,8 +48,8 @@ public class DemoGenerator extends ProgressAsyncTaskLoader<ProgressParams, Void>
                 String function = a + " + x^2";
                 DataSetModel dataSetModel = new DataSetModel()
                         .initDefault()
-                        .setPrimary(getContext().getString(R.string.data_set))
-                        .setSecondary(function)
+                        .setName(getContext().getString(R.string.data_set))
+                        .setDescription(function)
                         .setColor(color)
                         .setType(DataSetModel.Type.FROM_FUNCTION)
                         .setFunctionRange(functionRangeModel)
@@ -59,7 +59,7 @@ public class DemoGenerator extends ProgressAsyncTaskLoader<ProgressParams, Void>
                                 functionRangeModel.getTo(),
                                 functionRangeModel.getDelta()));
 
-                dataSetModel.setPrimary(dataSetModel.getPrimary() + " №" +
+                dataSetModel.setName(dataSetModel.getName() + " №" +
                         (dataSetModels.size() + 1));
 
                 dataSetModels.add(0, dataSetModel);
