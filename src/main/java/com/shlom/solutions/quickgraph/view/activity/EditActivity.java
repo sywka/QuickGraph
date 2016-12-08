@@ -11,6 +11,8 @@ public class EditActivity extends AppCompatActivity {
 
     private static final String TAG = EditActivity.class.getSimpleName();
 
+    private Fragment fragment;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -18,7 +20,6 @@ public class EditActivity extends AppCompatActivity {
 
         if (savedInstanceState == null) {
             Class fragmentClass = (Class) Utils.getSerializable(this);
-            Fragment fragment = null;
             try {
                 fragment = (Fragment) fragmentClass.newInstance();
             } catch (InstantiationException e) {
@@ -27,6 +28,8 @@ public class EditActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
             putFragment(fragment);
+        } else {
+            fragment = findFragment();
         }
     }
 
@@ -35,5 +38,22 @@ public class EditActivity extends AppCompatActivity {
                 .beginTransaction()
                 .add(R.id.content, fragment, TAG)
                 .commit();
+    }
+
+    protected Fragment findFragment() {
+        return getSupportFragmentManager().findFragmentByTag(TAG);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (fragment instanceof OnBackListener) {
+            ((OnBackListener) fragment).onBackPressed();
+        }
+
+        super.onBackPressed();
+    }
+
+    public interface OnBackListener {
+        void onBackPressed();
     }
 }

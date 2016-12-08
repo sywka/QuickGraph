@@ -1,12 +1,11 @@
 package com.shlom.solutions.quickgraph.view.fragment;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
 
 import com.shlom.solutions.quickgraph.R;
 import com.shlom.solutions.quickgraph.databinding.DataSetEditorBinding;
@@ -14,6 +13,8 @@ import com.shlom.solutions.quickgraph.etc.LogUtil;
 import com.shlom.solutions.quickgraph.etc.Utils;
 import com.shlom.solutions.quickgraph.model.database.RealmHelper;
 import com.shlom.solutions.quickgraph.model.database.dbmodel.DataSetModel;
+import com.shlom.solutions.quickgraph.view.activity.EditActivity;
+import com.shlom.solutions.quickgraph.view.fragment.dialog.DataSetStyleBottomSheetFragment;
 import com.shlom.solutions.quickgraph.viewmodel.dataset.editor.DataSetEditorViewModel;
 
 import icepick.State;
@@ -21,16 +22,16 @@ import io.realm.Realm;
 
 public class BaseDataSetEditorFragment extends BindingBaseFragment<DataSetEditorViewModel,
         DataSetEditorBinding>
-        implements View.OnKeyListener,
-        DataSetEditorViewModel.Callback {
+        implements DataSetEditorViewModel.Callback,
+        EditActivity.OnBackListener {
+
+    private static final String TAG_STYLE_DIALOG_FRAGMENT = "style_fragment_dialog";
 
     @State
     long tempId = -1;
 
     private Realm realm;
     private DataSetModel dataSet;
-
-    private Intent resultIntent = new Intent();
 
     @Override
     protected int getLayoutResource() {
@@ -45,9 +46,6 @@ public class BaseDataSetEditorFragment extends BindingBaseFragment<DataSetEditor
     @Override
     protected void initBinding(DataSetEditorBinding binding, DataSetEditorViewModel dataSetEditorViewModel) {
         binding.setDataSet(dataSetEditorViewModel);
-
-        binding.getRoot().setFocusableInTouchMode(true);
-        binding.getRoot().setOnKeyListener(this);
 
         setupActivityActionBar(binding.toolbar, true);
     }
@@ -80,10 +78,21 @@ public class BaseDataSetEditorFragment extends BindingBaseFragment<DataSetEditor
     }
 
     @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+
+        inflater.inflate(R.menu.style_menu, menu);
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
                 cancel();
+                return true;
+            case R.id.action_style:
+                new DataSetStyleBottomSheetFragment()
+                        .show(getChildFragmentManager(), TAG_STYLE_DIALOG_FRAGMENT);
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -103,7 +112,7 @@ public class BaseDataSetEditorFragment extends BindingBaseFragment<DataSetEditor
         getActivity().finish();
     }
 
-    private void cancel() {
+    public void cancel() {
         LogUtil.d();
         RealmHelper.executeTransaction(realm1 -> {
             DataSetModel temp = DataSetModel.find(realm1, tempId);
@@ -114,11 +123,7 @@ public class BaseDataSetEditorFragment extends BindingBaseFragment<DataSetEditor
     }
 
     @Override
-    public boolean onKey(View view, int i, KeyEvent keyEvent) {
-        if (i == KeyEvent.KEYCODE_BACK && keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
-            cancel();       // TODO: 07.12.2016
-            return true;
-        }
-        return false;
+    public void onBackPressed() {
+        cancel();
     }
 }
