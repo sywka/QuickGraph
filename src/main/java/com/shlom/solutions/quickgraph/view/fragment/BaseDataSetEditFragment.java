@@ -193,24 +193,24 @@ public abstract class BaseDataSetEditFragment extends BaseFragment
 //            public void onBindViewHolder(RecyclerView.ViewHolder viewHolder, int position) {
 //                final GeneralSectionVH holder = (GeneralSectionVH) viewHolder;
 //
-//                CompoundButton.OnCheckedChangeListener onCheckedChangeListener = (buttonView, isChecked) -> {
+//                CompoundButton.OnCheckedChangeListener onCheckedChangeListener = (buttonView, isCheckBoxChecked) -> {
 //                    if (holder.lineCheckBox.getId() == buttonView.getId()) {
-//                        getStandaloneDataSet().setDrawLine(isChecked);
+//                        getStandaloneDataSet().setDrawLine(isCheckBoxChecked);
 //                        holder.lineWidthTextView.setEnabled(getStandaloneDataSet().isDrawLine());
 //                        holder.lineWidthSeekBar.setEnabled(getStandaloneDataSet().isDrawLine());
 //                        holder.cubicCurveCheckBox.setEnabled(getStandaloneDataSet().isDrawLine());
 //
 //                    } else if (holder.cubicCurveCheckBox.getId() == buttonView.getId()) {
-//                        getStandaloneDataSet().setCubicCurve(isChecked);
+//                        getStandaloneDataSet().setApproximate(isCheckBoxChecked);
 //
 //                    } else if (holder.pointsCheckBox.getId() == buttonView.getId()) {
-//                        getStandaloneDataSet().setDrawPoints(isChecked);
+//                        getStandaloneDataSet().setDrawPoints(isCheckBoxChecked);
 //                        holder.pointsLabelCheckBox.setEnabled(getStandaloneDataSet().isDrawPoints());
 //                        holder.pointsRadiusTextView.setEnabled(getStandaloneDataSet().isDrawPoints());
 //                        holder.pointsRadiusSeekBar.setEnabled(getStandaloneDataSet().isDrawPoints());
 //
 //                    } else if (holder.pointsLabelCheckBox.getId() == buttonView.getId()) {
-//                        getStandaloneDataSet().setDrawPointsLabel(isChecked);
+//                        getStandaloneDataSet().setDrawPointsLabel(isCheckBoxChecked);
 //                    }
 //                };
 //
@@ -237,7 +237,7 @@ public abstract class BaseDataSetEditFragment extends BaseFragment
 //                });
 //
 //                holder.cubicCurveCheckBox.setEnabled(getStandaloneDataSet().isDrawLine());
-//                holder.cubicCurveCheckBox.setChecked(getStandaloneDataSet().isCubicCurve());
+//                holder.cubicCurveCheckBox.setChecked(getStandaloneDataSet().isApproximate());
 //                holder.cubicCurveCheckBox.setOnCheckedChangeListener(onCheckedChangeListener);
 //
 //                holder.pointsCheckBox.setChecked(getStandaloneDataSet().isDrawPoints());

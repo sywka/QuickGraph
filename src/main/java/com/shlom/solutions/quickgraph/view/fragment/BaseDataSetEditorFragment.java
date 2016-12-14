@@ -14,7 +14,7 @@ import com.shlom.solutions.quickgraph.etc.Utils;
 import com.shlom.solutions.quickgraph.model.database.RealmHelper;
 import com.shlom.solutions.quickgraph.model.database.dbmodel.DataSetModel;
 import com.shlom.solutions.quickgraph.view.activity.EditActivity;
-import com.shlom.solutions.quickgraph.view.fragment.dialog.DataSetStyleBottomSheetFragment;
+import com.shlom.solutions.quickgraph.view.fragment.dialog.DataSetStyleDialogFragment;
 import com.shlom.solutions.quickgraph.viewmodel.dataset.editor.DataSetEditorViewModel;
 
 import icepick.State;
@@ -91,7 +91,7 @@ public class BaseDataSetEditorFragment extends BindingBaseFragment<DataSetEditor
                 cancel();
                 return true;
             case R.id.action_style:
-                new DataSetStyleBottomSheetFragment()
+                DataSetStyleDialogFragment.newInstance(tempId)
                         .show(getChildFragmentManager(), TAG_STYLE_DIALOG_FRAGMENT);
                 return true;
         }

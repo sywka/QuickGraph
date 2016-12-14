@@ -265,11 +265,11 @@ public class DataSetModel extends RealmObject
         return this;
     }
 
-    public boolean isCubicCurve() {
+    public boolean isApproximate() {
         return cubicCurve;
     }
 
-    public DataSetModel setCubicCurve(boolean cubicCurve) {
+    public DataSetModel setApproximate(boolean cubicCurve) {
         this.cubicCurve = cubicCurve;
         return this;
     }

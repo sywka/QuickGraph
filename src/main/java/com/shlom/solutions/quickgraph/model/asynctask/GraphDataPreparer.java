@@ -66,7 +66,7 @@ public class GraphDataPreparer extends ProgressAsyncTaskLoader<ProgressParams, L
                         set.setDrawCircles(model.isDrawPoints());
                         set.setCircleColor(model.getColor());
                         set.setCircleRadius(Utils.dpToPx(getContext(), model.getPointsRadius()));
-                        set.setMode(model.isCubicCurve() ?
+                        set.setMode(model.isApproximate() ?
                                 LineDataSet.Mode.CUBIC_BEZIER : LineDataSet.Mode.LINEAR);
                         set.setDrawValues(model.isDrawPointsLabel());
                         set.setValueFormatter((value, entry, dataSetIndex, viewPortHandler) -> (
